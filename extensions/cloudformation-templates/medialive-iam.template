@@ -1,0 +1,228 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "IAM role and policy for MediaLive",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Global Configuration" },
+          "Parameters": [
+            "pPrefix"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pPrefix": {
+          "default": "Prefix"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rAccessRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com",
+                  "medialive.amazonaws.com",
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+        ],
+        "Path": "/service-role/",
+        "Policies": [
+          {
+            "PolicyName": "mediastore-access-policy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "MediaStoreFullAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "mediastore:ListContainers",
+                    "mediastore:DescribeObject",
+                    "mediastore:PutObject",
+                    "mediastore:GetObject",
+                    "mediastore:DeleteObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:mediastore:${AWS::Region}:${AWS::AccountId}:container/*"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "RoleName": {
+          "Fn::If": [
+            "cPrefix",
+            { "Fn::Sub": "${pPrefix}-medialive-access-role-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-medialive-access-role-${AWS::Region}" }
+          ]
+        }
+      }
+    },
+
+    "rManagedPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "ManagedPolicyName": {
+          "Fn::If": [
+            "cPrefix",
+            { "Fn::Sub": "${pPrefix}-medialive-managed-policy-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-medialive-managed-policy-${AWS::Region}" }
+          ]
+        },
+        "Description": "AWS Elemental MediaLive Managed Policy",
+        "Path": "/",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "medialive:*"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents"
+              ],
+              "Resource": [
+                "arn:aws:logs:*:*:*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sns:ListSubscriptionsByTopic",
+                "sns:DeleteTopic",
+                "sns:Subscribe",
+                "sns:Publish"
+              ],
+              "Resource": [
+                { "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*" }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ssm:Describe*",
+                "ssm:Get*",
+                "ssm:List*",
+                "ssm:PutParameter*",
+                "ssm:DeleteParameter*"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:ssm:*:${AWS::AccountId}:parameter/*"
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:PassRole"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+
+    "rProvisionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "${AWS::AccountId}"
+                },
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "rManagedPolicy"
+          }
+        ],
+        "Path": "/service-role/",
+        "RoleName": {
+          "Fn::If": [
+            "cPrefix",
+            { "Fn::Sub": "${pPrefix}-medialive-role-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-medialive-role-${AWS::Region}" }
+          ]
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pPrefix": {
+      "Type": "String",
+      "Description": "used to prefix resource name",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+    }
+  },
+
+  "Conditions": {
+    "cPrefix": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pPrefix" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oManagedPolicy": {
+      "Value": { "Ref": "rManagedPolicy" },
+      "Description": "Managed Policy"
+    },
+
+    "oProvisionRoleArn": {
+      "Value": { "Fn::GetAtt": [ "rProvisionRole", "Arn" ] },
+      "Description": "Lambda Provision Role"
+    },
+
+    "oAccessRoleArn": {
+      "Value": { "Fn::GetAtt": [ "rAccessRole", "Arn" ] },
+      "Description": "MediaLive Access Role"
+    }
+  }
+}
