@@ -35,3 +35,29 @@ Note:If you aren't developing a mobile app then it doesn't matter what language 
 Once you have a project configured then run `amplify livestream add` and follow the prompts.
 
 To deploy the project to the cloud run `amplify push`
+
+
+## Contributing
+
+Current version: `Alpha`
+
+Using Cloudformation to deploy elemental: `False`
+
+Version number meaning: `x.y.z`
+
+`x` is major
+`y` is minor
+`z` is bug fix
+
+Commit messages must follow:
+```
+
+Alpha vx.y.z
+    
+Initial plugin to create the elemental resources to host a livestream
+
+- (Changes in details)
+
+Please note this uses lambda functions to deploy the resources as there is no cloudformation support for elemental yet.
+
+```
