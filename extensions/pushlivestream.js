@@ -11,7 +11,7 @@ module.exports = context => {
 
 async function addLivestream(context){
   let options = {
-    service: 'Elemental',
+    service: 'livestream',
     providerPlugin: 'awscloudformation'
   };
   const result = await serviceQuestions(context);
@@ -93,7 +93,7 @@ function copyFilesOver(context, options, props){
 
   context.amplify.copyBatch(context, copyJobs, props);
   context.amplify.updateamplifyMetaAfterResourceAdd(
-    "Elemental",
+    "livestream",
     props.shared.resourceName,
     options,
   );
