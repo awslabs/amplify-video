@@ -22,7 +22,7 @@ TODO
 1. Open the terminal and navigate to the repo you just cloned
 1. Run this command: 
 ```
-npm install --save-dev amplify-elemental-plugin
+npm install -g
 ```
 
 

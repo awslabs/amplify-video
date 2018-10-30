@@ -14,6 +14,8 @@ async function addLivestream(context){
     service: 'livestream',
     providerPlugin: 'awscloudformation'
   };
+
+  console.log(await context.amplify.getResourceStatus('livestream', 'ElementalLivestream', 'awscloudformation'));
   const result = await serviceQuestions(context);
   copyFilesOver(context, options, result);
 }
@@ -97,6 +99,7 @@ function copyFilesOver(context, options, props){
     props.shared.resourceName,
     options,
   );
+
 }
 
 async function serviceQuestions(context){
@@ -238,7 +241,9 @@ async function serviceQuestions(context){
   ]
 
   answers = await inquirer.prompt(defaultQuestions);
-  answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+  //Bug ref: https://github.com/aws-amplify/amplify-cli/issues/370
+  //answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+  answers.bucket = "amplify-plugin-elemental";
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
   mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
   mediaStoreAnswers = await inquirer.prompt(mediaStoreQuestions);

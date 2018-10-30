@@ -151,7 +151,7 @@
           "pProvisionLambdaHandler": "orchestration.MediaPackageChannel",
 
           "pChannelId": {
-            "Fn::Sub": "${AWS::StackName}"
+            "Fn::Sub": "<%= props.shared.resourceName %>"
           },
 
           "pIngestType": "hls",
@@ -201,7 +201,7 @@
           "pProvisionLambdaHandler": "orchestration.MediaLiveChannel",
 
           "pChannelId": {
-            "Fn::Sub": "${AWS::StackName}"
+            "Fn::Sub": "<%= props.shared.resourceName %>"
           },
 
           "pInputSecurityGroup": {
@@ -278,7 +278,7 @@
           "pProvisionLambdaHandler": "orchestration.MediaStoreContainer",
 
           "pContainerName": {
-            "Fn::Sub": "${AWS::StackName}"
+            "Fn::Sub": "<%= props.shared.resourceName %>"
           }
         }
       }
@@ -311,7 +311,7 @@
           },
 
           "pChannelId": {
-            "Fn::Sub": "${AWS::StackName}"
+            "Fn::Sub": "<%= props.shared.resourceName %>"
           },
 
           "pPriceClass": {
@@ -449,6 +449,7 @@
       "Default": "<%= props.cloudFront.enableDistrubtion %>",
       "AllowedValues": [ "YES", "NO" ]
     },
+    <% if (props.cloudFront.enableDistrubtion == "YES") { %>
 
     "pPriceClass": {
       "Type": "String",
@@ -456,7 +457,16 @@
       "AllowedValues": [ "PriceClass_100", "PriceClass_200", "PriceClass_All" ],
       "Default": "<%= props.cloudFront.priceClass %>"
     },
+    <% }  else { %>
 
+    "pPriceClass": {
+      "Type": "String",
+      "Description": "see http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PriceClass.html for details",
+      "AllowedValues": [ "PriceClass_100", "PriceClass_200", "PriceClass_All" ],
+      "Default": "PriceClass_100"
+    },
+
+    <% } %>
     "pS3CF": {
       "Type": "String",
       "Description": "specify where CloudFront will deliver access logs to. Leave it blank to use the same bucket of this workflow.",
