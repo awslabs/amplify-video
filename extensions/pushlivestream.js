@@ -54,7 +54,9 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
   };
 
   s3Client.upload(uploadParams, (err, data) => {
-    
+    if(err){
+      console.log("Failed uploading object to S3. Check your connection and try to run amplify livestream setup");
+    }
   });
 }
 
@@ -74,6 +76,10 @@ async function copyFilesToLocal(context, options, props){
   context.amplify.copyBatch(context, copyJobs, props);
 
   let fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
+
+  if (!fs.existsSync(`${targetDir}/Elemental/${props.shared.resourceName}/src/`)){
+    fs.mkdirSync(`${targetDir}/Elemental/${props.shared.resourceName}/src/`);
+  }
 
   fileuploads.forEach((filePath) => {
     fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/Elemental/${props.shared.resourceName}/src/${filePath}`);
