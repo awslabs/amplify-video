@@ -227,7 +227,7 @@
             },
             {
                 "key": "sBucketLogs",
-                "question": "S3 bucket for CloudFront Logs: ",
+                "question": "S3 bucket for CloudFront Logs: (Must already exist): ",
                 "validation": {
                     "operator": "regex",
                     "value": "^[a-z0-9-]+$",

@@ -1,9 +1,11 @@
 const inquirer = require('inquirer');
 const fs = require('fs-extra');
+const path = require('path');
+const mime = require('mime-types');
 
 
 module.exports = context => {
-  context.printMyInfo = async () => {
+  context.createLiveStream = async () => {
     await addLivestream(context);
   }
 }
@@ -11,16 +13,52 @@ module.exports = context => {
 
 async function addLivestream(context){
   let options = {
-    service: 'livestream',
+    service: 'Elemental',
     providerPlugin: 'awscloudformation'
   };
-
-  console.log(await context.amplify.getResourceStatus('livestream', 'ElementalLivestream', 'awscloudformation'));
+  
   const result = await serviceQuestions(context);
-  copyFilesOver(context, options, result);
+  await copyFilesToLocal(context, options, result);
+  await copyFilesToS3(context, options, result);
 }
 
-function copyFilesOver(context, options, props){
+async function copyFilesToS3(context, options, props){
+  const { amplify } = context;
+  const projectConfig = amplify.getProjectConfig();
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+  const provider = require(projectConfig.providers[options.providerPlugin]);
+  const aws = await provider.getConfiguredAWSClient(context);
+  const s3Client = new aws.S3();
+  const distributionDirPath = `${targetDir}/Elemental/${props.shared.resourceName}/src/`;
+  let fileuploads = fs.readdirSync(distributionDirPath);
+
+  fileuploads.forEach((filePath) => {
+    uploadFile(s3Client, targetBucket, distributionDirPath, filePath);
+  });
+}
+
+async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath) {
+  let relativeFilePath = path.relative(distributionDirPath, filePath);
+
+  relativeFilePath = relativeFilePath.replace(/\\/g, '/');
+
+  const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
+  const contentType = mime.lookup(relativeFilePath);
+  const uploadParams = {
+    Bucket: hostingBucketName,
+    Key: `src/${filePath}`,
+    Body: fileStream,
+    ContentType: contentType || 'text/plain',
+    ACL: 'public-read',
+  };
+
+  s3Client.upload(uploadParams, (err, data) => {
+    
+  });
+}
+
+async function copyFilesToLocal(context, options, props){
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = __dirname;
@@ -29,73 +67,20 @@ function copyFilesOver(context, options, props){
     {
         dir: pluginDir,
         template: `cloudformation-templates/live-workflow.json.ejs`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/${props.shared.resourceName}-live-workflow-template.json`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/lambda.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/lambda.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/cloudfront-distribution.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/cloudfront-distribution.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/medialive-channel.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/medialive-channel.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/medialive-iam.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/medialive-iam.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/medialive.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/medialive.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediapackage-channel.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediapackage-channel.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediapackage-iam.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediapackage-iam.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediapackage.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediapackage.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediastore-container.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediastore-container.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediastore-iam.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediastore-iam.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/mediastore.template`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/mediastore.template`,
-    },
-    {
-        dir: pluginDir,
-        template: `cloudformation-templates/psdemo-js-live-workflow_v0.3.0.zip`,
-        target: `${targetDir}/livestream/${props.shared.resourceName}/src/psdemo-js-live-workflow_v0.3.0.zip`,
+        target: `${targetDir}/Elemental/${props.shared.resourceName}/${props.shared.resourceName}-live-workflow-template.json`,
     }
   ];
 
   context.amplify.copyBatch(context, copyJobs, props);
+
+  let fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
+
+  fileuploads.forEach((filePath) => {
+    fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/Elemental/${props.shared.resourceName}/src/${filePath}`);
+  });
+  
   context.amplify.updateamplifyMetaAfterResourceAdd(
-    "livestream",
+    "Elemental",
     props.shared.resourceName,
     options,
   );
@@ -107,14 +92,16 @@ async function serviceQuestions(context){
   let answers;
   let mediaLiveAnswers;
   let mediaStoreAnswers;
+  const targetDir = amplify.pathManager.getBackendDirPath();
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   let props = {};
-  
   serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/questions.json`))['Elemental'];
 
   const { inputs } = serviceMetadata;
 
+  const pluginDir = __dirname;
+  
   const defaultQuestions = [
       {
         type: inputs[0].type,
@@ -145,7 +132,6 @@ async function serviceQuestions(context){
         default: '3',
       }
   ];
-
 
   const mediaLiveQustions = [
       {
@@ -205,7 +191,6 @@ async function serviceQuestions(context){
     }
   ];
 
-
   const cloudFrontEnable = [
     {
       type: inputs[11].type,
@@ -241,9 +226,8 @@ async function serviceQuestions(context){
   ]
 
   answers = await inquirer.prompt(defaultQuestions);
-  //Bug ref: https://github.com/aws-amplify/amplify-cli/issues/370
-  //answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  answers.bucket = "amplify-plugin-elemental";
+
+  answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
   mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
   mediaStoreAnswers = await inquirer.prompt(mediaStoreQuestions);
