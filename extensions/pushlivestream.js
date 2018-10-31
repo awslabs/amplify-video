@@ -2,14 +2,46 @@ const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
 const mime = require('mime-types');
+const chalk = require('chalk');
 
 
 module.exports = context => {
   context.createLiveStream = async () => {
     await addLivestream(context);
   }
+  context.pushStaticFiles = async () => {
+    await resetupLivestream(context);
+  }
+  context.updateLiveStream = async() => {
+    //console.log(context.amplify.getProjectMeta().Elemental.ElementalLivestream2.providerMetadata);
+    console.log("Not yet implemented")
+  }
 }
 
+async function resetupLivestream(context){
+  let options = {
+    service: 'Elemental',
+    providerPlugin: 'awscloudformation'
+  };
+
+  let props = {};
+
+  const chooseProject = [
+    {
+      type: 'list',
+      name: 'resourceName',
+      message: 'Choose what project you want to push the setup to s3 again?',
+      choices: Object.keys(context.amplify.getProjectMeta().Elemental),
+      default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+    }
+  ];
+
+  props.shared = await inquirer.prompt(chooseProject);
+
+  await copyFilesToS3(context, options, props);
+
+  console.log(chalk.bold("Your S3 bucket has been setup."));
+}
 
 async function addLivestream(context){
   let options = {
@@ -55,7 +87,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
 
   s3Client.upload(uploadParams, (err, data) => {
     if(err){
-      console.log("Failed uploading object to S3. Check your connection and try to run amplify livestream setup");
+      console.log(chalk.bold("Failed uploading object to S3. Check your connection and try to run amplify livestream setup"));
     }
   });
 }

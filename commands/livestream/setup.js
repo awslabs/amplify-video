@@ -1,6 +1,6 @@
 module.exports = {
- name: 'update',
+ name: 'setup',
  run: async (context) => {
-   context.updateLiveStream();
+   context.pushStaticFiles();
  }
 }
