@@ -15,6 +15,14 @@ module.exports = context => {
   context.updateLiveStream = async() => {
     await updateLiveStream(context);
   }
+  context.removeLiveStream = async() => {
+    await removeLiveStream(context);
+  }
+}
+
+
+async function removeLiveStream(context){
+  context.amplify.removeResource(context, 'Elemental');
 }
 
 async function resetupLivestream(context){
