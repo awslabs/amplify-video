@@ -13,8 +13,7 @@ module.exports = context => {
     await resetupLivestream(context);
   }
   context.updateLiveStream = async() => {
-    //console.log(context.amplify.getProjectMeta().Elemental.ElementalLivestream2.providerMetadata);
-    console.log("Not yet implemented")
+    await updateLiveStream(context);
   }
 }
 
@@ -30,7 +29,7 @@ async function resetupLivestream(context){
     {
       type: 'list',
       name: 'resourceName',
-      message: 'Choose what project you want to push the setup to s3 again?',
+      message: 'Choose what project you want to push the default templates to s3 again?',
       choices: Object.keys(context.amplify.getProjectMeta().Elemental),
       default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
     }
@@ -41,6 +40,31 @@ async function resetupLivestream(context){
   await copyFilesToS3(context, options, props);
 
   console.log(chalk.bold("Your S3 bucket has been setup."));
+}
+
+async function updateLiveStream(context){
+  let options = {
+    service: 'Elemental',
+    providerPlugin: 'awscloudformation'
+  };
+
+  let props = {};
+  const chooseProject = [
+    {
+      type: 'list',
+      name: 'resourceName',
+      message: 'Choose what project you want to update?',
+      choices: Object.keys(context.amplify.getProjectMeta().Elemental),
+      default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+    }
+  ];
+
+  props.shared = await inquirer.prompt(chooseProject);
+
+  const result = await serviceQuestions(context, props.shared.resourceName);
+
+  await copyFilesToLocal(context, options, result);
+  await copyFilesToS3(context, options, result);
 }
 
 async function addLivestream(context){
@@ -125,7 +149,7 @@ async function copyFilesToLocal(context, options, props){
 
 }
 
-async function serviceQuestions(context){
+async function serviceQuestions(context, resourceName){
   const { amplify } = context;
   let answers;
   let mediaLiveAnswers;
@@ -139,8 +163,35 @@ async function serviceQuestions(context){
   const { inputs } = serviceMetadata;
 
   const pluginDir = __dirname;
+
+  let defaultQuestions;
   
-  const defaultQuestions = [
+  if (resourceName){
+    defaultQuestions = [
+      {
+        type: inputs[1].type,
+        name: inputs[1].key,
+        message: inputs[1].question,
+        validate: amplify.inputValidation(inputs[1]),
+        default: '1',
+      },
+      {
+        type: inputs[2].type,
+        name: inputs[2].key,
+        message: inputs[2].question,
+        validate: amplify.inputValidation(inputs[2]),
+        default: '1',
+      },
+      {
+        type: inputs[3].type,
+        name: inputs[3].key,
+        message: inputs[3].question,
+        validate: amplify.inputValidation(inputs[2]),
+        default: '3',
+      }
+    ];
+  } else {
+    defaultQuestions = [
       {
         type: inputs[0].type,
         name: inputs[0].key,
@@ -169,7 +220,8 @@ async function serviceQuestions(context){
         validate: amplify.inputValidation(inputs[2]),
         default: '3',
       }
-  ];
+    ];
+  }
 
   const mediaLiveQustions = [
       {
@@ -264,8 +316,10 @@ async function serviceQuestions(context){
   ]
 
   answers = await inquirer.prompt(defaultQuestions);
-
   answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+  if (resourceName){
+    answers.resourceName = resourceName;
+  }
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
   mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
   mediaStoreAnswers = await inquirer.prompt(mediaStoreQuestions);
