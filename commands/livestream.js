@@ -31,6 +31,10 @@ module.exports = {
         description: `Provisions ${featureName} cloud resources and it's dependencies with the latest local developments`,
       },
       {
+        name: 'get-info',
+        description: `Gets info for ${featureName} resource from the cloudformation template`,
+      },
+      {
         name: 'remove',
         description: `Removes ${featureName} resource from your local backend and will remove them on amplify push`,
       },
