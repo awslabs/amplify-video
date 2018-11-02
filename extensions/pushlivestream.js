@@ -137,7 +137,7 @@ async function copyFilesToLocal(context, options, props){
     }
   ];
 
-  context.amplify.copyBatch(context, copyJobs, props);
+  await context.amplify.copyBatch(context, copyJobs, props);
 
   let fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
 

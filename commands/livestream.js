@@ -20,7 +20,7 @@ module.exports = {
       },
       {
         name: 'update',
-        description: `Takes you through a CLI flow to update a ${featureName} resource`,
+        description: `Takes you through a CLI flow to update a ${featureName} resource !DOES NOT WORK!`,
       },
       {
         name: 'setup',
@@ -32,7 +32,7 @@ module.exports = {
       },
       {
         name: 'remove',
-        description: `Removes ${featureName} resource from your local backend. Does not undeploy the resources.`,
+        description: `Removes ${featureName} resource from your local backend and will remove them on amplify push`,
       },
     ];
 

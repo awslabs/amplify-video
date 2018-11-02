@@ -1,3 +1,5 @@
+const inquirer = require('inquirer');
+
 module.exports = {
  name: 'push',
  run: async (context) => {
@@ -19,7 +21,7 @@ module.exports = {
    return amplify.pushResources(context, 'Elemental', answer.resourceName)
          .catch((err) => {
         context.print.info(err.stack);
-        context.print.error('There was an error pushing the API resource');
+        context.print.error('There was an error pushing the Elemental resource');
    });
  }
 }
