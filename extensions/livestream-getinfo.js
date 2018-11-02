@@ -11,109 +11,52 @@ module.exports = context => {
   }
 }
 
-
-async function setupAWS(context, options){
-  const { amplify } = context;
-  const projectConfig = amplify.getProjectConfig();
-  const provider = require(projectConfig.providers[options.providerPlugin]);
-  const aws = await provider.getConfiguredAWSClient(context);
-
-  console.log(chalk.bold('Getting info ...'));
-
-  return aws;
-}
-
-
 async function getLiveStreamInfo(context, options){
-
+  const { amplify } = context;
   let project;
+  const amplifyMeta = context.amplify.getProjectMeta();
   const chooseProject = [
     {
       type: 'list',
       name: 'resourceName',
       message: 'Choose what project you want to get info for?',
-      choices: Object.keys(context.amplify.getProjectMeta().Elemental),
-      default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+      choices: Object.keys(amplifyMeta.Elemental),
+      default: Object.keys(amplifyMeta.Elemental)[0],
     }
   ];
 
-  project = await inquirer.prompt(chooseProject);
-
-  const aws = await setupAWS(context, options);
-  const mediaLive = await getMediaLive(aws, project.resourceName);
-  const mediaPackage = await getMediaPackage(aws, project.resourceName);
-  const mediaStore = await getMediaStore(aws, project.resourceName);
-  const cloudFront = await getCloudFront(aws, project.resourceName);
-
-  console.log(mediaLive);
-  console.log(mediaPackage);
-  console.log(mediaStore);
-  console.log(cloudFront);
-}
-
-async function getMediaLive(aws, channelName){
-  try {
-    const mediaLiveClient = new aws.MediaLive();
-    const { Channels } = await mediaLiveClient.listChannels({
-        MaxResults: 20,
-    }).promise();
-    const result = Channels.filter(x => x.Name === channelName);
-    if(result.length > 1){
-      console.log(chalk`{bgYellowBright.bold WARNING:} {bold More than one channel with the name ${channelName} was found. Using first result}`);
-    } else if (result.length == 0) {
-      console.error(chalk`{bgRedBright.bold Error:} {bold Could not find ${channelName}. Make sure you deployed your live stream.}`);
-      return;
-    }
-    return result[0];
-  } catch (e){
-    console.error(e);
-    return undefined;
+  if(!amplify.Elemental && Object.keys(amplifyMeta.Elemental).length != 0){
+    project = await inquirer.prompt(chooseProject);
+    await prettifyOutput(amplifyMeta.Elemental[project.resourceName].output);
+  } else {
+    console.log(chalk.bold("You have no Elemental projects."));
+    return;
   }
 }
 
-async function getMediaPackage(aws, channelId){
-  try {
-    const mediaPackageClient = new aws.MediaPackage();
-    const channelInfo = await mediaPackageClient.describeChannel({
-      Id: channelId,
-    }).promise();
-    return channelInfo;
-  } catch (e){
-    console.error(e);
-    return undefined;
-  }
-}
+async function prettifyOutput(output){
+  console.log(chalk.bold("MediaLive"));
+  console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
+  console.log(chalk`MediaLive Backup Ingest Url: {blue.underline ${output.oMediaLiveBackupIngestUrl}}`);
 
-async function getMediaStore(aws, channelId){
-  try {
-    const mediaStoreClient = new aws.MediaStore();
-    const containerInfo = await mediaStoreClient.describeContainer({
-      ContainerName: channelId,
-    }).promise();
-    return containerInfo;
-  } catch (e){
-    console.error(e);
-    return undefined;
+  console.log(chalk.bold("\nMediaPackage"));
+  if (output.oPrimaryHlsEgress){
+    console.log(chalk`MediaPackage HLS Egress Url: {blue.underline ${output.oPrimaryHlsEgress}}`);
   }
-}
+  if (output.oPrimaryDashEgress){
+    console.log(chalk`MediaPackage Dash Egress Url: {blue.underline ${output.oPrimaryDashEgress}}`);
+  }
+  if (output.oPrimaryMssEgress){
+    console.log(chalk`MediaPackage MSS Egress Url: {blue.underline \e]8;;${output.oPrimaryMssEgress}}e]8;;\a`);
+  }
+  if (output.oPrimaryCmafEgress){
+    console.log(chalk`MediaPackage CMAF Egress Url: {blue.underline ${output.oPrimaryCmafEgress}}`);
+  }
 
-async function getCloudFront(aws, channelId){
-  try {
-    const cloudFrontClient = new aws.CloudFront();
-    const cloudFrontInfo = await cloudFrontClient.listDistributions({
-      MaxItems: '20',
-    }).promise();
+  if(output.oMediaStoreContainerName){
+    console.log(chalk.bold("\nMediaStore"));
+    console.log(chalk`MediaStore Output Url: {blue.underline ${output.oBackupMediaStoreEgressUrl}}`);
+  }
+
   
-    const result = cloudFrontInfo.DistributionList.Items.filter(x => x.Comment.includes(channelId));
-    if(result.length > 1){
-      console.log(chalk`{bgYellowBright.bold WARNING:} {bold More than one channel with the name ${channelName} was found. Using first result}`);
-    } else if (result.length == 0) {
-      console.error(chalk`{bgRedBright.bold Error:} {bold Could not find ${channelName}. Make sure you deployed your live stream.}`);
-      return;
-    }
-    return result;
-  } catch (e){
-    console.error(e);
-    return undefined;
-  }
 }
