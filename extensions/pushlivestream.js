@@ -205,7 +205,7 @@ async function serviceQuestions(context, resourceName){
         name: inputs[0].key,
         message: inputs[0].question,
         validate: amplify.inputValidation(inputs[0]),
-        default: 'ElementalLivestream',
+        default: amplify.getProjectDetails().projectConfig.projectName,
       },
       {
         type: inputs[1].type,
