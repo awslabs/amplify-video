@@ -1,4 +1,5 @@
 const featureName = 'livestream';
+const chalk = require('chalk');
 
 module.exports = {
   name: featureName,
@@ -20,7 +21,7 @@ module.exports = {
       },
       {
         name: 'update',
-        description: `Takes you through a CLI flow to update a ${featureName} resource !DOES NOT WORK!`,
+        description: chalk`{bold !DOES NOT WORK!} Takes you through a CLI flow to update a ${featureName} resource {bold !DOES NOT WORK!}`,
       },
       {
         name: 'setup',
@@ -32,7 +33,7 @@ module.exports = {
       },
       {
         name: 'get-info',
-        description: `Gets info for ${featureName} resource from the cloudformation template`,
+        description: `Gets info for ${featureName} resource from the CloudFormation template`,
       },
       {
         name: 'remove',

@@ -30,16 +30,37 @@ npm install -g
 
 To use this plugin you just need to configure a project using `amplify init`.
 
-Note:If you aren't developing a mobile app then it doesn't matter what language you choose.
+Note: If you aren't developing a mobile/web app then it doesn't matter what language you choose.
 
-Once you have a project configured then run `amplify livestream add` and follow the prompts.
 
-To deploy the project to the cloud run `amplify push`
+### amplify livestream add
+
+Command to configure the params for setting up a livestream. Run `amplify livestream push` or `amplify push` to create the resources in the cloud.
+
+### amplify livestream update
+
+Command to update your params for your livestream (Not working currently)
+
+### amplify livestream setup
+
+Command to repush the CloudFormation dependancies to the S3.
+
+### amplify livestream push
+
+Command to push a specific livestream project.
+
+### amplify livestream get-info
+
+Command to return the CloudFormation outputs.
+
+### amplify livestream remove
+
+Command to remove a livestream that you have made. To remove from the cloud you must run `amplify livestream push` or `amplify push`
 
 
 ## Contributing
 
-Current version: `Alpha`
+Current version: `Beta`
 
 Using Cloudformation to deploy elemental: `False`
 
@@ -52,7 +73,7 @@ Version number meaning: `x.y.z`
 Commit messages must follow:
 ```
 
-Alpha vx.y.z
+Beta vx.y.z
     
 Initial plugin to create the elemental resources to host a livestream
 
