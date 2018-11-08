@@ -37,7 +37,11 @@ async function getLiveStreamInfo(context, options){
 async function prettifyOutput(output){
   console.log(chalk.bold("MediaLive"));
   console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
+  var primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
+  console.log(chalk`MediaLive Primary Stream Key: ${primaryKey[3]}`);
   console.log(chalk`MediaLive Backup Ingest Url: {blue.underline ${output.oMediaLiveBackupIngestUrl}}`);
+  var backupKey = output.oMediaLiveBackupIngestUrl.split('/');
+  console.log(chalk`MediaLive Backup Stream Key: ${backupKey[3]}`);
 
   console.log(chalk.bold("\nMediaPackage"));
   if (output.oPrimaryHlsEgress){

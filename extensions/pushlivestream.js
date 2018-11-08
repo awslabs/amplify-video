@@ -244,7 +244,7 @@ async function serviceQuestions(context, resourceName){
         name: inputs[5].key,
         message: inputs[5].question,
         choices: inputs[5].options,
-        default: 'RTP_PUSH',
+        default: 'RTMP_PUSH',
       },
       {
         type: inputs[6].type,
