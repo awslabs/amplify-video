@@ -127,8 +127,9 @@
       }
     }
   },
-
+  
   "Resources": {
+  <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
     "rMP": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
@@ -178,7 +179,7 @@
         }
       }
     },
-
+    <% } %>
     "rML": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
@@ -231,7 +232,7 @@
           "pStartChannel": {
             "Ref": "pStartChannel"
           },
-
+          <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
           "pEndpointUrls": {
             "Fn::GetAtt": [ "rMP", "Outputs.oIngestUrls" ]
           },
@@ -243,7 +244,7 @@
           "pParameterStoreKeys": {
             "Fn::GetAtt": [ "rMP", "Outputs.oParameterStoreKeys" ]
           },
-
+          <% } %>
           "pMediaStoreEndpoint": {
             "Fn::If": [
               "cEnableMediaStore",
@@ -282,7 +283,7 @@
           }
         }
       }
-    },
+    }<% if (props.cloudFront.enableDistrubtion == "YES") { %>,
 
     "rDistribution": {
       "Condition": "cEnableDistribution",
@@ -324,10 +325,6 @@
             ]
           },
 
-          "pS3PrefixCF": {
-            "Ref": "pS3PrefixCF"
-          },
-
           "pPrimaryHlsUrl": {
             "Fn::GetAtt": [ "rMP", "Outputs.oHlsEndpoint" ]
           },
@@ -342,10 +339,14 @@
 
           "pPrimaryCmafUrl": {
             "Fn::GetAtt": [ "rMP", "Outputs.oCmafEndpoint" ]
+          },
+          "pS3PrefixCF": {
+            "Ref": "pS3PrefixCF"
           }
         }
       }
     }
+    <% } %>
   },
 
   "Parameters": {
@@ -408,7 +409,7 @@
       "Default": "<%= props.mediaLive.autoStart %>",
       "AllowedValues": [ "YES", "NO" ]
     },
-
+    <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
     "pEndpoints": {
       "Type": "CommaDelimitedList",
       "Description": "output streaming standards. MediaPackage supports HLS, DASH, MSS, and/or CMAF",
@@ -428,6 +429,7 @@
       "MinValue": "60",
       "MaxValue": "259200"
     },
+    <% } %>
 
     "pSegmentPerPlaylist": {
       "Type": "Number",
@@ -439,7 +441,7 @@
     "pEnableMediaStore": {
       "Type": "String",
       "Description": "Caution: By enabling MediaStore, it clones the MediaLive output channels that will ingest to MediaStore origin.",
-      "Default": "<%= props.mediaStore.enableMediaStore %>",
+      "Default": <%if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mStore') { %>"YES"<% } else { %>"NO"<%}%>,
       "AllowedValues": [ "YES", "NO" ]
     },
 
@@ -518,7 +520,7 @@
       "Value": { "Fn::GetAtt": [ "rML", "Outputs.oBackupIngestUrl" ] },
       "Description": "(B) MediaLive Ingest Url"
     },
-
+    <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
     "oPrimaryHlsEgress": {
       "Value": {
         "Fn::If": [
@@ -562,7 +564,7 @@
       },
       "Description": "(P) CMAF Egress Url"
     },
-
+    <% } %>
     "oMediaStoreContainerName": {
       "Condition": "cEnableMediaStore",
       "Value": { "Fn::GetAtt": [ "rMS", "Outputs.oContainerName" ] },
@@ -585,7 +587,7 @@
       "Condition": "cEnableMediaStore",
       "Value": { "Fn::GetAtt": [ "rML", "Outputs.oBackupMediaStoreEgressUrl" ] },
       "Description": "(B) MediaStore Egress Url"
-    },
+    }<% if (props.cloudFront.enableDistrubtion == "YES") { %>,
 
     "oCloudFrontDistributionDomain": {
       "Condition": "cEnableDistribution",
@@ -598,5 +600,6 @@
       "Value": { "Fn::GetAtt": [ "rDistribution", "Outputs.oDistributionId" ] },
       "Description": "CloudFront Distribution Id"
     }
+    <% } %>
   }
 }

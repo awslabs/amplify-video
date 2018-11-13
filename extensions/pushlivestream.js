@@ -161,7 +161,7 @@ async function serviceQuestions(context, resourceName){
   const { amplify } = context;
   let answers;
   let mediaLiveAnswers;
-  let mediaStoreAnswers;
+  let mediaStorageAnswers;
   const targetDir = amplify.pathManager.getBackendDirPath();
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
@@ -188,7 +188,7 @@ async function serviceQuestions(context, resourceName){
         name: inputs[2].key,
         message: inputs[2].question,
         validate: amplify.inputValidation(inputs[2]),
-        default: '1',
+        default: '2',
       },
       {
         type: inputs[3].type,
@@ -219,7 +219,7 @@ async function serviceQuestions(context, resourceName){
         name: inputs[2].key,
         message: inputs[2].question,
         validate: amplify.inputValidation(inputs[2]),
-        default: '1',
+        default: '2',
       },
       {
         type: inputs[3].type,
@@ -279,13 +279,13 @@ async function serviceQuestions(context, resourceName){
     }
   ];
 
-  const mediaStoreQuestions = [
+  const mediaStorage = [
     {
-      type: inputs[10].type,
-      name: inputs[10].key,
-      message: inputs[10].question,
-      choices: inputs[10].options,
-      default: 'YES',
+      type: inputs[15].type,
+      name: inputs[15].key,
+      message: inputs[15].question,
+      choices: inputs[15].options,
+      default: 'mStore',
     }
   ];
 
@@ -329,18 +329,26 @@ async function serviceQuestions(context, resourceName){
     answers.resourceName = resourceName;
   }
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
-  mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
-  mediaStoreAnswers = await inquirer.prompt(mediaStoreQuestions);
-  let cloudfrontenable = await inquirer.prompt(cloudFrontEnable);
-  if (cloudfrontenable.enableDistrubtion == 'YES'){
-    cloudFrontAnswers = await inquirer.prompt(cloudFrontQuestions);
+  mediaStorageAnswers = await inquirer.prompt(mediaStorage);
+  if(mediaStorageAnswers.storageType == 'mPackageStore' || mediaStorageAnswers.storageType == 'mPackage'){
+    console.log(mediaStorageAnswers.storageType);
+    mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
+    props.mediaPackage = mediaPackageAnswers;
+    let cloudfrontenable = await inquirer.prompt(cloudFrontEnable);
+    if (cloudfrontenable.enableDistrubtion == 'YES'){
+      cloudFrontAnswers = await inquirer.prompt(cloudFrontQuestions);
+    }
+    cloudFrontAnswers.enableDistrubtion = cloudfrontenable.enableDistrubtion;
+
+  } else {
+    cloudFrontAnswers.enableDistrubtion = 'NO';
   }
-  cloudFrontAnswers.enableDistrubtion = cloudfrontenable.enableDistrubtion;
+  
 
   props.shared = answers;
   props.mediaLive = mediaLiveAnswers;
   props.mediaPackage = mediaPackageAnswers;
-  props.mediaStore = mediaStoreAnswers;
+  props.mediaStorage = mediaStorageAnswers;
   props.cloudFront = cloudFrontAnswers;
 
   return props;

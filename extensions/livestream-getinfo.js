@@ -15,6 +15,9 @@ async function getLiveStreamInfo(context, options){
   const { amplify } = context;
   let project;
   const amplifyMeta = context.amplify.getProjectMeta();
+  if (!amplifyMeta.Elemental){
+    chalk.bold("You have no Elemental projects.");
+  }
   const chooseProject = [
     {
       type: 'list',
@@ -27,7 +30,11 @@ async function getLiveStreamInfo(context, options){
 
   if(!amplify.Elemental && Object.keys(amplifyMeta.Elemental).length != 0){
     project = await inquirer.prompt(chooseProject);
-    await prettifyOutput(amplifyMeta.Elemental[project.resourceName].output);
+    if (amplifyMeta.Elemental[project.resourceName].output){
+      await prettifyOutput(amplifyMeta.Elemental[project.resourceName].output);
+    } else {
+      console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
+    }
   } else {
     console.log(chalk.bold("You have no Elemental projects."));
     return;
@@ -42,8 +49,10 @@ async function prettifyOutput(output){
   console.log(chalk`MediaLive Backup Ingest Url: {blue.underline ${output.oMediaLiveBackupIngestUrl}}`);
   var backupKey = output.oMediaLiveBackupIngestUrl.split('/');
   console.log(chalk`MediaLive Backup Stream Key: ${backupKey[3]}`);
-
-  console.log(chalk.bold("\nMediaPackage"));
+  
+  if (output.oPrimaryHlsEgress || output.oPrimaryCmafEgress || output.oPrimaryDashEgress || output.oPrimaryMssEgress){
+    console.log(chalk.bold("\nMediaPackage"));
+  }
   if (output.oPrimaryHlsEgress){
     console.log(chalk`MediaPackage HLS Egress Url: {blue.underline ${output.oPrimaryHlsEgress}}`);
   }
@@ -59,7 +68,7 @@ async function prettifyOutput(output){
 
   if(output.oMediaStoreContainerName){
     console.log(chalk.bold("\nMediaStore"));
-    console.log(chalk`MediaStore Output Url: {blue.underline ${output.oBackupMediaStoreEgressUrl}}`);
+    console.log(chalk`MediaStore Output Url: {blue.underline ${output.oPrimaryMediaStoreEgressUrl}}`);
   }
 
   

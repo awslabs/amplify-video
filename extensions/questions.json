@@ -244,6 +244,26 @@
                     "onErrorMsg": "Bucket name can only use the following characters: a-z 0-9 -"
                 },
                 "required": true
+            },
+            {
+                "key":"storageType",
+                "question":"Where do you want to stream to?",
+                "type":"list",
+                "options": [
+                    {
+                        "name": "MediaPackage",
+                        "value": "mPackage"
+                    },
+                    {
+                        "name": "MediaPackage & MediaStore",
+                        "value": "mPackageStore"
+                    },
+                    {
+                        "name": "MediaStore",
+                        "value": "mStore"
+                    }
+                ],
+                "required": true
             }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
