@@ -331,7 +331,6 @@ async function serviceQuestions(context, resourceName){
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
   mediaStorageAnswers = await inquirer.prompt(mediaStorage);
   if(mediaStorageAnswers.storageType == 'mPackageStore' || mediaStorageAnswers.storageType == 'mPackage'){
-    console.log(mediaStorageAnswers.storageType);
     mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
     props.mediaPackage = mediaPackageAnswers;
     let cloudfrontenable = await inquirer.prompt(cloudFrontEnable);
