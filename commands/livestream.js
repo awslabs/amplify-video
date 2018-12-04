@@ -21,11 +21,7 @@ module.exports = {
       },
       {
         name: 'update',
-        description: chalk`{bold !DOES NOT WORK!} Takes you through a CLI flow to update a ${featureName} resource {bold !DOES NOT WORK!}`,
-      },
-      {
-        name: 'setup',
-        description: `Provisions ${featureName} cloud resources to help with the cloudformation templates`,
+        description: chalk`{bold !DOES NOT WORK IF RESOURCES ALREADY DEPLOYED!} Takes you through a CLI flow to update a ${featureName} resource {bold !DOES NOT WORK!}`,
       },
       {
         name: 'push',
@@ -38,6 +34,10 @@ module.exports = {
       {
         name: 'remove',
         description: `Removes ${featureName} resource from your local backend and will remove them on amplify push`,
+      },
+      {
+        name: 'setup-obs',
+        description: `Sets up OBS with your stream settings.`,
       },
     ];
 
