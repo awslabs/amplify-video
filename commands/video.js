@@ -1,4 +1,4 @@
-const featureName = 'livestream';
+const featureName = 'video';
 const chalk = require('chalk');
 
 module.exports = {

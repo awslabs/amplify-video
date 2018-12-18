@@ -77,40 +77,8 @@ async function prettifyOutput(output, projectName){
   generateService(projectName, profileDir, output.oMediaLivePrimaryIngestUrl);
 
   console.log("Configuration complete.");
-  console.log("Would you like to open OBS with this profile?")
+  console.log("Open OBS and select " + projectName + " profile to use the generated profile for OBS");
 
-
-  /*
-  console.log(chalk.bold("MediaLive"));
-  console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
-  var primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
-  console.log(chalk`MediaLive Primary Stream Key: ${primaryKey[3]}\n`);
-  console.log(chalk`MediaLive Backup Ingest Url: {blue.underline ${output.oMediaLiveBackupIngestUrl}}`);
-  var backupKey = output.oMediaLiveBackupIngestUrl.split('/');
-  console.log(chalk`MediaLive Backup Stream Key: ${backupKey[3]}`);
-  
-  if (output.oPrimaryHlsEgress || output.oPrimaryCmafEgress || output.oPrimaryDashEgress || output.oPrimaryMssEgress){
-    console.log(chalk.bold("\nMediaPackage"));
-  }
-  if (output.oPrimaryHlsEgress){
-    console.log(chalk`MediaPackage HLS Egress Url: {blue.underline ${output.oPrimaryHlsEgress}}`);
-  }
-  if (output.oPrimaryDashEgress){
-    console.log(chalk`MediaPackage Dash Egress Url: {blue.underline ${output.oPrimaryDashEgress}}`);
-  }
-  if (output.oPrimaryMssEgress){
-    console.log(chalk`MediaPackage MSS Egress Url: {blue.underline \e]8;;${output.oPrimaryMssEgress}}e]8;;\a`);
-  }
-  if (output.oPrimaryCmafEgress){
-    console.log(chalk`MediaPackage CMAF Egress Url: {blue.underline ${output.oPrimaryCmafEgress}}`);
-  }
-
-  if(output.oMediaStoreContainerName){
-    console.log(chalk.bold("\nMediaStore"));
-    console.log(chalk`MediaStore Output Url: {blue.underline ${output.oPrimaryMediaStoreEgressUrl}}`);
-  }
-
-  */
 }
 
 async function generateINI(projectName, directory){
