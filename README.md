@@ -1,6 +1,6 @@
 # Amplify Elemental Plugin
 
-Welcome to the first 3rd party plugin for Amplify that supports setting up Elemental services.
+Welcome to the first 3rd party plugin for Amplify that supports setting up AWS Video Services.
 
 ## Installation Guide
 
@@ -14,7 +14,9 @@ After installing the official CLI you now have to install this on your local mac
 
 ### NPM Installation guide
 
-TODO
+```
+npm i amplify-elemental-plugin -g
+```
 
 ### Manually installing
 
@@ -33,29 +35,29 @@ To use this plugin you just need to configure a project using `amplify init`.
 Note: If you aren't developing a mobile/web app then it doesn't matter what language you choose.
 
 
-### amplify livestream add
+### amplify video add
 
-Command to configure the params for setting up a livestream. Run `amplify livestream push` or `amplify push` to create the resources in the cloud.
+Command to configure the params for setting up a livestream. Run `amplify video push` or `amplify push` to create the resources in the cloud.
 
-### amplify livestream update
+### amplify video update
 
-Command to update your params for your livestream (Not working currently)
+Command to update your params for your video setup (Not working currently)
 
-### amplify livestream setup
+### amplify video setup
 
 Command to repush the CloudFormation dependancies to the S3.
 
-### amplify livestream push
+### amplify video push
 
-Command to push a specific livestream project.
+Command to push a specific video project.
 
-### amplify livestream get-info
+### amplify vidoe get-info
 
 Command to return the CloudFormation outputs.
 
-### amplify livestream remove
+### amplify video remove
 
-Command to remove a livestream that you have made. To remove from the cloud you must run `amplify livestream push` or `amplify push`
+Command to remove a project that you have made. To remove from the cloud you must run `amplify livestream push` or `amplify push`
 
 
 ## Contributing
@@ -75,7 +77,7 @@ Commit messages must follow:
 
 Beta vx.y.z
     
-Initial plugin to create the elemental resources to host a livestream
+Initial plugin to create the elemental resources to host a AWS Video Services
 
 - (Changes in details)
 
