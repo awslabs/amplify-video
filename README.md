@@ -51,7 +51,7 @@ Command to repush the CloudFormation dependancies to the S3.
 
 Command to push a specific video project.
 
-### amplify vidoe get-info
+### amplify video get-info
 
 Command to return the CloudFormation outputs.
 
