@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const mime = require('mime-types');
 const chalk = require('chalk');
+const sha1 = require('sha1');
 
 
 module.exports = context => {
@@ -70,8 +71,8 @@ async function updateLiveStream(context){
   props.shared = await inquirer.prompt(chooseProject);
 
   const result = await serviceQuestions(context, props.shared.resourceName);
-
-  await copyFilesToLocal(context, options, result);
+  
+  await copyFilesToLocal(context, options, result, "update");
   await copyFilesToS3(context, options, result);
 }
 
@@ -82,7 +83,7 @@ async function addLivestream(context){
   };
   
   const result = await serviceQuestions(context);
-  await copyFilesToLocal(context, options, result);
+  await copyFilesToLocal(context, options, result, "add");
   await copyFilesToS3(context, options, result);
 }
 
@@ -124,7 +125,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
   });
 }
 
-async function copyFilesToLocal(context, options, props){
+async function copyFilesToLocal(context, options, props, type){
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = __dirname;
@@ -137,6 +138,28 @@ async function copyFilesToLocal(context, options, props){
     }
   ];
 
+  options.sha = sha1(JSON.stringify(props));
+
+  if (type == "add"){
+    context.amplify.updateamplifyMetaAfterResourceAdd(
+      "Elemental",
+      props.shared.resourceName,
+      options,
+    );
+  } else if (type == "update"){
+    if (options.sha == context.amplify.getProjectMeta().Elemental[props.shared.resourceName].sha){
+      console.log("Same setting detected. Not updating project.");
+      return
+    } else{
+      context.amplify.updateamplifyMetaAfterResourceUpdate(
+        "Elemental",
+        props.shared.resourceName,
+        'sha',
+        options.sha
+      );
+    }
+  }
+
   await context.amplify.copyBatch(context, copyJobs, props);
 
   let fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
@@ -148,88 +171,67 @@ async function copyFilesToLocal(context, options, props){
   fileuploads.forEach((filePath) => {
     fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/Elemental/${props.shared.resourceName}/src/${filePath}`);
   });
-  
-  context.amplify.updateamplifyMetaAfterResourceAdd(
-    "Elemental",
-    props.shared.resourceName,
-    options,
-  );
 
+  fs.writeFileSync(`${targetDir}/Elemental/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function serviceQuestions(context, resourceName){
   const { amplify } = context;
   let answers;
   let mediaLiveAnswers;
+  let resource = {};
   let mediaStorageAnswers;
   const targetDir = amplify.pathManager.getBackendDirPath();
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   let props = {};
-  serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/questions.json`))['Elemental'];
+  let defaults = {};
+
+  defaults = JSON.parse(fs.readFileSync(`${__dirname}/livestream-defaults.json`));
+  defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
+  try {
+    let oldValues = JSON.parse(fs.readFileSync(`${targetDir}/Elemental/${resourceName}/props.json`));
+    Object.assign(defaults,oldValues);
+  } catch (err){
+    //Do nothing
+  }
+
+  serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`))['Elemental'];
 
   const { inputs } = serviceMetadata;
 
-  const pluginDir = __dirname;
+  const nameProject = [
+    {
+      type: inputs[0].type,
+      name: inputs[0].key,
+      message: inputs[0].question,
+      validate: amplify.inputValidation(inputs[0]),
+      default: defaults["shared"]["resourceName"],
+    }];
 
-  let defaultQuestions;
-  
-  if (resourceName){
-    defaultQuestions = [
-      {
-        type: inputs[1].type,
-        name: inputs[1].key,
-        message: inputs[1].question,
-        validate: amplify.inputValidation(inputs[1]),
-        default: '1',
-      },
-      {
-        type: inputs[2].type,
-        name: inputs[2].key,
-        message: inputs[2].question,
-        validate: amplify.inputValidation(inputs[2]),
-        default: '2',
-      },
-      {
-        type: inputs[3].type,
-        name: inputs[3].key,
-        message: inputs[3].question,
-        validate: amplify.inputValidation(inputs[2]),
-        default: '3',
-      }
-    ];
-  } else {
-    defaultQuestions = [
-      {
-        type: inputs[0].type,
-        name: inputs[0].key,
-        message: inputs[0].question,
-        validate: amplify.inputValidation(inputs[0]),
-        default: amplify.getProjectDetails().projectConfig.projectName,
-      },
-      {
-        type: inputs[1].type,
-        name: inputs[1].key,
-        message: inputs[1].question,
-        validate: amplify.inputValidation(inputs[1]),
-        default: '1',
-      },
-      {
-        type: inputs[2].type,
-        name: inputs[2].key,
-        message: inputs[2].question,
-        validate: amplify.inputValidation(inputs[2]),
-        default: '2',
-      },
-      {
-        type: inputs[3].type,
-        name: inputs[3].key,
-        message: inputs[3].question,
-        validate: amplify.inputValidation(inputs[2]),
-        default: '3',
-      }
-    ];
-  }
+  const defaultQuestions = [
+    {
+      type: inputs[1].type,
+      name: inputs[1].key,
+      message: inputs[1].question,
+      validate: amplify.inputValidation(inputs[1]),
+      default: defaults["shared"][inputs[1].key],
+    },
+    {
+      type: inputs[2].type,
+      name: inputs[2].key,
+      message: inputs[2].question,
+      validate: amplify.inputValidation(inputs[2]),
+      default: defaults["shared"][inputs[2].key],
+    },
+    {
+      type: inputs[3].type,
+      name: inputs[3].key,
+      message: inputs[3].question,
+      validate: amplify.inputValidation(inputs[3]),
+      default: defaults["shared"][inputs[3].key],
+    }
+  ];
 
   const mediaLiveQustions = [
       {
@@ -237,28 +239,28 @@ async function serviceQuestions(context, resourceName){
         name: inputs[4].key,
         message: inputs[4].question,
         validate: amplify.inputValidation(inputs[4]),
-        default: '0.0.0.0/0',
+        default: defaults["mediaLive"][inputs[4].key],
       },
       {
         type: inputs[5].type,
         name: inputs[5].key,
         message: inputs[5].question,
         choices: inputs[5].options,
-        default: 'RTMP_PUSH',
+        default: defaults["mediaLive"][inputs[5].key],
       },
       {
         type: inputs[6].type,
         name: inputs[6].key,
         message: inputs[6].question,
         choices: inputs[6].options,
-        default: 'FULL',
+        default: defaults["mediaLive"][inputs[6].key],
       },
       {
         type: inputs[7].type,
         name: inputs[7].key,
         message: inputs[7].question,
         choices: inputs[7].options,
-        default: 'YES',
+        default: defaults["mediaLive"][inputs[7].key],
       }
   ];
 
@@ -268,14 +270,14 @@ async function serviceQuestions(context, resourceName){
       name: inputs[8].key,
       message: inputs[8].question,
       choices: inputs[8].options,
-      default: 'HLS,DASH',
+      default: defaults["mediaPackage"][inputs[8].key],
     },
     {
         type: inputs[9].type,
         name: inputs[9].key,
         message: inputs[9].question,
         validate: amplify.inputValidation(inputs[9]),
-        default: '86400',
+        default: defaults["mediaPackage"][inputs[9].key],
     }
   ];
 
@@ -285,7 +287,7 @@ async function serviceQuestions(context, resourceName){
       name: inputs[15].key,
       message: inputs[15].question,
       choices: inputs[15].options,
-      default: 'mStore',
+      default: defaults["mediaStorage"][inputs[15].key],
     }
   ];
 
@@ -295,7 +297,7 @@ async function serviceQuestions(context, resourceName){
       name: inputs[11].key,
       message: inputs[11].question,
       choices: inputs[11].options,
-      default: 'YES',
+      default: defaults["cloudFront"][inputs[11].key],
     }
   ];
 
@@ -305,29 +307,35 @@ async function serviceQuestions(context, resourceName){
       name: inputs[12].key,
       message: inputs[12].question,
       choices: inputs[12].options,
-      default: 'PriceClass_100',
+      default: defaults["cloudFront"][inputs[12].key],
     },
     {
         type: inputs[13].type,
         name: inputs[13].key,
         message: inputs[13].question,
         validate: amplify.inputValidation(inputs[13]),
-        default: '',
+        default: defaults["cloudFront"][inputs[13].key],
     },
     {
         type: inputs[14].type,
         name: inputs[14].key,
         message: inputs[14].question,
         validate: amplify.inputValidation(inputs[14]),
-        default: 'cf_logs/',
+        default: defaults["cloudFront"][inputs[14].key],
     }
   ]
 
+  if (resourceName){
+    resource.name = resourceName;
+  } else {
+    resource = await inquirer.prompt(nameProject);
+  }
+
   answers = await inquirer.prompt(defaultQuestions);
   answers.bucket = context.amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  if (resourceName){
-    answers.resourceName = resourceName;
-  }
+
+  answers.resourceName = resource.name;
+  
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
   mediaStorageAnswers = await inquirer.prompt(mediaStorage);
   if(mediaStorageAnswers.storageType == 'mPackageStore' || mediaStorageAnswers.storageType == 'mPackage'){
