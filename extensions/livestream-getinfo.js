@@ -60,7 +60,7 @@ async function prettifyOutput(output){
     console.log(chalk`MediaPackage Dash Egress Url: {blue.underline ${output.oPrimaryDashEgress}}`);
   }
   if (output.oPrimaryMssEgress){
-    console.log(chalk`MediaPackage MSS Egress Url: {blue.underline \e]8;;${output.oPrimaryMssEgress}}e]8;;\a`);
+    console.log(chalk`MediaPackage MSS Egress Url: {blue.underline ${output.oPrimaryMssEgress}}`);
   }
   if (output.oPrimaryCmafEgress){
     console.log(chalk`MediaPackage CMAF Egress Url: {blue.underline ${output.oPrimaryCmafEgress}}`);

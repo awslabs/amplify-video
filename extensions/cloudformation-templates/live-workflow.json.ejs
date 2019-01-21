@@ -366,7 +366,7 @@
     "pPackageName": {
       "Type": "String",
       "Description": "lambda package zip file",
-      "Default": "psdemo-js-live-workflow_v0.3.0.zip"
+      "Default": "psdemo-js-live-workflow_v0.4.0.zip"
     },
 
     "pInputSecurityGroup": {
@@ -523,44 +523,44 @@
     <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
     "oPrimaryHlsEgress": {
       "Value": {
-        "Fn::If": [
-          "cEnableDistribution",
-          { "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryHlsEndpoint" ] },
-          { "Fn::GetAtt": [ "rMP", "Outputs.oHlsEndpoint" ] }
-        ]
+        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+          "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryHlsEndpoint" ]
+        <% } else { %>
+          "Fn::GetAtt": [ "rMP", "Outputs.oHlsEndpoint" ]
+        <% } %>
       },
       "Description": "(P) HLS Egress Url"
     },
 
     "oPrimaryDashEgress": {
       "Value": {
-        "Fn::If": [
-          "cEnableDistribution",
-          { "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryDashEndpoint" ] },
-          { "Fn::GetAtt": [ "rMP", "Outputs.oDashEndpoint" ] }
-        ]
+        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+          "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryDashEndpoint" ]
+        <% } else { %>
+          "Fn::GetAtt": [ "rMP", "Outputs.oDashEndpoint" ]
+        <% } %>
       },
       "Description": "(P) DASH Egress Url"
     },
 
     "oPrimaryMssEgress": {
       "Value": {
-        "Fn::If": [
-          "cEnableDistribution",
-          { "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryMssEndpoint" ] },
-          { "Fn::GetAtt": [ "rMP", "Outputs.oMssEndpoint" ] }
-        ]
+        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+          "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryMssEndpoint" ]
+        <% } else { %>
+          "Fn::GetAtt": [ "rMP", "Outputs.oMssEndpoint" ]
+        <% } %>
       },
       "Description": "(P) MSS Egress Url"
     },
 
     "oPrimaryCmafEgress": {
       "Value": {
-        "Fn::If": [
-          "cEnableDistribution",
-          { "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryCmafEndpoint" ] },
-          { "Fn::GetAtt": [ "rMP", "Outputs.oCmafEndpoint" ] }
-        ]
+        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+          "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryCmafEndpoint" ]
+        <% } else { %>
+          "Fn::GetAtt": [ "rMP", "Outputs.oCmafEndpoint" ]
+        <% } %>
       },
       "Description": "(P) CMAF Egress Url"
     },
