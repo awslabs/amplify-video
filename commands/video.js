@@ -21,7 +21,7 @@ module.exports = {
       },
       {
         name: 'update',
-        description: chalk`{bold !DOES NOT WORK IF RESOURCES ALREADY DEPLOYED!} Takes you through a CLI flow to update a ${featureName} resource {bold !DOES NOT WORK!}`,
+        description: `Takes you through a CLI flow to update a ${featureName} resource`,
       },
       {
         name: 'push',
