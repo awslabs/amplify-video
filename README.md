@@ -12,10 +12,10 @@ Please refer to the getting started guide on their [Github repo](https://github.
 
 After installing the official CLI you now have to install this on your local machine. Their are two methods for doing this.
 
-### NPM Installation guide
+### NPM Installation guide (Not released yet)
 
 ```
-npm i amplify-elemental-plugin -g
+npm i amplify-category-video -g
 ```
 
 ### Manually installing
@@ -41,7 +41,7 @@ Command to configure the params for setting up a livestream. Run `amplify video 
 
 ### amplify video update
 
-Command to update your params for your video setup (Not working currently)
+Command to update your params for your video setup
 
 ### amplify video setup
 
