@@ -5,6 +5,7 @@ module.exports = {
   name: featureName,
   run: async (context) => {
     if (/^win/.test(process.platform)) {
+      console.log('test');
       try {
         const { run } = require(`./${featureName}/${context.parameters.first}`);
         return run(context);
@@ -14,6 +15,7 @@ module.exports = {
     }
     const header = `amplify ${featureName} <subcommand>`;
 
+    console.log(context.parameters.first, 'blah blah blah');
     const commands = [
       {
         name: 'add',
@@ -30,6 +32,14 @@ module.exports = {
       {
         name: 'get-info',
         description: `Gets info for ${featureName} resource from the CloudFormation template`,
+      },
+      {
+        name: 'start',
+        description: `Starts your ${featureName} stream from an idle state`,
+      },
+      {
+        name: 'stop',
+        description: `Puts your ${featureName} stream into an idle state`,
       },
       {
         name: 'remove',

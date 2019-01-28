@@ -19,8 +19,11 @@ module.exports = context => {
   context.removeLiveStream = async() => {
     await removeLiveStream(context);
   }
+  context.updateWithProps = async(context, options, props) => {
+    await copyFilesToLocal(context, options, props, 'update');
+    await copyFilesToS3(context, options, props);
+  }
 }
-
 
 async function removeLiveStream(context){
   context.amplify.removeResource(context, 'Elemental');
