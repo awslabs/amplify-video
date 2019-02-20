@@ -43,6 +43,14 @@ Command to configure the params for setting up a livestream. Run `amplify video 
 
 Command to update your params for your video setup
 
+### amplify video start
+
+Command to start your video stream
+
+### amplify video stop
+
+Command to stop your video stream
+
 ### amplify video setup
 
 Command to repush the CloudFormation dependancies to the S3.

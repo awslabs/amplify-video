@@ -95,7 +95,9 @@ async function copyFilesToS3(context, options, props){
   const projectConfig = amplify.getProjectConfig();
   const targetDir = amplify.pathManager.getBackendDirPath();
   const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  const provider = require(projectConfig.providers[options.providerPlugin]);
+  const provider = context.amplify
+  .getPluginInstance(context, options.providerPlugin);
+  //const provider = require(projectConfig.providers.projectConfig[options.providerPlugin]);
   const aws = await provider.getConfiguredAWSClient(context);
   const s3Client = new aws.S3();
   const distributionDirPath = `${targetDir}/Elemental/${props.shared.resourceName}/src/`;

@@ -57,6 +57,12 @@
         }
       ],
       "ParameterLabels": {
+        "env":{
+          "default": "Env variable for Amplify"
+        },
+        "pProjectName": {
+          "default": "Your project name"
+        },
         "pS3": {
           "default": "S3 Bucket Name"
         },
@@ -152,7 +158,25 @@
           "pProvisionLambdaHandler": "orchestration.MediaPackageChannel",
 
           "pChannelId": {
-            "Fn::Sub": "<%= props.shared.resourceName %>"
+            "Fn::If": [
+              "HasEnvironmentParameter",
+              {
+                "Fn::Join": [
+                  "-",
+                  [
+                    {
+                      "Ref": "pProjectName"
+                    },
+                    {
+                      "Ref": "env"
+                    }
+                  ]
+                ]
+              },
+              {
+                "Ref": "pProjectName"
+              }
+            ]
           },
 
           "pIngestType": "hls",
@@ -202,7 +226,25 @@
           "pProvisionLambdaHandler": "orchestration.MediaLiveChannel",
 
           "pChannelId": {
-            "Fn::Sub": "<%= props.shared.resourceName %>"
+            "Fn::If": [
+              "HasEnvironmentParameter",
+              {
+                "Fn::Join": [
+                  "-",
+                  [
+                    {
+                      "Ref": "pProjectName"
+                    },
+                    {
+                      "Ref": "env"
+                    }
+                  ]
+                ]
+              },
+              {
+                "Ref": "pProjectName"
+              }
+            ]
           },
 
           "pInputSecurityGroup": {
@@ -279,7 +321,25 @@
           "pProvisionLambdaHandler": "orchestration.MediaStoreContainer",
 
           "pContainerName": {
-            "Fn::Sub": "<%= props.shared.resourceName %>"
+            "Fn::If": [
+              "HasEnvironmentParameter",
+              {
+                "Fn::Join": [
+                  "-",
+                  [
+                    {
+                      "Ref": "pProjectName"
+                    },
+                    {
+                      "Ref": "env"
+                    }
+                  ]
+                ]
+              },
+              {
+                "Ref": "pProjectName"
+              }
+            ]
           }
         }
       }
@@ -312,7 +372,25 @@
           },
 
           "pChannelId": {
-            "Fn::Sub": "<%= props.shared.resourceName %>"
+            "Fn::If": [
+              "HasEnvironmentParameter",
+              {
+                "Fn::Join": [
+                  "-",
+                  [
+                    {
+                      "Ref": "pProjectName"
+                    },
+                    {
+                      "Ref": "env"
+                    }
+                  ]
+                ]
+              },
+              {
+                "Ref": "pProjectName"
+              }
+            ]
           },
 
           "pPriceClass": {
@@ -350,6 +428,16 @@
   },
 
   "Parameters": {
+    "env": {
+      "Type": "String",
+      "Description": "The environment name. e.g. Dev, Test, or Production",
+      "Default": "NONE"
+    },
+    "pProjectName": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "Default": "<%= props.shared.resourceName %>"
+    },
     "pS3": {
       "Type": "String",
       "Description": "store template and lambda package",
@@ -490,13 +578,24 @@
         }
       ]
     },
-
     "cEnableMediaStore": {
       "Fn::Equals": [ { "Ref": "pEnableMediaStore" }, "YES" ]
     },
 
     "cEnableDistribution": {
       "Fn::Equals": [ { "Ref": "pEnableDistribution" }, "YES" ]
+    },
+    "HasEnvironmentParameter": {
+      "Fn::Not": [
+          {
+              "Fn::Equals": [
+                  {
+                      "Ref": "env"
+                  },
+                  "NONE"
+              ]
+          }
+      ]
     }
   },
 
