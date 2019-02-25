@@ -15,7 +15,6 @@ module.exports = {
     }
     const header = `amplify ${featureName} <subcommand>`;
 
-    console.log(context.parameters.first, 'blah blah blah');
     const commands = [
       {
         name: 'add',

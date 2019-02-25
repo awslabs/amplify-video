@@ -4,7 +4,7 @@ const chalk = require('chalk');
 module.exports = context => {
   context.getInfo = async () => {
     let options = {
-      service: 'Elemental',
+      service: 'video',
       providerPlugin: 'awscloudformation'
     };
     await getLiveStreamInfo(context, options)
@@ -15,28 +15,28 @@ async function getLiveStreamInfo(context, options){
   const { amplify } = context;
   let project;
   const amplifyMeta = context.amplify.getProjectMeta();
-  if (!amplifyMeta.Elemental){
-    chalk.bold("You have no Elemental projects.");
+  if (!amplifyMeta.video){
+    chalk.bold("You have no video projects.");
   }
   const chooseProject = [
     {
       type: 'list',
       name: 'resourceName',
       message: 'Choose what project you want to get info for?',
-      choices: Object.keys(amplifyMeta.Elemental),
-      default: Object.keys(amplifyMeta.Elemental)[0],
+      choices: Object.keys(amplifyMeta.video),
+      default: Object.keys(amplifyMeta.video)[0],
     }
   ];
 
-  if(!amplify.Elemental && Object.keys(amplifyMeta.Elemental).length != 0){
+  if(!amplify.video && Object.keys(amplifyMeta.video).length != 0){
     project = await inquirer.prompt(chooseProject);
-    if (amplifyMeta.Elemental[project.resourceName].output){
-      await prettifyOutput(amplifyMeta.Elemental[project.resourceName].output);
+    if (amplifyMeta.video[project.resourceName].output){
+      await prettifyOutput(amplifyMeta.video[project.resourceName].output);
     } else {
       console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
     }
   } else {
-    console.log(chalk.bold("You have no Elemental projects."));
+    console.log(chalk.bold("You have no video projects."));
     return;
   }
 }
