@@ -6,7 +6,7 @@ const {copyFilesToLocal, copyFilesToS3} = require('./livestream-push');
 module.exports = context => {
   context.startStream = async () => {
     let options = {
-      service: 'Elemental',
+      service: 'video',
       providerPlugin: 'awscloudformation',
       start: true
     };
@@ -14,7 +14,7 @@ module.exports = context => {
   }
   context.stopStream = async () => {
     let options = {
-      service: 'Elemental',
+      service: 'video',
       providerPlugin: 'awscloudformation',
       start: false
     };
@@ -30,31 +30,31 @@ async function startStop(context, options){
     if (debug == true){
       return;
     } else {
-    if (!amplifyMeta.Elemental){
-      chalk.bold("You have no Elemental projects.");
+    if (!amplifyMeta.video){
+      chalk.bold("You have no video projects.");
     }
     const chooseProject = [
       {
         type: 'list',
         name: 'resourceName',
         message: `Choose what project you want to ${ options.start ? 'start' : 'stop'}?`,
-        choices: Object.keys(amplifyMeta.Elemental),
-        default: Object.keys(amplifyMeta.Elemental)[0],
+        choices: Object.keys(amplifyMeta.video),
+        default: Object.keys(amplifyMeta.video)[0],
       }
     ];
   
-    if(!amplify.Elemental && Object.keys(amplifyMeta.Elemental).length != 0){
+    if(!amplify.video && Object.keys(amplifyMeta.video).length != 0){
       project = await inquirer.prompt(chooseProject);
-      if (amplifyMeta.Elemental[project.resourceName].output){
+      if (amplifyMeta.video[project.resourceName].output){
         const targetDir = amplify.pathManager.getBackendDirPath();
         try {
-            let props = JSON.parse(fs.readFileSync(`${targetDir}/Elemental/${project.resourceName}/props.json`));
+            let props = JSON.parse(fs.readFileSync(`${targetDir}/video/${project.resourceName}/props.json`));
             if ( (props.mediaLive.autoStart === 'YES' && !options.start) || (props.mediaLive.autoStart === 'NO' && options.start) ){
                 props.mediaLive.autoStart = options.start ? 'YES' : 'NO';
                 await context.updateWithProps(context, options, props);
-                amplify.pushResources(context, 'Elemental', project.resourceName).catch((err) => {
+                amplify.pushResources(context, 'video', project.resourceName).catch((err) => {
                     context.print.info(err.stack);
-                    context.print.error('There was an error pushing the Elemental resource');
+                    context.print.error('There was an error pushing the video resource');
                 });
             } else {
                 console.log(chalk`{bold ${project.resourceName} is already ${options.start ? 'running' : 'stopped'}.}`);
@@ -63,12 +63,12 @@ async function startStop(context, options){
             console.log(err);
         //Do nothing
         }
-        //await prettifyOutput(amplifyMeta.Elemental[project.resourceName].output, project.resourceName);
+        //await prettifyOutput(amplifyMeta.video[project.resourceName].output, project.resourceName);
       } else {
         console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
       }
     } else {
-      console.log(chalk.bold("You have no Elemental projects."));
+      console.log(chalk.bold("You have no video projects."));
       return;
     }
   }    

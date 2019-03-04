@@ -11,17 +11,17 @@ module.exports = {
        type: 'list',
        name: 'resourceName',
        message: 'Choose what project you want to update?',
-       choices: Object.keys(context.amplify.getProjectMeta().Elemental),
-       default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+       choices: Object.keys(context.amplify.getProjectMeta().video),
+       default: Object.keys(context.amplify.getProjectMeta().video)[0],
      }
    ];
 
    answer = await inquirer.prompt(chooseProject);
 
-   return amplify.pushResources(context, 'Elemental', answer.resourceName)
+   return amplify.pushResources(context, 'video', answer.resourceName)
          .catch((err) => {
         context.print.info(err.stack);
-        context.print.error('There was an error pushing the Elemental resource');
+        context.print.error('There was an error pushing the video resource');
    });
  }
 }

@@ -26,12 +26,12 @@ module.exports = context => {
 }
 
 async function removeLiveStream(context){
-  context.amplify.removeResource(context, 'Elemental');
+  context.amplify.removeResource(context, 'video');
 }
 
 async function resetupLivestream(context){
   let options = {
-    service: 'Elemental',
+    service: 'video',
     providerPlugin: 'awscloudformation'
   };
 
@@ -42,8 +42,8 @@ async function resetupLivestream(context){
       type: 'list',
       name: 'resourceName',
       message: 'Choose what project you want to push the default templates to s3 again?',
-      choices: Object.keys(context.amplify.getProjectMeta().Elemental),
-      default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+      choices: Object.keys(context.amplify.getProjectMeta().video),
+      default: Object.keys(context.amplify.getProjectMeta().video)[0],
     }
   ];
 
@@ -56,7 +56,7 @@ async function resetupLivestream(context){
 
 async function updateLiveStream(context){
   let options = {
-    service: 'Elemental',
+    service: 'video',
     providerPlugin: 'awscloudformation'
   };
 
@@ -66,8 +66,8 @@ async function updateLiveStream(context){
       type: 'list',
       name: 'resourceName',
       message: 'Choose what project you want to update?',
-      choices: Object.keys(context.amplify.getProjectMeta().Elemental),
-      default: Object.keys(context.amplify.getProjectMeta().Elemental)[0],
+      choices: Object.keys(context.amplify.getProjectMeta().video),
+      default: Object.keys(context.amplify.getProjectMeta().video)[0],
     }
   ];
 
@@ -81,7 +81,7 @@ async function updateLiveStream(context){
 
 async function addLivestream(context){
   let options = {
-    service: 'Elemental',
+    service: 'video',
     providerPlugin: 'awscloudformation'
   };
   
@@ -95,12 +95,12 @@ async function copyFilesToS3(context, options, props){
   const projectConfig = amplify.getProjectConfig();
   const targetDir = amplify.pathManager.getBackendDirPath();
   const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  const provider = context.amplify
-  .getPluginInstance(context, options.providerPlugin);
+  const provider = context.amplify.getPluginInstance(context, options.providerPlugin);
+  //console.log(provider);
   //const provider = require(projectConfig.providers.projectConfig[options.providerPlugin]);
   const aws = await provider.getConfiguredAWSClient(context);
   const s3Client = new aws.S3();
-  const distributionDirPath = `${targetDir}/Elemental/${props.shared.resourceName}/src/`;
+  const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/src/`;
   let fileuploads = fs.readdirSync(distributionDirPath);
 
   fileuploads.forEach((filePath) => {
@@ -139,7 +139,7 @@ async function copyFilesToLocal(context, options, props, type){
     {
         dir: pluginDir,
         template: `cloudformation-templates/live-workflow.json.ejs`,
-        target: `${targetDir}/Elemental/${props.shared.resourceName}/${props.shared.resourceName}-live-workflow-template.json`,
+        target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-live-workflow-template.json`,
     }
   ];
 
@@ -147,17 +147,17 @@ async function copyFilesToLocal(context, options, props, type){
 
   if (type == "add"){
     context.amplify.updateamplifyMetaAfterResourceAdd(
-      "Elemental",
+      "video",
       props.shared.resourceName,
       options,
     );
   } else if (type == "update"){
-    if (options.sha == context.amplify.getProjectMeta().Elemental[props.shared.resourceName].sha){
+    if (options.sha == context.amplify.getProjectMeta().video[props.shared.resourceName].sha){
       console.log("Same setting detected. Not updating project.");
       return
     } else{
       context.amplify.updateamplifyMetaAfterResourceUpdate(
-        "Elemental",
+        "video",
         props.shared.resourceName,
         'sha',
         options.sha
@@ -169,15 +169,15 @@ async function copyFilesToLocal(context, options, props, type){
 
   let fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
 
-  if (!fs.existsSync(`${targetDir}/Elemental/${props.shared.resourceName}/src/`)){
-    fs.mkdirSync(`${targetDir}/Elemental/${props.shared.resourceName}/src/`);
+  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/src/`)){
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/src/`);
   }
 
   fileuploads.forEach((filePath) => {
-    fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/Elemental/${props.shared.resourceName}/src/${filePath}`);
+    fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/src/${filePath}`);
   });
 
-  fs.writeFileSync(`${targetDir}/Elemental/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
+  fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function serviceQuestions(context, resourceName){
@@ -195,13 +195,13 @@ async function serviceQuestions(context, resourceName){
   defaults = JSON.parse(fs.readFileSync(`${__dirname}/livestream-defaults.json`));
   defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
   try {
-    let oldValues = JSON.parse(fs.readFileSync(`${targetDir}/Elemental/${resourceName}/props.json`));
+    let oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
     Object.assign(defaults,oldValues);
   } catch (err){
     //Do nothing
   }
 
-  serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`))['Elemental'];
+  serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`))['video'];
 
   const { inputs } = serviceMetadata;
 
@@ -329,7 +329,6 @@ async function serviceQuestions(context, resourceName){
         default: defaults["cloudFront"][inputs[14].key],
     }
   ]
-
   if (resourceName){
     resource.name = resourceName;
   } else {
