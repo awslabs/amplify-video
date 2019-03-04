@@ -9,40 +9,59 @@ module.exports = context => {
     };
     await getLiveStreamInfo(context, options)
   }
+
+  context.getInfoAll = async () => {
+    let options = {
+      service: 'video',
+      providerPlugin: 'awscloudformation'
+    };
+    await getLiveStreamInfoAll(context, options)
+  }
 }
+
+async function getLiveStreamInfoAll(context, options){
+  const { amplify } = context;
+  const amplifyMeta = context.amplify.getProjectMeta();
+  if(typeof amplifyMeta.video != "undefined" && Object.keys(amplifyMeta.video).length != 0){
+    for(var project in amplifyMeta.video){
+      if (amplifyMeta.video[project].output){
+        await prettifyOutput(amplifyMeta.video[project].output);
+      }
+    }
+  } else {
+    return;
+  }
+}
+
 
 async function getLiveStreamInfo(context, options){
   const { amplify } = context;
   let project;
   const amplifyMeta = context.amplify.getProjectMeta();
-  if (!amplifyMeta.video){
-    chalk.bold("You have no video projects.");
-  }
-  const chooseProject = [
-    {
-      type: 'list',
-      name: 'resourceName',
-      message: 'Choose what project you want to get info for?',
-      choices: Object.keys(amplifyMeta.video),
-      default: Object.keys(amplifyMeta.video)[0],
-    }
-  ];
-
-  if(!amplify.video && Object.keys(amplifyMeta.video).length != 0){
+  if (typeof amplifyMeta.video == "undefined" || Object.keys(amplifyMeta.video).length == 0){
+    console.log(chalk.bold("You have no video projects."));
+    return;
+  } else {
+    const chooseProject = [
+      {
+        type: 'list',
+        name: 'resourceName',
+        message: 'Choose what project you want to get info for?',
+        choices: Object.keys(amplifyMeta.video),
+        default: Object.keys(amplifyMeta.video)[0],
+      }
+    ];
     project = await inquirer.prompt(chooseProject);
     if (amplifyMeta.video[project.resourceName].output){
       await prettifyOutput(amplifyMeta.video[project.resourceName].output);
     } else {
       console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
     }
-  } else {
-    console.log(chalk.bold("You have no video projects."));
-    return;
   }
 }
 
 async function prettifyOutput(output){
-  console.log(chalk.bold("MediaLive"));
+  console.log(chalk.bold("\nMediaLive"));
   console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
   var primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
   console.log(chalk`MediaLive Primary Stream Key: ${primaryKey[3]}\n`);
