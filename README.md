@@ -67,28 +67,6 @@ Command to return the CloudFormation outputs.
 
 Command to remove a project that you have made. To remove from the cloud you must run `amplify livestream push` or `amplify push`
 
+## License
 
-## Contributing
-
-Current version: `Beta`
-
-Using Cloudformation to deploy elemental: `False`
-
-Version number meaning: `x.y.z`
-
-`x` is major
-`y` is minor
-`z` is bug fix
-
-Commit messages must follow:
-```
-
-Beta vx.y.z
-    
-Initial plugin to create the elemental resources to host a AWS Video Services
-
-- (Changes in details)
-
-Please note this uses lambda functions to deploy the resources as there is no cloudformation support for elemental yet.
-
-```
+This library is licensed under the Apache 2.0 License. 

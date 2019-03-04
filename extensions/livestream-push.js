@@ -96,8 +96,7 @@ async function copyFilesToS3(context, options, props){
   const targetDir = amplify.pathManager.getBackendDirPath();
   const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
   const provider = context.amplify.getPluginInstance(context, options.providerPlugin);
-  //console.log(provider);
-  //const provider = require(projectConfig.providers.projectConfig[options.providerPlugin]);
+
   const aws = await provider.getConfiguredAWSClient(context);
   const s3Client = new aws.S3();
   const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/src/`;
