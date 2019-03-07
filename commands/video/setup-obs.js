@@ -1,6 +1,6 @@
 module.exports = {
- name: 'setup-obs',
- run: async (context) => {
-   context.setupOBS()
- }
-}
+  name: 'setup-obs',
+  run: async (context) => {
+    context.setupOBS();
+  },
+};
