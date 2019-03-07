@@ -17,8 +17,8 @@ async function console(context) {
   context.print.info(`to be implemented: ${category} console`);
 }
 
-async function callback(context){
-    context.getInfoAll();
+async function callback(context) {
+  context.getInfoAll();
 }
 
 

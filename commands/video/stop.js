@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'stop',
-    run: async (context) => {
-        context.stopStream();
-    }
-}
+  name: 'stop',
+  run: async (context) => {
+    context.stopStream();
+  },
+};
