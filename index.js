@@ -17,7 +17,7 @@ async function console(context) {
   context.print.info(`to be implemented: ${category} console`);
 }
 
-async function callback(context) {
+async function onAmplifyCategoryOutputChange(context) {
   context.getInfoAll();
 }
 
@@ -55,5 +55,5 @@ module.exports = {
   add,
   console,
   migrate,
-  callback,
+  onAmplifyCategoryOutputChange,
 };
