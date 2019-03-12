@@ -1,11 +1,13 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-
----
+title: ''
+labels: ''
 
 >**Note**: If your issue/bug is regarding the AWS Amplify Console service, please log it in the 
 [official AWS Amplify Console forum](https://forums.aws.amazon.com/forum.jspa?forumID=314&start=0)
+
+---
 
 **Describe the bug**
 A clear and concise description of what the bug is.
