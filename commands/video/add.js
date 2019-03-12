@@ -1,6 +1,6 @@
 module.exports = {
- name: 'add',
- run: async (context) => {
-   context.createLiveStream();
- }
-}
+  name: 'add',
+  run: async (context) => {
+    context.createLiveStream();
+  },
+};

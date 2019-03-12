@@ -12,7 +12,7 @@ Please refer to the getting started guide on their [Github repo](https://github.
 
 After installing the official CLI you now have to install this on your local machine. Their are two methods for doing this.
 
-### NPM Installation guide (Not released yet)
+### NPM Installation guide
 
 ```
 npm i amplify-category-video -g

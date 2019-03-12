@@ -1,5 +1,4 @@
 const featureName = 'video';
-const chalk = require('chalk');
 
 module.exports = {
   name: featureName,
@@ -46,7 +45,7 @@ module.exports = {
       },
       {
         name: 'setup-obs',
-        description: `Sets up OBS with your stream settings.`,
+        description: 'Sets up OBS with your stream settings.',
       },
     ];
 
