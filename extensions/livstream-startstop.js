@@ -50,7 +50,9 @@ async function startStop(context, options) {
           const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${project.resourceName}/props.json`));
           if ((props.mediaLive.autoStart === 'YES' && !options.start) || (props.mediaLive.autoStart === 'NO' && options.start)) {
             props.mediaLive.autoStart = options.start ? 'YES' : 'NO';
-            await context.updateWithProps(context, options, props);
+            props.shared.resourceName = project.resourceName;
+            await context.updateWithProps(options, props);
+            amplify.constructExeInfo(context);
             amplify.pushResources(context, 'video', project.resourceName).catch((err) => {
               context.print.info(err.stack);
               context.print.error('There was an error pushing the video resource');

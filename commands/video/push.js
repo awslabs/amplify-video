@@ -16,7 +16,7 @@ module.exports = {
     ];
 
     const answer = await inquirer.prompt(chooseProject);
-
+    amplify.constructExeInfo(context);
     return amplify.pushResources(context, 'video', answer.resourceName)
       .catch((err) => {
         context.print.info(err.stack);
