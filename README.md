@@ -1,4 +1,4 @@
-# Amplify Elemental Plugin
+# Amplify Video Plugin
 
 Welcome to the first 3rd party plugin for Amplify that supports setting up AWS Video Services.
 
