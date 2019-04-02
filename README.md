@@ -60,7 +60,7 @@ Command to return the CloudFormation outputs.
 
 ### amplify video remove
 
-Command to remove a project that you have made. To remove from the cloud you must run `amplify livestream push` or `amplify push`
+Command to remove a project that you have made. To remove from the cloud you must run `amplify video push` or `amplify push`
 
 ## License
 
