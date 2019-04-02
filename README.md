@@ -1,16 +1,12 @@
 # Amplify Video Plugin
 
-Welcome to the first 3rd party plugin for Amplify that supports setting up AWS Video Services.
+An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
 ## Installation Guide
 
-To get started with installing make sure you have installed the Amplify CLI.
+To get started install the Amplify CLI via the getting started guide on the [Amplify-CLI Github repo](https://github.com/aws-amplify/amplify-cli/).
 
-
-Please refer to the getting started guide on their [Github repo](https://github.com/aws-amplify/amplify-cli/).
-
-
-After installing the official CLI you now have to install this on your local machine. Their are two methods for doing this.
+Now, install this Amplify Video plugin through NPM or manually:
 
 ### NPM Installation guide
 
@@ -26,7 +22,6 @@ npm i amplify-category-video -g
 ```
 npm install -g
 ```
-
 
 ## Usage
 
