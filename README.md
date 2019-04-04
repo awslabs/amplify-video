@@ -36,15 +36,15 @@ Command to configure the params for setting up a livestream. Run `amplify video 
 
 ### amplify video update
 
-Command to update your params for your video setup
+Command to update your params for your video setup.
 
 ### amplify video start
 
-Command to start your video stream
+Command to start your video stream.
 
 ### amplify video stop
 
-Command to stop your video stream
+Command to stop your video stream.
 
 ### amplify video setup
 
@@ -57,6 +57,10 @@ Command to push a specific video project.
 ### amplify video get-info
 
 Command to return the CloudFormation outputs.
+
+### amplify video setup-obs
+
+Command to create and import a preconfigured OBS profile.
 
 ### amplify video remove
 
