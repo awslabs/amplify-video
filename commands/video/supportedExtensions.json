@@ -1,0 +1,16 @@
+{
+    "key": "extension",
+    "question": "What project would you like to make?",
+    "type":"list",
+    "options": [
+        {
+            "name": "Livestream",
+            "value": "livestream"
+        },
+        {
+            "name": "Video On Demand",
+            "value": "vod"
+        }
+    ],
+    "required": true
+}

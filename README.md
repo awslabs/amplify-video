@@ -1,4 +1,4 @@
-# Amplify Video Plugin
+# Amplify Video Plugin (Alpha) - Includes VOD
 
 An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
