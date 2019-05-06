@@ -98,7 +98,7 @@ async function copyFilesToS3(context, options, props) {
 
   const aws = await provider.getConfiguredAWSClient(context);
   const s3Client = new aws.S3();
-  const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/src/`;
+  const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`;
   const fileuploads = fs.readdirSync(distributionDirPath);
 
   fileuploads.forEach((filePath) => {
@@ -115,7 +115,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
   const contentType = mime.lookup(relativeFilePath);
   const uploadParams = {
     Bucket: hostingBucketName,
-    Key: `src/${filePath}`,
+    Key: `livestream-helpers/${filePath}`,
     Body: fileStream,
     ContentType: contentType || 'text/plain',
     ACL: 'public-read',
@@ -123,7 +123,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
 
   s3Client.upload(uploadParams, (err) => {
     if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify livestream setup'));
+      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
     }
   });
 }
@@ -164,14 +164,14 @@ async function copyFilesToLocal(context, options, props, type) {
 
   await context.amplify.copyBatch(context, copyJobs, props);
 
-  const fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/src/`);
+  const fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/livestream-helpers/`);
 
-  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/src/`)) {
-    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/src/`);
+  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`)) {
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`);
   }
 
   fileuploads.forEach((filePath) => {
-    fs.copyFileSync(`${pluginDir}/cloudformation-templates/src/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/src/${filePath}`);
+    fs.copyFileSync(`${pluginDir}/cloudformation-templates/livestream-helpers/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/livestream-helpers/${filePath}`);
   });
 
   fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));

@@ -93,7 +93,7 @@
     "pZipFile": {
       "Type": "String",
       "Description": "zip file package path",
-      "Default": "src/psdemo-js-live-workflow_v0.1.0.zip"
+      "Default": "livestream-helpers/psdemo-js-live-workflow_v0.1.0.zip"
     },
 
     "pLambdaFunction": {

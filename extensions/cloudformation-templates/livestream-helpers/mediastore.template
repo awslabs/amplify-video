@@ -129,7 +129,7 @@
     "pSourceFolder": {
       "Type": "String",
       "Description": "store template and lambda package",
-      "Default": "src"
+      "Default": "livestream-helpers"
     },
 
     "pPackageName": {

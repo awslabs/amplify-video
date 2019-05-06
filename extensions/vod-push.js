@@ -20,13 +20,17 @@ async function addVod(context) {
     };
 
     const result = await serviceQuestions(context);
+    //console.log(result);
+    await pushRootTemplate(context, options, result, 'add');
+    await copyFilesToS3(context, options, result);
 
-    console.log(result);
+    //console.log(result);
 }
 
 async function serviceQuestions(context){
     const { amplify } = context;
     let props = {};
+    //props.shared = {};
     //let defaults = {};
     //defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
     let inputs = question.video.inputs;
@@ -40,7 +44,7 @@ async function serviceQuestions(context){
     }];
 
     const nameDict = await inquirer.prompt(nameProject);
-    props.name = nameDict.name;
+    props.shared = nameDict;
 
     const profileQuestion = [
         {
@@ -90,4 +94,91 @@ async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
+}
+
+async function pushRootTemplate(context, options, props, type){
+    const { amplify } = context;
+    const targetDir = amplify.pathManager.getBackendDirPath();
+    const pluginDir = __dirname;
+  
+    const copyJobs = [
+      {
+        dir: pluginDir,
+        template: 'cloudformation-templates/vod-workflow.json.ejs',
+        target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-vod-workflow-template.json`,
+      },
+    ];
+  
+    options.sha = sha1(JSON.stringify(props));
+  
+    if (type === 'add') {
+      context.amplify.updateamplifyMetaAfterResourceAdd(
+        'video',
+        props.shared.resourceName,
+        options,
+      );
+    } else if (type === 'update') {
+      if (options.sha === context.amplify.getProjectMeta().video[props.shared.resourceName].sha) {
+        console.log('Same setting detected. Not updating project.');
+        return;
+      }
+      context.amplify.updateamplifyMetaAfterResourceUpdate(
+        'video',
+        props.shared.resourceName,
+        'sha',
+        options.sha,
+      );
+    }
+  
+    await context.amplify.copyBatch(context, copyJobs, props);
+  
+    const fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/vod-helpers/`);
+  
+    if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/vod-helpers/`)) {
+      fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/vod-helpers/`);
+    }
+  
+    fileuploads.forEach((filePath) => {
+      fs.copyFileSync(`${pluginDir}/cloudformation-templates/vod-helpers/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/vod-helpers/${filePath}`);
+    });
+  
+    fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
+}
+
+async function copyFilesToS3(context, options, props) {
+    const { amplify } = context;
+    const targetDir = amplify.pathManager.getBackendDirPath();
+    const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+    const provider = context.amplify.getPluginInstance(context, options.providerPlugin);
+
+    const aws = await provider.getConfiguredAWSClient(context);
+    const s3Client = new aws.S3();
+    const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/vod-helpers/`;
+    const fileuploads = fs.readdirSync(distributionDirPath);
+
+    fileuploads.forEach((filePath) => {
+        uploadFile(s3Client, targetBucket, distributionDirPath, filePath);
+    });
+}
+  
+async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath) {
+    let relativeFilePath = path.relative(distributionDirPath, filePath);
+
+    relativeFilePath = relativeFilePath.replace(/\\/g, '/');
+
+    const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
+    const contentType = mime.lookup(relativeFilePath);
+    const uploadParams = {
+        Bucket: hostingBucketName,
+        Key: `vod-helpers/${filePath}`,
+        Body: fileStream,
+        ContentType: contentType || 'text/plain',
+        ACL: 'public-read',
+    };
+
+    s3Client.upload(uploadParams, (err) => {
+        if (err) {
+        console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
+        }
+    });
 }
