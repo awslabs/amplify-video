@@ -1,9 +1,7 @@
 const inquirer = require('inquirer');
+const {stageVideo} = require('./helpers/video-staging');
 const fs = require('fs-extra');
-const path = require('path');
-const mime = require('mime-types');
 const chalk = require('chalk');
-const sha1 = require('sha1');
 
 
 module.exports = (context) => {
@@ -20,8 +18,7 @@ module.exports = (context) => {
     await removeLiveStream(context);
   };
   context.updateWithProps = async (options, props) => {
-    await copyFilesToLocal(context, options, props, 'update');
-    await copyFilesToS3(context, options, props);
+    await stageVideo(context, options, result, 'update');
   };
 };
 
@@ -29,34 +26,10 @@ async function removeLiveStream(context) {
   context.amplify.removeResource(context, 'video');
 }
 
-async function resetupLivestream(context) {
-  const options = {
-    service: 'video',
-    providerPlugin: 'awscloudformation',
-  };
-
-  const props = {};
-
-  const chooseProject = [
-    {
-      type: 'list',
-      name: 'resourceName',
-      message: 'Choose what project you want to push the default templates to s3 again?',
-      choices: Object.keys(context.amplify.getProjectMeta().video),
-      default: Object.keys(context.amplify.getProjectMeta().video)[0],
-    },
-  ];
-
-  props.shared = await inquirer.prompt(chooseProject);
-
-  await copyFilesToS3(context, options, props);
-
-  console.log(chalk.bold('Your S3 bucket has been setup.'));
-}
-
 async function updateLiveStream(context) {
   const options = {
     service: 'video',
+    serviceType: 'livestream',
     providerPlugin: 'awscloudformation',
   };
 
@@ -75,106 +48,18 @@ async function updateLiveStream(context) {
 
   const result = await serviceQuestions(context, props.shared.resourceName);
 
-  await copyFilesToLocal(context, options, result, 'update');
-  await copyFilesToS3(context, options, result);
+  await stageVideo(context, options, result, 'update');
 }
 
 async function addLivestream(context) {
   const options = {
     service: 'video',
+    serviceType: 'livestream',
     providerPlugin: 'awscloudformation',
   };
 
   const result = await serviceQuestions(context);
-  await copyFilesToLocal(context, options, result, 'add');
-  await copyFilesToS3(context, options, result);
-}
-
-async function copyFilesToS3(context, options, props) {
-  const { amplify } = context;
-  const targetDir = amplify.pathManager.getBackendDirPath();
-  const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  const provider = context.amplify.getPluginInstance(context, options.providerPlugin);
-
-  const aws = await provider.getConfiguredAWSClient(context);
-  const s3Client = new aws.S3();
-  const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`;
-  const fileuploads = fs.readdirSync(distributionDirPath);
-
-  fileuploads.forEach((filePath) => {
-    uploadFile(s3Client, targetBucket, distributionDirPath, filePath);
-  });
-}
-
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath) {
-  let relativeFilePath = path.relative(distributionDirPath, filePath);
-
-  relativeFilePath = relativeFilePath.replace(/\\/g, '/');
-
-  const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
-  const contentType = mime.lookup(relativeFilePath);
-  const uploadParams = {
-    Bucket: hostingBucketName,
-    Key: `livestream-helpers/${filePath}`,
-    Body: fileStream,
-    ContentType: contentType || 'text/plain',
-    ACL: 'public-read',
-  };
-
-  s3Client.upload(uploadParams, (err) => {
-    if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
-    }
-  });
-}
-
-async function copyFilesToLocal(context, options, props, type) {
-  const { amplify } = context;
-  const targetDir = amplify.pathManager.getBackendDirPath();
-  const pluginDir = __dirname;
-
-  const copyJobs = [
-    {
-      dir: pluginDir,
-      template: 'cloudformation-templates/live-workflow.json.ejs',
-      target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-live-workflow-template.json`,
-    },
-  ];
-
-  options.sha = sha1(JSON.stringify(props));
-
-  if (type === 'add') {
-    context.amplify.updateamplifyMetaAfterResourceAdd(
-      'video',
-      props.shared.resourceName,
-      options,
-    );
-  } else if (type === 'update') {
-    if (options.sha === context.amplify.getProjectMeta().video[props.shared.resourceName].sha) {
-      console.log('Same setting detected. Not updating project.');
-      return;
-    }
-    context.amplify.updateamplifyMetaAfterResourceUpdate(
-      'video',
-      props.shared.resourceName,
-      'sha',
-      options.sha,
-    );
-  }
-
-  await context.amplify.copyBatch(context, copyJobs, props);
-
-  const fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/livestream-helpers/`);
-
-  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`)) {
-    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/livestream-helpers/`);
-  }
-
-  fileuploads.forEach((filePath) => {
-    fs.copyFileSync(`${pluginDir}/cloudformation-templates/livestream-helpers/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/livestream-helpers/${filePath}`);
-  });
-
-  fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
+  await stageVideo(context, options, result, 'add');
 }
 
 async function serviceQuestions(context, resourceName) {

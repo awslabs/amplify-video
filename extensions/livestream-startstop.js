@@ -6,6 +6,7 @@ module.exports = (context) => {
   context.startStream = async () => {
     const options = {
       service: 'video',
+      serviceType: 'livestream',
       providerPlugin: 'awscloudformation',
       start: true,
     };
@@ -14,6 +15,7 @@ module.exports = (context) => {
   context.stopStream = async () => {
     const options = {
       service: 'video',
+      serviceType: 'livestream',
       providerPlugin: 'awscloudformation',
       start: false,
     };
