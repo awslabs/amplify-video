@@ -39,7 +39,7 @@ async function serviceQuestions(context){
     const nameDict = await inquirer.prompt(nameProject);
     props.shared = nameDict;
 
-    const profileQuestion = [
+    const templateQuestion = [ // ask questions
         {
             type: inputs[1].type,
             name: inputs[1].key,
@@ -48,40 +48,21 @@ async function serviceQuestions(context){
             choices: inputs[1].options,
         },
     ];
-    const profile = await inquirer.prompt(profileQuestion);
-    props.profile = profile.encodingProfile;
+    const template = await inquirer.prompt(templateQuestion); // display question
+    props.template = template.encodingTemplate; // save answers in props
 
-    if (profile.encodingProfile === 'advance'){
-        const transcodeTypes = [
+    if (template.encodingTemplate === 'advance'){
+        const encodingTemplateName = [
             {
                 type: inputs[2].type,
                 name: inputs[2].key,
                 message: inputs[2].question,
                 validate: amplify.inputValidation(inputs[2]),
-                choices: inputs[2].options,
             },
         ];
-
-        const inquirerTypes = await inquirer.prompt(transcodeTypes);
-        props.types = inquirerTypes.type;
-        await asyncForEach(inquirerTypes.type, async (element) => {
-            const transcodeQuality = [
-                {
-                    type: inputs[3].type,
-                    name: inputs[3].key,
-                    message: inputs[3].question + ' for ' + element,
-                    validate: amplify.inputValidation(inputs[3]),
-                    choices: inputs[3].options,
-                },
-            ];
-            let inquirerQuality = await inquirer.prompt(transcodeQuality);
-            props[element] = inquirerQuality.quality;
-        });
     }
-
     return props;
 }
-
 
 async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
