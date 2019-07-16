@@ -1,6 +1,6 @@
 module.exports = {
   name: 'remove',
   run: async (context) => {
-    context.removeLiveStream(context);
+    context.amplify.removeResource(context, 'video');
   },
 };

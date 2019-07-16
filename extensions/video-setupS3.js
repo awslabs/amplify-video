@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+const chalk = require('chalk');
 const {copyFilesToS3} = require('./helpers/video-staging');
 
 module.exports = (context) => {
@@ -8,11 +9,6 @@ module.exports = (context) => {
 };
 
 async function resetupLivestream(context) {
-    const options = {
-      service: 'video',
-      serviceType: 'livestream',
-      providerPlugin: 'awscloudformation',
-    };
   
     const props = {};
   
@@ -27,7 +23,9 @@ async function resetupLivestream(context) {
     ];
   
     props.shared = await inquirer.prompt(chooseProject);
-  
+
+    let options = context.amplify.getProjectMeta().video[props.shared.resourceName];
+
     await copyFilesToS3(context, options, props);
   
     console.log(chalk.bold('Your S3 bucket has been setup.'));

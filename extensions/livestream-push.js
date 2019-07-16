@@ -8,23 +8,13 @@ module.exports = (context) => {
   context.createLiveStream = async () => {
     await addLivestream(context);
   };
-  context.pushStaticFiles = async () => {
-    await resetupLivestream(context);
-  };
   context.updateLiveStream = async () => {
     await updateLiveStream(context);
   };
-  context.removeLiveStream = async () => {
-    await removeLiveStream(context);
-  };
   context.updateWithProps = async (options, props) => {
-    await stageVideo(context, options, result, 'update');
+    await stageVideo(context, options, props, 'update');
   };
 };
-
-async function removeLiveStream(context) {
-  context.amplify.removeResource(context, 'video');
-}
 
 async function updateLiveStream(context) {
   const options = {

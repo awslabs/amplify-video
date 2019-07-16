@@ -1,0 +1,21 @@
+archive-source
+ - archives to glacier
+custom-resources
+ - ok but actually what the hell
+ - this does a lot things including but not limited to, sending data (what?!), S3 put notifications, get mediaconvert endpoint, get templates, UUID, 
+encode
+ - creates encoding job
+error handler
+ - looks for errors in cloudwatch and mediaconvert
+input-validate
+ - does input validation (i guess that is useful)
+mediainfo
+ - literally just does analayze function
+output-validatte
+ - cause why not?!
+profiler
+ - uses the video size to determine what we should transcode to
+sns-notifications
+ - spam sns for no good reason...
+step-functions
+- step functions are there....

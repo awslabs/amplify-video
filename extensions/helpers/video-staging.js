@@ -7,7 +7,7 @@ const sha1 = require('sha1');
 async function pushRootTemplate(context, options, props, type){
     const { amplify } = context;
     const targetDir = amplify.pathManager.getBackendDirPath();
-    const pluginDir = __dirname + '/..';
+    const pluginDir = path.join(__dirname + '/..');
     var ending = "json"
 
     if (options.serviceType === 'vod'){

@@ -46,7 +46,7 @@
                 "options": [
                     {
                         "name": "HLS",
-                        "value": "HLS"
+                        "value": "dash"
                     },
                     {
                         "name": "DASH",
