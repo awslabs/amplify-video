@@ -12,77 +12,35 @@
                 "required": true
             },
             {
-                "key": "encodingProfile",
-                "question": "Encoding Profile: ",
+                "key": "encodingTemplate",
+                "question": "Select a system-provided encoding template, specify an already-created template name: ",
                 "type":"list",
                 "options": [
                     {
-                        "name": "Mobile",
-                        "value": "mobile"
+                        "name": "Apple HLS Standard H.264 HD",
+                        "value": "System-Ott_Hls_Ts_Avc_Aac"
                     },
                     {
-                        "name": "Web",
-                        "value": "web"
+                        "name": "MPEG DASH H.264 HD",
+                        "value": "System-Ott_Dash_Mp4_Avc_Aac"
                     },
                     {
-                        "name": "HD (single 1080p)",
-                        "value": "hd"
-                    },
-                    {
-                        "name": "SD (single 480p)",
-                        "value": "sd"
-                    },
-                    {
-                        "name": "Advanced (you choose)",
-                        "value": "advance"
+                        "name": "Advanced (specify template name)",
+                        "value": "advanced"
                     }
                 ],
                 "required": true
             },
             {
-                "key": "type",
-                "question": "Select Transcoding options",
-                "type":"checkbox",
-                "options": [
-                    {
-                        "name": "HLS",
-                        "value": "dash"
-                    },
-                    {
-                        "name": "DASH",
-                        "value": "DASH"
-                    },
-                    {
-                        "name": "RAW",
-                        "value": "RAW"
-                    }
-                ],
-                "required": true
-            },
-            {
-                "key": "quality",
-                "question": "Select Transcoding options",
-                "type":"checkbox",
-                "options": [
-                    {
-                        "name": "4k",
-                        "value": "4080"
-                    },
-                    {
-                        "name": "1080p",
-                        "value": "1080"
-                    },
-                    {
-                        "name": "720p",
-                        "value": "720"
-                    },
-                    {
-                        "name": "480p",
-                        "value": "480"
-                    }
-                ],
-                "required": true
-            }
+              "key": "encodingTemplateName",
+              "question": "Provide a specific MediaConvert template name (must be available in project region):",
+              "validation": {
+                  "operator": "regex",
+                  "value": "^[a-zA-Z0-9]+$",
+                  "onErrorMsg": "Resource name should be alphanumeric"
+              },
+              "required": true
+          }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"
