@@ -1,0 +1,21 @@
+Description: S3 Workflow
+
+Parameters:
+  pBucketName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+
+Resources:
+  InputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref pBucketName
+Outputs:
+  oInputBucketArn:
+    Value: !GetAtt InputBucket.Arn
+    Description: BucketArn
+  oInputBucketName:
+    Value: !Ref InputBucket
+    Description: S3 Bucket Created

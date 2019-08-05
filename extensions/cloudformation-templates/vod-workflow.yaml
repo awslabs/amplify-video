@@ -1,0 +1,90 @@
+Description: Video On Demand workflow Phase 1
+
+Parameters:
+  Env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: amazonbooth
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: vod-helpers
+  pProjectName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: testsampatze
+
+Conditions:
+  HasEnvironmentParameter:
+    !Not [!Equals [!Ref Env, NONE]]
+
+Resources:
+  rS3InputBucket:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
+      Parameters:
+        pBucketName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref Env
+                - 'input'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'input'
+  
+  rLambdaTriggerFunction:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/TriggerLambda.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+        pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pFunctionName: 
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref Env
+                - 's3watcher'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 's3watcher'
+
+  rLambdaTriggerSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3TriggerSetup.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+        pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pTriggerLambda: !GetAtt rLambdaTriggerFunction.Outputs.oLambdaFunction
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref Env
+                - 'cfTrigger'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'cfTrigger'
