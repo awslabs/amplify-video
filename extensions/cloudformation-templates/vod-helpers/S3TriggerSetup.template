@@ -38,27 +38,27 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: s3.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
-  rCreateTriggerLambda:
+  rCreateSetupTriggerLambda:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Ref pFunctionName
       Description: Sends a notification when a new object is put into the bucket
       Handler: index.handler
-      Role: !GetAtt rTriggerLambdaRole.Arn
+      Role: !GetAtt rSetupTriggerLambdaRole.Arn
       Runtime: nodejs10.x
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
-        S3Key: vod-helpers/TriggerLambda.zip
+        S3Key: vod-helpers/SetupTriggerLambda.zip
 
   rCreateTrigger:
     Type: "Custom::Trigger"
     Properties:
-      ServiceToken: !GetAtt rCreateTriggerLambda.Arn
+      ServiceToken: !GetAtt rCreateSetupTriggerLambda.Arn
       BucketName: !Ref pInputS3
       IngestArn: !Ref pTriggerLambda
 
-  rTriggerLambdaRole:
+  rSetupTriggerLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:

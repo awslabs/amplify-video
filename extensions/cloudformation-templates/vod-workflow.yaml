@@ -43,6 +43,24 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'input'
+                
+  rS3OuputBucket:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
+      Parameters:
+        pBucketName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref Env
+                - 'output'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'output'
   
   rLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
