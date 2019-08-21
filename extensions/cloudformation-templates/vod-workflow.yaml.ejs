@@ -1,4 +1,4 @@
-Description: Video On Demand workflow Phase 1
+Description: <%= props.shared.resourceName %>
 
 Parameters:
   Env:
@@ -9,7 +9,7 @@ Parameters:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: amazonbooth
+    Default: "<%= props.shared.bucket %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -19,7 +19,11 @@ Parameters:
     Type: String
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: testsampatze
+    Default: <%= props.shared.resourceName %>
+  pTemplateArn:
+    Type: String
+    Description: Arn for MediaConvert Template
+    Default: <%= props.template.arn %>
 
 Conditions:
   HasEnvironmentParameter:
@@ -71,6 +75,7 @@ Resources:
         pSourceFolder: !Ref pSourceFolder
         pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
         pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pMediaConvertTemplate: !Ref pTemplateArn
         pFunctionName: 
           !If
             - HasEnvironmentParameter

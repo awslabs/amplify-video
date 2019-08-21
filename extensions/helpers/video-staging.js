@@ -62,7 +62,7 @@ async function copyFilesToS3(context, options, props) {
     const { amplify } = context;
     const targetDir = amplify.pathManager.getBackendDirPath();
     const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-    const provider = context.amplify.getPluginInstance(context, options.providerPlugin);
+    const provider = getAWSConfig(context, options);
 
     const aws = await provider.getConfiguredAWSClient(context);
     const s3Client = new aws.S3();
@@ -106,3 +106,5 @@ module.exports = {
     stageVideo,
     copyFilesToS3,
 };
+
+

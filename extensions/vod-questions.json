@@ -32,7 +32,7 @@
                 "required": true
             },
             {
-              "key": "encodingTemplateName",
+              "key": "encodingTemplate",
               "question": "Provide a specific MediaConvert template name (must be available in project region):",
               "validation": {
                   "operator": "regex",
@@ -40,7 +40,7 @@
                   "onErrorMsg": "Resource name should be alphanumeric"
               },
               "required": true
-          }
+            }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

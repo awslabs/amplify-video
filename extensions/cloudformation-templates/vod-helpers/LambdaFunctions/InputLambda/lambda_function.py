@@ -40,10 +40,10 @@ def launch_transcode(s3key):
     res = MEDIACONVERT.list_queues()
     queue = res['Queues'][0]['Arn']
     response = MEDIACONVERT.create_job(
-      JobTemplate= "arn:aws:mediaconvert:us-east-1:585391604912:jobTemplates/System-Ott_Hls_Ts_Avc_Aac",
+      JobTemplate= os.environ["ARN_TEMPLATE"],
       Queue= queue,
       UserMetadata= {},
-      Role= os.environ["mediaconvertrole"],
+      Role= os.environ["MC_ROLE"],
       Settings= {
         "OutputGroups": [
           {

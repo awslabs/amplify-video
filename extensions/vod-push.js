@@ -23,9 +23,7 @@ async function addVod(context) {
 async function serviceQuestions(context){
     const { amplify } = context;
     let props = {};
-    //props.shared = {};
-    //let defaults = {};
-    //defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
+
     let inputs = question.video.inputs;
     const nameProject = [
     {
@@ -38,29 +36,55 @@ async function serviceQuestions(context){
 
     const nameDict = await inquirer.prompt(nameProject);
     props.shared = nameDict;
+    props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
-    const templateQuestion = [ // ask questions
-        {
-            type: inputs[1].type,
-            name: inputs[1].key,
-            message: inputs[1].question,
-            validate: amplify.inputValidation(inputs[1]),
-            choices: inputs[1].options,
-        },
-    ];
-    const template = await inquirer.prompt(templateQuestion); // display question
-    props.template = template.encodingTemplate; // save answers in props
+    const provider = getAWSConfig(context, options);
+    var mc_client = new provider.MediaConvert();
 
-    if (template.encodingTemplate === 'advance'){
-        const encodingTemplateName = [
+    const endpoints = await mc_client.describeEndpoints().promise();
+    provider.config.mediaconvert = {endpoint : endpoints.Endpoints[0].Url};
+    //Override so config applies
+    mc_client = new provider.MediaConvert();
+    var jobTemplate = {};
+    props.template = {};
+    while (!("JobTemplate" in jobTemplate)){
+        const templateQuestion = [
             {
-                type: inputs[2].type,
-                name: inputs[2].key,
-                message: inputs[2].question,
-                validate: amplify.inputValidation(inputs[2]),
+                type: inputs[1].type,
+                name: inputs[1].key,
+                message: inputs[1].question,
+                validate: amplify.inputValidation(inputs[1]),
+                choices: inputs[1].options,
             },
         ];
+        const template = await inquirer.prompt(templateQuestion);
+        
+        if (template.encodingTemplate === 'advance'){
+            const encodingTemplateName = [
+                {
+                    type: inputs[2].type,
+                    name: inputs[2].key,
+                    message: inputs[2].question,
+                    validate: amplify.inputValidation(inputs[2]),
+                },
+            ];
+            const advTemplate = await inquirer.prompt(encodingTemplateName);
+            props.template.name = advTemplate.encodingTemplate;
+        } else {
+            props.template.name = template.encodingTemplate;
+        }
+        var params = {
+            Name: props.template
+        };
+        try {
+            jobTemplate = await mc_client.getJobTemplate(params).promise();
+        } catch (e){
+            console.log(e.message);
+        }
     }
+    
+    props.template.arn = jobTemplate.JobTemplate.Arn
+    
     return props;
 }
 

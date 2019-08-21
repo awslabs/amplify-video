@@ -5,7 +5,7 @@ Parameters:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: amazonbooth
+    Default: s3default
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -25,7 +25,10 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: BucketWatcher
-
+  pMediaConvertTemplate:
+    Type: String
+    Description: MediaConvert Template Arn
+    Default: arn-default
 
 Resources:
   BucketWatcher:
@@ -33,13 +36,18 @@ Resources:
     Properties:
       FunctionName: !Ref pFunctionName
       Description: Sends a notification when a new object is put into the bucket
-      Handler: index.handler
+      Handler: lambda_function.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: python2.7
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
         S3Key: vod-helpers/InputLambda.zip
+      Environment:
+        Variables:
+          ARN_TEMPLATE: !Ref pMediaConvertTemplate
+          MC_ROLE: !GetAtt MediaConvertRole.Arn
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
