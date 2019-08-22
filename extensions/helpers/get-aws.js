@@ -6,6 +6,7 @@ function getAWSConfig(context, options){
       console.log("Falling back to old version of getting AWS SDK. If you see this error you are running an old version of Amplify. Please update as soon as possible!");
       provider = getPluginInstanceShim(context, options.providerPlugin);
     }
+
     return provider;
 }
 

@@ -3,6 +3,7 @@ const path = require('path');
 const mime = require('mime-types');
 const chalk = require('chalk');
 const sha1 = require('sha1');
+const {getAWSConfig} = require('./get-aws');
 
 async function pushRootTemplate(context, options, props, type){
     const { amplify } = context;
@@ -18,7 +19,7 @@ async function pushRootTemplate(context, options, props, type){
       {
         dir: pluginDir,
         template: `cloudformation-templates/${options.serviceType}-workflow.${ending}.ejs`,
-        target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-${options.serviceType}-workflow-template.json`,
+        target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-${options.serviceType}-workflow-template.${ending}`,
       },
     ];
   
@@ -52,7 +53,9 @@ async function pushRootTemplate(context, options, props, type){
     }
   
     fileuploads.forEach((filePath) => {
-      fs.copyFileSync(`${pluginDir}/cloudformation-templates/${options.serviceType}-helpers/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${options.serviceType}-helpers/${filePath}`);
+      if (filePath != 'LambdaFunctions'){
+        fs.copyFileSync(`${pluginDir}/cloudformation-templates/${options.serviceType}-helpers/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${options.serviceType}-helpers/${filePath}`);
+      }
     });
   
     fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
@@ -63,8 +66,8 @@ async function copyFilesToS3(context, options, props) {
     const targetDir = amplify.pathManager.getBackendDirPath();
     const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
     const provider = getAWSConfig(context, options);
-
     const aws = await provider.getConfiguredAWSClient(context);
+
     const s3Client = new aws.S3();
     const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/${options.serviceType}-helpers/`;
     const fileuploads = fs.readdirSync(distributionDirPath);

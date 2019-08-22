@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const question = require('./vod-questions.json');
 const {stageVideo} = require('./helpers/video-staging');
+const {getAWSConfig} = require('./helpers/get-aws');
 
 module.exports = (context) => {
     context.createVod = async () => {
@@ -16,12 +17,13 @@ async function addVod(context) {
         providerPlugin: 'awscloudformation',
     };
 
-    const result = await serviceQuestions(context);
+    const result = await serviceQuestions(context, options);
     stageVideo(context, options, result, 'add');
 }
 
-async function serviceQuestions(context){
+async function serviceQuestions(context, options){
     const { amplify } = context;
+    const projectMeta = context.amplify.getProjectMeta();
     let props = {};
 
     let inputs = question.video.inputs;
@@ -39,12 +41,14 @@ async function serviceQuestions(context){
     props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
     const provider = getAWSConfig(context, options);
-    var mc_client = new provider.MediaConvert();
+    const aws = await provider.getConfiguredAWSClient(context);
+
+    var mc_client = new aws.MediaConvert();
 
     const endpoints = await mc_client.describeEndpoints().promise();
-    provider.config.mediaconvert = {endpoint : endpoints.Endpoints[0].Url};
+    aws.config.mediaconvert = {endpoint : endpoints.Endpoints[0].Url};
     //Override so config applies
-    mc_client = new provider.MediaConvert();
+    mc_client = new aws.MediaConvert();
     var jobTemplate = {};
     props.template = {};
     while (!("JobTemplate" in jobTemplate)){
@@ -74,7 +78,7 @@ async function serviceQuestions(context){
             props.template.name = template.encodingTemplate;
         }
         var params = {
-            Name: props.template
+            Name: props.template.name
         };
         try {
             jobTemplate = await mc_client.getJobTemplate(params).promise();
