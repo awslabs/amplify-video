@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+const chalk = require('chalk');
 const question = require('./vod-questions.json');
 const {stageVideo} = require('./helpers/video-staging');
 const {getAWSConfig} = require('./helpers/get-aws');
@@ -63,7 +64,7 @@ async function serviceQuestions(context, options){
         ];
         const template = await inquirer.prompt(templateQuestion);
         
-        if (template.encodingTemplate === 'advance'){
+        if (template.encodingTemplate === 'advanced'){
             const encodingTemplateName = [
                 {
                     type: inputs[2].type,
@@ -83,17 +84,11 @@ async function serviceQuestions(context, options){
         try {
             jobTemplate = await mc_client.getJobTemplate(params).promise();
         } catch (e){
-            console.log(e.message);
+            console.log(chalk.red(e.message));
         }
     }
     
     props.template.arn = jobTemplate.JobTemplate.Arn
     
     return props;
-}
-
-async function asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
 }
