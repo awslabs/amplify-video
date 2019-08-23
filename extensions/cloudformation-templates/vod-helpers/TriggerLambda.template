@@ -47,6 +47,7 @@ Resources:
         Variables:
           ARN_TEMPLATE: !Ref pMediaConvertTemplate
           MC_ROLE: !GetAtt MediaConvertRole.Arn
+          region: us-west-2
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
