@@ -87,6 +87,7 @@ Resources:
                   - mediaconvert:GetPreset
                   - mediaconvert:ListJobTemplates
                   - mediaconvert:ListJobs
+                  - mediaconvert:ListQueues
                   - mediaconvert:ListPresets
                   - mediaconvert:UpdateJobTemplate
                 Resource:
