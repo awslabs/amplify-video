@@ -1,7 +1,7 @@
 Description: <%= props.shared.resourceName %>
 
 Parameters:
-  Env:
+  env:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
     Default: NONE
@@ -27,7 +27,7 @@ Parameters:
 
 Conditions:
   HasEnvironmentParameter:
-    !Not [!Equals [!Ref Env, NONE]]
+    !Not [!Equals [!Ref env, NONE]]
 
 Resources:
   rS3InputBucket:
@@ -41,7 +41,7 @@ Resources:
             - !Join
               - '-'
               - - !Ref pProjectName
-                - !Ref Env
+                - !Ref env
                 - 'input'
             - !Join
               - '-'
@@ -59,7 +59,7 @@ Resources:
             - !Join
               - '-'
               - - !Ref pProjectName
-                - !Ref Env
+                - !Ref env
                 - 'output'
             - !Join
               - '-'
@@ -82,7 +82,7 @@ Resources:
             - !Join
               - '-'
               - - !Ref pProjectName
-                - !Ref Env
+                - !Ref env
                 - 's3watcher'
             - !Join
               - '-'
@@ -105,7 +105,7 @@ Resources:
             - !Join
               - '-'
               - - !Ref pProjectName
-                - !Ref Env
+                - !Ref env
                 - 'cfTrigger'
             - !Join
               - '-'
