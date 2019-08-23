@@ -20,6 +20,15 @@ Parameters:
     Type: String
     Description: Input S3 Arn
     Default: arn-default
+  pOutputS3:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pOutputS3Arn:
+    Type: String
+    Description: Output S3 Arn
+    Default: arn-default
   pFunctionName:
     Type: String
     Description: ProjectName
@@ -47,7 +56,7 @@ Resources:
         Variables:
           ARN_TEMPLATE: !Ref pMediaConvertTemplate
           MC_ROLE: !GetAtt MediaConvertRole.Arn
-          region: us-west-2
+          S3_OUTPUT_NAME: !Ref pOutputS3
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -119,6 +128,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "${pInputS3Arn}/*" 
+                  - !Sub "${pOutputS3Arn}/*" 
               - Effect: Allow
                 Action:
                   - "execute-api:Invoke"

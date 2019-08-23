@@ -48,7 +48,7 @@ Resources:
               - - !Ref pProjectName
                 - 'input'
                 
-  rS3OuputBucket:
+  rS3OutputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
@@ -75,6 +75,8 @@ Resources:
         pSourceFolder: !Ref pSourceFolder
         pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
         pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+        pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pMediaConvertTemplate: !Ref pTemplateArn
         pFunctionName: 
           !If

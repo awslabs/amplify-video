@@ -2,12 +2,12 @@ import logging
 import subprocess
 import os
 import boto3
+from urllib import unquote_plus
 from botocore.client import Config
 SIGNED_URL_EXPIRATION = 300     # The number of seconds that the Signed URL is valid
-region= os.environ['region']
-mc_client = boto3.client('mediaconvert', region_name=region)
+mc_client = boto3.client('mediaconvert')
 endpoints = mc_client.describe_endpoints()
-MEDIACONVERT= boto3.client('mediaconvert', region_name=region, endpoint_url=endpoints['Endpoints'][0]['Url'], verify=False)
+MEDIACONVERT= boto3.client('mediaconvert', endpoint_url=endpoints['Endpoints'][0]['Url'])
 
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     for s3_record in event['Records']:
         logger.info("Working on new s3_record...")
         # Extract the Key and Bucket names for the asset uploaded to S3
-        key = s3_record['s3']['object']['key']
+        key = unquote_plus(s3_record['s3']['object']['key'])
         bucket = s3_record['s3']['bucket']['name']
         logger.info("Bucket: {} \t Key: {}".format(bucket, key))
         # Generate a signed URL for the uploaded asset
@@ -56,7 +56,7 @@ def launch_transcode(s3key):
                 "SegmentLength": 3,
                 "TimedMetadataId3Period": 10,
                 "CaptionLanguageSetting": "OMIT",
-                "Destination": "s3://mediainfotest/output/",
+                "Destination": "s3://" + os.environ["S3_OUTPUT_NAME"] + "/output/",
                 "TimedMetadataId3Frame": "PRIV",
                 "CodecSpecification": "RFC_4281",
                 "OutputSelection": "MANIFESTS_AND_SEGMENTS",
