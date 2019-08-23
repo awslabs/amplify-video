@@ -3,30 +3,32 @@ const chalk = require('chalk');
 
 module.exports = (context) => {
   context.getInfo = async () => {
-    await getLiveStreamInfo(context);
+    await getVideoInfo(context);
   };
 
   context.getInfoAll = async () => {
-    await getLiveStreamInfoAll(context);
+    await getInfoVideoAll(context);
   };
 };
 
-async function getLiveStreamInfoAll(context) {
+async function getInfoVideoAll(context) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if (typeof amplifyMeta.video !== 'undefined' && Object.keys(amplifyMeta.video).length !== 0) {
+  if ("video" in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
     Object.values(amplifyMeta.video).forEach((project) => {
-      if (project.output) {
-        prettifyOutput(project.output);
+      if ("output" in project) {
+        if ("oMediaLivePrimaryIngestUrl" in project.output){
+          prettifyOutputLive(project.output);
+        }
       }
     });
   }
 }
 
 
-async function getLiveStreamInfo(context) {
+async function getVideoInfo(context) {
   let project;
   const amplifyMeta = context.amplify.getProjectMeta();
-  if (typeof amplifyMeta.video === 'undefined' || Object.keys(amplifyMeta.video).length === 0) {
+  if (!("video" in amplifyMeta) || Object.keys(amplifyMeta.video).length === 0) {
     console.log(chalk.bold('You have no video projects.'));
   } else {
     const chooseProject = [
@@ -39,15 +41,17 @@ async function getLiveStreamInfo(context) {
       },
     ];
     project = await inquirer.prompt(chooseProject);
-    if (amplifyMeta.video[project.resourceName].output) {
-      await prettifyOutput(amplifyMeta.video[project.resourceName].output);
+    if ("output" in amplifyMeta.video[project.resourceName]) {
+      if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[project.resourceName].output){
+        await prettifyOutputLive(amplifyMeta.video[project.resourceName].output);
+      }
     } else {
       console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
     }
   }
 }
 
-async function prettifyOutput(output) {
+async function prettifyOutputLive(output) {
   console.log(chalk.bold('\nMediaLive'));
   console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
   const primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
