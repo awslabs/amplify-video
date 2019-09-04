@@ -231,8 +231,10 @@ async function serviceQuestions(context, resourceName) {
     advancedAnswers.gopSize = "1";
     advancedAnswers.gopPerSegment = "2";
     advancedAnswers.segsPerPlist = "3";
+    advancedAnswers.advancedChoice = false;
   } else {
     advancedAnswers = await inquirer.prompt(advancedQuestions);
+    advancedAnswers.advancedChoice = true;
   }
 
   const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
