@@ -227,7 +227,6 @@ async function serviceQuestions(context, resourceName) {
   answers.resourceName = resource.name;
 
   const advancedEnable = await inquirer.prompt(advanced);
-  console.log(advancedEnable.advancedChoice);
   if (advancedEnable.advancedChoice == false) {
     advancedAnswers.gopSize = "1";
     advancedAnswers.gopPerSegment = "2";
