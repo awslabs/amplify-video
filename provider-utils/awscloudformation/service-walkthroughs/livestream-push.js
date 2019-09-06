@@ -1,20 +1,13 @@
 const inquirer = require('inquirer');
-const {stageVideo} = require('./helpers/video-staging');
+const {stageVideo} = require('../utils/video-staging');
+const question = require('../../livestream-questions.json');
 const fs = require('fs-extra');
+const path = require('path');
 const chalk = require('chalk');
 
-
-module.exports = (context) => {
-  context.createLiveStream = async () => {
-    await addLivestream(context);
-  };
-  context.updateLiveStream = async () => {
-    await updateLiveStream(context);
-  };
-  context.updateWithProps = async (options, props) => {
-    await stageVideo(context, options, props, 'update');
-  };
-};
+module.exports = {
+  serviceQuestions,
+}
 
 async function updateLiveStream(context) {
   const options = {
@@ -36,7 +29,7 @@ async function updateLiveStream(context) {
 
   props.shared = await inquirer.prompt(chooseProject);
 
-  const result = await serviceQuestions(context, props.shared.resourceName);
+  const result = await serviceQuestions(context, options, props.shared.resourceName);
 
   await stageVideo(context, options, result, 'update');
 }
@@ -52,17 +45,18 @@ async function addLivestream(context) {
   await stageVideo(context, options, result, 'add');
 }
 
-async function serviceQuestions(context, resourceName) {
+async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
   const projectMeta = context.amplify.getProjectMeta();
+  const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   const props = {};
   let defaults = {};
-
-  defaults = JSON.parse(fs.readFileSync(`${__dirname}/livestream-defaults.json`));
+  
+  defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
   try {
     const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
@@ -71,9 +65,7 @@ async function serviceQuestions(context, resourceName) {
     // Do nothing
   }
 
-  const serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`)).video;
-
-  const { inputs } = serviceMetadata;
+  const { inputs } = question.video;
 
   const nameProject = [
     {

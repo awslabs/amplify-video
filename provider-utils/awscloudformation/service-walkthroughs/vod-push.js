@@ -1,15 +1,12 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const question = require('./vod-questions.json');
-const {stageVideo} = require('./helpers/video-staging');
-const {getAWSConfig} = require('./helpers/get-aws');
+const question = require('../../vod-questions.json');
+const {stageVideo} = require('../utils/video-staging');
+const {getAWSConfig} = require('../utils/get-aws');
 
-module.exports = (context) => {
-    context.createVod = async () => {
-      await addVod(context);
-    };
-};
-
+module.exports={
+    serviceQuestions,
+}
 
 async function addVod(context) {
     const options = {
