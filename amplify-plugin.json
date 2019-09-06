@@ -1,0 +1,12 @@
+{
+    "name": "video",
+    "type": "category",
+    "commands": [
+        "add",
+        "remove",
+        "update",
+        "push",
+        "console",
+        "help"
+    ]
+}
