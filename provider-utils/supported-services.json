@@ -10,7 +10,7 @@
     "livestream":{
         "alias":"Livestream",
 		"serviceWalkthroughFilename": "livestream-push.js",
-        "cfnFilename": "livestream-workflow.yaml.ejs",
+        "cfnFilename": "livestream-workflow.json.ejs",
         "stackFolder":"livestream-helpers",
         "defaultValuesFilename": "livestream-defaults.json",
 		"provider": "awscloudformation"

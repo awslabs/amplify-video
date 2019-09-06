@@ -1,48 +1,10 @@
 const inquirer = require('inquirer');
-const {stageVideo} = require('../utils/video-staging');
 const question = require('../../livestream-questions.json');
 const fs = require('fs-extra');
 const path = require('path');
-const chalk = require('chalk');
 
 module.exports = {
   serviceQuestions,
-}
-
-async function updateLiveStream(context) {
-  const options = {
-    service: 'video',
-    serviceType: 'livestream',
-    providerPlugin: 'awscloudformation',
-  };
-
-  const props = {};
-  const chooseProject = [
-    {
-      type: 'list',
-      name: 'resourceName',
-      message: 'Choose what project you want to update?',
-      choices: Object.keys(context.amplify.getProjectMeta().video),
-      default: Object.keys(context.amplify.getProjectMeta().video)[0],
-    },
-  ];
-
-  props.shared = await inquirer.prompt(chooseProject);
-
-  const result = await serviceQuestions(context, options, props.shared.resourceName);
-
-  await stageVideo(context, options, result, 'update');
-}
-
-async function addLivestream(context) {
-  const options = {
-    service: 'video',
-    serviceType: 'livestream',
-    providerPlugin: 'awscloudformation',
-  };
-
-  const result = await serviceQuestions(context);
-  await stageVideo(context, options, result, 'add');
 }
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {

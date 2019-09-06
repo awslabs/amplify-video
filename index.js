@@ -19,7 +19,7 @@ async function console(context) {
 }
 
 async function onAmplifyCategoryOutputChange(context) {
-  context.getInfoAll();
+  await context.getInfoAll();
 }
 
 
