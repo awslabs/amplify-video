@@ -19,7 +19,10 @@ async function console(context) {
 }
 
 async function onAmplifyCategoryOutputChange(context) {
-  await context.getInfoAll();
+  //Hard coded to CF. Find a better way to handle this.
+  const infoController =
+          require(`../../provider-utils/awscloudformation/utils/video-getinfo`);
+  await infoController.getInfoVideoAll(context);
 }
 
 

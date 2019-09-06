@@ -1,15 +1,10 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 
-module.exports = (context) => {
-  context.getInfo = async () => {
-    await getVideoInfo(context);
-  };
-
-  context.getInfoAll = async () => {
-    await getInfoVideoAll(context);
-  };
-};
+module.exports = {
+  getVideoInfo,
+  getInfoVideoAll
+}
 
 async function getInfoVideoAll(context) {
   const amplifyMeta = context.amplify.getProjectMeta();
@@ -25,29 +20,14 @@ async function getInfoVideoAll(context) {
 }
 
 
-async function getVideoInfo(context) {
-  let project;
+async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if (!("video" in amplifyMeta) || Object.keys(amplifyMeta.video).length === 0) {
-    console.log(chalk.bold('You have no video projects.'));
-  } else {
-    const chooseProject = [
-      {
-        type: 'list',
-        name: 'resourceName',
-        message: 'Choose what project you want to get info for?',
-        choices: Object.keys(amplifyMeta.video),
-        default: Object.keys(amplifyMeta.video)[0],
-      },
-    ];
-    project = await inquirer.prompt(chooseProject);
-    if ("output" in amplifyMeta.video[project.resourceName]) {
-      if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[project.resourceName].output){
-        await prettifyOutputLive(amplifyMeta.video[project.resourceName].output);
-      }
-    } else {
-      console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
+  if ("output" in amplifyMeta.video[resourceName]) {
+    if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[resourceName].output){
+      await prettifyOutputLive(amplifyMeta.video[resourceName].output);
     }
+  } else {
+    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 

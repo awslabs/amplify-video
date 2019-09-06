@@ -8,6 +8,11 @@ module.exports = {
     const {amplify} = context;
     const amplifyMeta = amplify.getProjectMeta();
 
+    if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
+      context.print.error(`You have no ${category} projects.`);
+      return
+    }
+
     const chooseProject = [
       {
         type: 'list',
@@ -17,6 +22,7 @@ module.exports = {
         default: Object.keys(amplifyMeta[category])[0],
       },
     ];
+    
     let props = await inquirer.prompt(chooseProject);
 
     let options = amplifyMeta.video[props.resourceName];
