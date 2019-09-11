@@ -1,50 +1,24 @@
-const inquirer = require('inquirer');
 const chalk = require('chalk');
 const fs = require('fs');
 const ini = require('ini');
 
-const debug = false;
+module.exports = {
+  setupOBS,
+}
 
-module.exports = (context) => {
-  context.setupOBS = async () => {
-    await getLiveStreamInfo(context);
-  };
-};
-
-async function getLiveStreamInfo(context) {
+async function setupOBS(context, resourceName) {
   const { amplify } = context;
-  let project;
-  const amplifyMeta = context.amplify.getProjectMeta();
-  if (debug === true) {
-    prettifyOutput();
+  const amplifyMeta = amplify.getProjectMeta();
+  if ("output" in amplifyMeta.video[resourceName]) {
+    if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[resourceName].output){
+      await createConfig(amplifyMeta.video[resourceName].output, resourceName);
+    }
   } else {
-    if (!amplifyMeta.video) {
-      chalk.bold('You have no video projects.');
-    }
-    const chooseProject = [
-      {
-        type: 'list',
-        name: 'resourceName',
-        message: 'Choose what project you want to configure OBS for?',
-        choices: Object.keys(amplifyMeta.video),
-        default: Object.keys(amplifyMeta.video)[0],
-      },
-    ];
-
-    if (!amplify.video && Object.keys(amplifyMeta.video).length !== 0) {
-      project = await inquirer.prompt(chooseProject);
-      if (amplifyMeta.video[project.resourceName].output) {
-        await prettifyOutput(amplifyMeta.video[project.resourceName].output, project.resourceName);
-      } else {
-        console.log(chalk`{bold You have not pushed ${project.resourceName} to the cloud yet.}`);
-      }
-    } else {
-      console.log(chalk.bold('You have no video projects.'));
-    }
+    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
-async function prettifyOutput(output, projectName) {
+async function createConfig(output, projectName) {
   // check for obs installation!
   let profileDir = '';
   if (process.platform === 'darwin') {

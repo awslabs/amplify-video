@@ -5,7 +5,7 @@ const chalk = require('chalk');
 const sha1 = require('sha1');
 const {getAWSConfig} = require('./get-aws');
 
-async function copyFilesToS3(context, options, props, stackFolder) {
+async function copyFilesToS3(context, options, resourceName, stackFolder) {
     const { amplify } = context;
     const targetDir = amplify.pathManager.getBackendDirPath();
     const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
@@ -13,7 +13,7 @@ async function copyFilesToS3(context, options, props, stackFolder) {
     const aws = await provider.getConfiguredAWSClient(context);
 
     const s3Client = new aws.S3();
-    const distributionDirPath = `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`;
+    const distributionDirPath = `${targetDir}/video/${resourceName}/${stackFolder}/`;
     const fileuploads = fs.readdirSync(distributionDirPath);
 
     fileuploads.forEach((filePath) => {
@@ -46,7 +46,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
 async function stageVideo(context, options, props, cfnFilename, stackFolder, type){
     await pushRootTemplate(context, options, props, cfnFilename, type);
     await syncHelperCF(context, props, stackFolder);
-    await copyFilesToS3(context, options, props, stackFolder);
+    await copyFilesToS3(context, options, props.shared.resourceName, stackFolder);
 }
 
 async function syncHelperCF(context, props, stackFolder){
@@ -106,9 +106,16 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
   await context.amplify.copyBatch(context, copyJobs, props);
 }
 
+async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder){
+  pushRootTemplate(contex, options, props, cfnFilename, 'update');
+  syncHelperCF(context, props, stackFolder);
+  copyFilesToS3(conext, options, resourceName, stackFolder);
+}
+
 module.exports = {
     stageVideo,
     copyFilesToS3,
+    updateWithProps
 };
 
 
