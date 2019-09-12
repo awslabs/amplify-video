@@ -33,7 +33,7 @@ module.exports = {
       context.print.error('Provider not configured for this category');
       return;
     }
-    return providerController.setupCloudFormation(context, results.service, options, resourceName);
+    return providerController.setupCloudFormation(context, options.serviceType, options, props.resourceName);
 
   },
 };

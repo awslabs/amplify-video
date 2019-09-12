@@ -17,7 +17,7 @@ module.exports = {
       {
         type: 'list',
         name: 'resourceName',
-        message: 'Choose what project you want to update?',
+        message: 'Choose what project you want to start?',
         choices: Object.keys(amplifyMeta[category]),
         default: Object.keys(amplifyMeta[category])[0],
       },
@@ -34,6 +34,6 @@ module.exports = {
       return;
     }
 
-    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, true);
+    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, false);
   },
 };

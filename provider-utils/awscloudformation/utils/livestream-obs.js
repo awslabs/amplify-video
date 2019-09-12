@@ -50,7 +50,7 @@ async function createConfig(output, projectName) {
 }
 
 async function generateINI(projectName, directory) {
-  const iniBasic = ini.parse(fs.readFileSync(`${__dirname}/obs-templates/basic.ini`, 'utf-8'));
+  const iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/basic.ini`, 'utf-8'));
   iniBasic.General.Name = projectName;
   fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
 }

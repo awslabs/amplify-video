@@ -108,9 +108,9 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
 }
 
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder){
-  pushRootTemplate(contex, options, props, cfnFilename, 'update');
+  pushRootTemplate(context, options, props, cfnFilename, 'update');
   syncHelperCF(context, props, stackFolder);
-  copyFilesToS3(conext, options, resourceName, stackFolder);
+  copyFilesToS3(context, options, resourceName, stackFolder);
 }
 
 module.exports = {

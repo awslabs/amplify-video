@@ -1,18 +1,18 @@
 {
-    "video-on-demand":{
-        "alias":"Video On Demand",
-		"serviceWalkthroughFilename": "vod-push.js",
-        "cfnFilename": "vod-workflow.yaml.ejs",
-        "stackFolder":"vod-helpers",
-        "defaultValuesFilename": "vod-defaults.json",
-		"provider": "awscloudformation"
-    },
     "livestream":{
         "alias":"Livestream",
 		"serviceWalkthroughFilename": "livestream-push.js",
         "cfnFilename": "livestream-workflow.json.ejs",
         "stackFolder":"livestream-helpers",
         "defaultValuesFilename": "livestream-defaults.json",
+		"provider": "awscloudformation"
+    },
+    "video-on-demand":{
+        "alias":"Video On Demand",
+		"serviceWalkthroughFilename": "vod-push.js",
+        "cfnFilename": "vod-workflow.yaml.ejs",
+        "stackFolder":"vod-helpers",
+        "defaultValuesFilename": "vod-defaults.json",
 		"provider": "awscloudformation"
     }
 }
