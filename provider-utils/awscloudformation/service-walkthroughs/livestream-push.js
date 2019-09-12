@@ -28,14 +28,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     // Do nothing
   }
 
-<<<<<<< HEAD:provider-utils/awscloudformation/service-walkthroughs/livestream-push.js
   const { inputs } = question.video;
-=======
-  const serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`)).video;
-
-  const { inputs } = serviceMetadata;
-  
->>>>>>> master/vod:extensions/livestream-push.js
 
   // question dictionaries taken by inquirer
   // project name

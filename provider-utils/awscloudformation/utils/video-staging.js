@@ -73,12 +73,13 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(__dirname + '/..');
+  const newCfnName = cfnFilename.split('.')[0];
   
   const copyJobs = [
     {
       dir: pluginDir,
       template: `cloudformation-templates/${cfnFilename}`,
-      target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-${cfnFilename}`,
+      target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-${newCfnName}.template`,
     },
   ];
 
