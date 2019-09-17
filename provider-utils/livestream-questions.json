@@ -264,7 +264,13 @@
                     }
                 ],
                 "required": true
-            }
+            },
+            {
+              "key": "advancedChoice",
+              "type": "confirm",
+              "question": "Do you want to modify any advanced video encoding parameters?",
+              "required": true
+          }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

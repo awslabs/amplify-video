@@ -1,6 +1,9 @@
+const subcommand = 'remove';
+const category = 'video';
+
 module.exports = {
-  name: 'remove',
+  name: subcommand,
   run: async (context) => {
-    context.amplify.removeResource(context, 'video');
+    await context.amplify.removeResource(context, category);
   },
 };

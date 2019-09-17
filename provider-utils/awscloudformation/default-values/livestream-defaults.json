@@ -1,9 +1,9 @@
 {
-    "shared": {
-        "gopSize": "1",
-        "gopPerSegment": "2",
-        "segsPerPlist": "3",
-        "bucket": "exampleproj-20181220152035-deployment"
+  "advanced": {
+    "advancedChoice": false,
+    "gopSize": "1",
+    "gopPerSegment": "2",
+    "segsPerPlist": "3"
     },
     "mediaLive": {
         "securityGroup": "0.0.0.0/0",

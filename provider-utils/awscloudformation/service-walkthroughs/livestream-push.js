@@ -1,69 +1,26 @@
 const inquirer = require('inquirer');
-const {stageVideo} = require('./helpers/video-staging');
+const question = require('../../livestream-questions.json');
 const fs = require('fs-extra');
-const chalk = require('chalk');
+const path = require('path');
 
-
-module.exports = (context) => {
-  context.createLiveStream = async () => {
-    await addLivestream(context);
-  };
-  context.updateLiveStream = async () => {
-    await updateLiveStream(context);
-  };
-  context.updateWithProps = async (options, props) => {
-    await stageVideo(context, options, props, 'update');
-  };
-};
-
-async function updateLiveStream(context) {
-  const options = {
-    service: 'video',
-    serviceType: 'livestream',
-    providerPlugin: 'awscloudformation',
-  };
-
-  const props = {};
-  const chooseProject = [
-    {
-      type: 'list',
-      name: 'resourceName',
-      message: 'Choose what project you want to update?',
-      choices: Object.keys(context.amplify.getProjectMeta().video),
-      default: Object.keys(context.amplify.getProjectMeta().video)[0],
-    },
-  ];
-
-  props.shared = await inquirer.prompt(chooseProject);
-
-  const result = await serviceQuestions(context, props.shared.resourceName);
-
-  await stageVideo(context, options, result, 'update');
+module.exports = {
+  serviceQuestions,
 }
 
-async function addLivestream(context) {
-  const options = {
-    service: 'video',
-    serviceType: 'livestream',
-    providerPlugin: 'awscloudformation',
-  };
-
-  const result = await serviceQuestions(context);
-  await stageVideo(context, options, result, 'add');
-}
-
-async function serviceQuestions(context, resourceName) {
+async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
   const projectMeta = context.amplify.getProjectMeta();
+  const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();
+  let advancedAnswers = {};
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   const props = {};
   let defaults = {};
-
-  defaults = JSON.parse(fs.readFileSync(`${__dirname}/livestream-defaults.json`));
-  defaults.shared.resourceName = amplify.getProjectDetails().projectConfig.projectName;
+  
+  defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
+  defaults.resourceName = 'mylivestream';
   try {
     const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
     Object.assign(defaults, oldValues);
@@ -71,44 +28,55 @@ async function serviceQuestions(context, resourceName) {
     // Do nothing
   }
 
-  const serviceMetadata = JSON.parse(fs.readFileSync(`${__dirname}/livestream-questions.json`)).video;
+  const { inputs } = question.video;
 
-  const { inputs } = serviceMetadata;
-
+  // question dictionaries taken by inquirer
+  // project name
   const nameProject = [
     {
       type: inputs[0].type,
       name: inputs[0].key,
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
-      default: defaults.shared.resourceName,
+      default: defaults.resourceName,
     }];
+  
+  // prompt for advanced options
+  const advanced = [
+    {
+      type: inputs[16].type,
+      name: inputs[16].key,
+      message: inputs[16].question,
+      default: defaults.advanced[inputs[16].key],
+    }
+  ]
 
-  const defaultQuestions = [
+  // advanced options (currently only segmentation settings)
+  const advancedQuestions = [
     {
       type: inputs[1].type,
       name: inputs[1].key,
       message: inputs[1].question,
       validate: amplify.inputValidation(inputs[1]),
-      default: defaults.shared[inputs[1].key],
+      default: defaults.advanced[inputs[1].key],
     },
     {
       type: inputs[2].type,
       name: inputs[2].key,
       message: inputs[2].question,
       validate: amplify.inputValidation(inputs[2]),
-      default: defaults.shared[inputs[2].key],
+      default: defaults.advanced[inputs[2].key],
     },
     {
       type: inputs[3].type,
       name: inputs[3].key,
       message: inputs[3].question,
       validate: amplify.inputValidation(inputs[3]),
-      default: defaults.shared[inputs[3].key],
+      default: defaults.advanced[inputs[3].key],
     },
-  ];
+  ]
 
-  const mediaLiveQustions = [
+  const mediaLiveQuestions = [
     {
       type: inputs[4].type,
       name: inputs[4].key,
@@ -204,28 +172,42 @@ async function serviceQuestions(context, resourceName) {
   } else {
     resource = await inquirer.prompt(nameProject);
   }
-
-  const answers = await inquirer.prompt(defaultQuestions);
+  
+  // main question control flow
+  const answers = {};
   answers.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
   answers.resourceName = resource.name;
 
-  const mediaLiveAnswers = await inquirer.prompt(mediaLiveQustions);
+  const advancedEnable = await inquirer.prompt(advanced);
+  if (advancedEnable.advancedChoice == false) {
+    advancedAnswers.gopSize = "1";
+    advancedAnswers.gopPerSegment = "2";
+    advancedAnswers.segsPerPlist = "3";
+    advancedAnswers.advancedChoice = false;
+  } else {
+    advancedAnswers = await inquirer.prompt(advancedQuestions);
+    advancedAnswers.advancedChoice = true;
+  }
+
+  const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
   const mediaStorageAnswers = await inquirer.prompt(mediaStorage);
   if (mediaStorageAnswers.storageType === 'mPackageStore' || mediaStorageAnswers.storageType === 'mPackage') {
     mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);
     props.mediaPackage = mediaPackageAnswers;
+    // TODO change this to choice prompt
     const cloudfrontenable = await inquirer.prompt(cloudFrontEnable);
-    if (cloudfrontenable.enableDistrubtion === 'YES') {
+    if (cloudfrontenable.enableDistribution === 'YES') {
       cloudFrontAnswers = await inquirer.prompt(cloudFrontQuestions);
     }
-    cloudFrontAnswers.enableDistrubtion = cloudfrontenable.enableDistrubtion;
+    cloudFrontAnswers.enableDistribution = cloudfrontenable.enableDistribution;
   } else {
-    cloudFrontAnswers.enableDistrubtion = 'NO';
+    cloudFrontAnswers.enableDistribution = 'NO';
   }
 
-
+  // export stored answers
   props.shared = answers;
+  props.advanced = advancedAnswers;
   props.mediaLive = mediaLiveAnswers;
   props.mediaPackage = mediaPackageAnswers;
   props.mediaStorage = mediaStorageAnswers;

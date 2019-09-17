@@ -29,6 +29,14 @@ Conditions:
   HasEnvironmentParameter:
     !Not [!Equals [!Ref env, NONE]]
 
+Outputs:
+  oVODInputS3:
+    Description: Put source video here for processing and hosting by Amplify Video
+    Value: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+  oVODOutputS3:
+    Description: Amplify Video hosts transcoded video content in this bucket
+    Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+
 Resources:
   rS3InputBucket:
     Type: AWS::CloudFormation::Stack

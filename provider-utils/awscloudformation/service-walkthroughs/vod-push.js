@@ -1,31 +1,17 @@
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-const question = require('./vod-questions.json');
-const {stageVideo} = require('./helpers/video-staging');
-const {getAWSConfig} = require('./helpers/get-aws');
+const question = require('../../vod-questions.json');
+const {getAWSConfig} = require('../utils/get-aws');
 
-module.exports = (context) => {
-    context.createVod = async () => {
-      await addVod(context);
-    };
-};
-
-
-async function addVod(context) {
-    const options = {
-        service: 'video',
-        serviceType: 'vod',
-        providerPlugin: 'awscloudformation',
-    };
-
-    const result = await serviceQuestions(context, options);
-    stageVideo(context, options, result, 'add');
+module.exports={
+    serviceQuestions,
 }
 
-async function serviceQuestions(context, options){
+async function serviceQuestions(context, options, resourceName){
     const { amplify } = context;
     const projectMeta = context.amplify.getProjectMeta();
     let props = {};
+    let nameDict = {};
 
     let inputs = question.video.inputs;
     const nameProject = [
@@ -37,7 +23,12 @@ async function serviceQuestions(context, options){
         default: amplify.getProjectDetails().projectConfig.projectName,
     }];
 
-    const nameDict = await inquirer.prompt(nameProject);
+    if (resourceName) {
+        nameDict.resourceName = resourceName;
+    } else {
+        nameDict = await inquirer.prompt(nameProject);
+    }
+
     props.shared = nameDict;
     props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 

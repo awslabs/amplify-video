@@ -343,7 +343,7 @@
           }
         }
       }
-    }<% if (props.cloudFront.enableDistrubtion == "YES") { %>,
+    }<% if (props.cloudFront.enableDistribution == "YES") { %>,
 
     "rDistribution": {
       "Condition": "cEnableDistribution",
@@ -480,14 +480,14 @@
     "pGopSizeInSec": {
       "Type": "Number",
       "Description": "specify GOP size in seconds. Use 1s to force IP-frame encode for low-latency.",
-      "Default": "<%= props.shared.gopSize %>",
+      "Default": "<%= props.advanced.gopSize %>",
       "MinValue": "1"
     },
 
     "pGopPerSegment": {
       "Type": "Number",
       "Description": "specify number of GOPs per segment. Use 1 for low-latency.",
-      "Default": "<%= props.shared.gopPerSegment %>",
+      "Default": "<%= props.advanced.gopPerSegment %>",
       "MinValue": "1"
     },
 
@@ -522,7 +522,7 @@
     "pSegmentPerPlaylist": {
       "Type": "Number",
       "Description": "specify number of segments per playlist/manifest, minimum 1 (recommended 3 and above)",
-      "Default": "<%= props.shared.segsPerPlist %>",
+      "Default": "<%= props.advanced.segsPerPlist %>",
       "MinValue": "1"
     },
 
@@ -536,10 +536,10 @@
     "pEnableDistribution": {
       "Type": "String",
       "Description": "",
-      "Default": "<%= props.cloudFront.enableDistrubtion %>",
+      "Default": "<%= props.cloudFront.enableDistribution %>",
       "AllowedValues": [ "YES", "NO" ]
     },
-    <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+    <% if (props.cloudFront.enableDistribution == "YES") { %>
 
     "pPriceClass": {
       "Type": "String",
@@ -622,7 +622,7 @@
     <% if (props.mediaStorage.storageType == 'mPackageStore' || props.mediaStorage.storageType == 'mPackage') { %>
     "oPrimaryHlsEgress": {
       "Value": {
-        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+        <% if (props.cloudFront.enableDistribution == "YES") { %>
           "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryHlsEndpoint" ]
         <% } else { %>
           "Fn::GetAtt": [ "rMP", "Outputs.oHlsEndpoint" ]
@@ -633,7 +633,7 @@
 
     "oPrimaryDashEgress": {
       "Value": {
-        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+        <% if (props.cloudFront.enableDistribution == "YES") { %>
           "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryDashEndpoint" ]
         <% } else { %>
           "Fn::GetAtt": [ "rMP", "Outputs.oDashEndpoint" ]
@@ -644,7 +644,7 @@
 
     "oPrimaryMssEgress": {
       "Value": {
-        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+        <% if (props.cloudFront.enableDistribution == "YES") { %>
           "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryMssEndpoint" ]
         <% } else { %>
           "Fn::GetAtt": [ "rMP", "Outputs.oMssEndpoint" ]
@@ -655,7 +655,7 @@
 
     "oPrimaryCmafEgress": {
       "Value": {
-        <% if (props.cloudFront.enableDistrubtion == "YES") { %>
+        <% if (props.cloudFront.enableDistribution == "YES") { %>
           "Fn::GetAtt": [ "rDistribution", "Outputs.oPrimaryCmafEndpoint" ]
         <% } else { %>
           "Fn::GetAtt": [ "rMP", "Outputs.oCmafEndpoint" ]
@@ -686,7 +686,7 @@
       "Condition": "cEnableMediaStore",
       "Value": { "Fn::GetAtt": [ "rML", "Outputs.oBackupMediaStoreEgressUrl" ] },
       "Description": "(B) MediaStore Egress Url"
-    }<% if (props.cloudFront.enableDistrubtion == "YES") { %>,
+    }<% if (props.cloudFront.enableDistribution == "YES") { %>,
 
     "oCloudFrontDistributionDomain": {
       "Condition": "cEnableDistribution",
