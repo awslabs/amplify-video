@@ -1,0 +1,173 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Create lambda function",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Lambda Configuration" },
+          "Parameters": [
+            "pS3",
+            "pZipFile",
+            "pLambdaFunction",
+            "pLambdaHandler",
+            "pLambdaRoleArn",
+            "pMemorySize",
+            "pTimeout"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pS3": {
+          "default": "S3 Bucket"
+        },
+
+        "pZipFile": {
+          "default": "Lambda Package Name"
+        },
+
+        "pLambdaFunction": {
+          "default": "Function Name"
+        },
+
+        "pLambdaHandler": {
+          "default": "Function Handler"
+        },
+
+        "pLambdaRoleArn": {
+          "default": "IAM Role"
+        },
+
+        "pMemorySize": {
+          "default": "Memory Size"
+        },
+
+        "pTimeout": {
+          "default": "Timeout"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::If": [
+            "bLambdaFunction",
+            { "Ref": "pLambdaFunction" },
+            { "Ref": "AWS::NoValue" }
+          ]
+        },
+        "Runtime": "nodejs8.10",
+        "MemorySize": { "Ref": "pMemorySize" },
+        "Timeout": { "Ref": "pTimeout" },
+        "Handler": { "Ref": "pLambdaHandler" },
+        "Role": { "Ref": "pLambdaRoleArn" },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "pS3"
+          },
+          "S3Key": {
+            "Ref": "pZipFile"
+          }
+        },
+        "Environment": {
+          "Variables": {
+          }
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pS3": {
+      "Type": "String",
+      "Description": "store lambda package",
+      "Default": "mediapackage-demo"
+    },
+
+    "pZipFile": {
+      "Type": "String",
+      "Description": "zip file package path",
+      "Default": "livestream-helpers/psdemo-js-live-workflow_v0.1.0.zip"
+    },
+
+    "pLambdaFunction": {
+      "Type": "String",
+      "Description": "leave it blank to auto-generate the lambda function name",
+      "Default": ""
+    },
+
+    "pLambdaHandler": {
+      "Type": "String",
+      "Description": "leave it as is.",
+      "Default": "file.FunctionName"
+    },
+
+    "pLambdaRoleArn": {
+      "Type": "String",
+      "Description": "lambda execution IAM role",
+      "Default": ""
+    },
+
+    "pMemorySize": {
+      "Type": "String",
+      "Description": "in MB",
+      "Default": "128"
+    },
+
+    "pTimeout": {
+      "Type": "String",
+      "Description": "in second",
+      "Default": "300"
+    }
+  },
+
+  "Conditions": {
+    "bLambdaFunction" : {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pLambdaFunction" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oS3": {
+      "Value": { "Ref": "pS3" },
+      "Description": "S3 Bucket"
+    },
+
+    "oZipFile": {
+      "Value": { "Ref": "pZipFile" },
+      "Description": "Lambda Package Path"
+    },
+
+    "oLambdaFunction": {
+      "Value": { "Ref": "pLambdaFunction" },
+      "Description": "Lambda Function Name"
+    },
+
+    "oLambdaHandler": {
+      "Value": { "Ref": "pLambdaHandler" },
+      "Description": "Lambda Function Handler"
+    },
+
+    "oLambdaArn": {
+      "Value": {
+        "Fn::GetAtt": [ "rLambdaFunction", "Arn" ]
+      },
+      "Description": "Arn of Workflow Lambda Function"
+    },
+
+    "oLambdaRoleArn": {
+      "Value": { "Ref": "pLambdaRoleArn" },
+      "Description": "Lambda Execution Role"
+    }
+  }
+}

@@ -1,0 +1,412 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "CloudFront Distribution template",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Provision: Source Files Configuration" },
+          "Parameters": [
+            "pS3",
+            "pSourceFolder",
+            "pPackageName",
+            "pProvisionLambdaHandler"
+          ]
+        },
+        {
+          "Label": { "default": "Distribution Configuration" },
+          "Parameters": [
+            "pOrigin",
+            "pChannelId",
+            "pPriceClass"
+          ]
+        },
+        {
+          "Label": { "default": "Logging Configuration" },
+          "Parameters": [
+            "pS3CF",
+            "pS3PrefixCF"
+          ]
+        },
+        {
+          "Label": { "default": "Cache Behaviors Configuration" },
+          "Parameters": [
+            "pPrimaryHlsUrl",
+            "pPrimaryDashUrl",
+            "pPrimaryMssUrl",
+            "pPrimaryCmafUrl"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pS3": {
+          "default": "S3 Bucket Name"
+        },
+
+        "pSourceFolder": {
+          "default": "Source Folder"
+        },
+
+        "pPackageName": {
+          "default": "Lambda Package Name"
+        },
+
+        "pProvisionLambdaHandler": {
+          "default": "Lambda Function Handler"
+        },
+
+        "pOrigin": {
+          "default": "Origin Domain Name"
+        },
+
+        "pChannelId": {
+          "default": "Channel Name"
+        },
+
+        "pPriceClass": {
+          "default": "Price Class"
+        },
+
+        "pS3CF": {
+          "default": "S3 Bucket for Logging"
+        },
+
+        "pS3PrefixCF": {
+          "default": "S3 Prefix for Logging"
+        },
+
+        "pPrimaryHlsUrl": {
+          "default": "(P) HLS Endpoint"
+        },
+
+        "pPrimaryDashUrl": {
+          "default": "(P) DASH Endpoint"
+        },
+
+        "pPrimaryMssUrl": {
+          "default": "(P) MSS Endpoint"
+        },
+
+        "pPrimaryCmafUrl": {
+          "default": "(P) CMAF Endpoint"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rProvisionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "${AWS::AccountId}"
+                },
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/CloudFrontFullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+        ],
+        "Path": "/service-role/",
+        "RoleName": {
+          "Fn::If": [
+            "cChannelId",
+            { "Fn::Sub": "${pChannelId}-cloudfront-role-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-cloudfront-role-${AWS::Region}" }
+          ]
+        }
+      }
+    },
+
+    "rProvisionLambdaFunction": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/lambda.template"
+        },
+        "Parameters": {
+          "pS3": {
+            "Ref": "pS3"
+          },
+
+          "pZipFile": {
+            "Fn::Sub": "${pSourceFolder}/${pPackageName}"
+          },
+
+          "pLambdaHandler": {
+            "Ref": "pProvisionLambdaHandler"
+          },
+
+          "pLambdaRoleArn": {
+            "Fn::GetAtt": [ "rProvisionRole", "Arn" ]
+          },
+
+          "pMemorySize": "512",
+
+          "pTimeout": "300"
+        }
+      }
+    },
+
+    "rDistribution" : {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Origins": [
+            {
+              "DomainName": {
+                "Ref": "pOrigin"
+              },
+              "Id": {
+                "Fn::Sub": "${pChannelId}-mediapackage"
+              },
+              "CustomOriginConfig": {
+                "HTTPSPort": "443",
+                "OriginProtocolPolicy": "https-only",
+                "OriginSSLProtocols": [
+                  "TLSv1",
+                  "TLSv1.1",
+                  "TLSv1.2"
+                ]
+              }
+            }
+          ],
+          "Enabled": "true",
+          "Comment": {
+            "Fn::Sub": "Channel ${pChannelId} (MediaPackage)"
+          },
+          "Logging": {
+            "Bucket": {
+              "Fn::If": [
+                "cS3CF",
+                { "Fn::Sub": "${pS3CF}.s3.amazonaws.com" },
+                { "Fn::Sub": "${pS3}.s3.amazonaws.com" }
+              ]
+            },
+            "Prefix": {
+              "Ref": "pS3PrefixCF"
+            }
+          },
+          "DefaultCacheBehavior": {
+            "TargetOriginId": {
+              "Fn::Sub": "${pChannelId}-mediapackage"
+            },
+            "SmoothStreaming": "false",
+            "Compress": "false",
+            "AllowedMethods": [ "GET", "HEAD", "OPTIONS" ],
+            "CachedMethods": [ "GET", "HEAD", "OPTIONS" ],
+            "ForwardedValues": {
+              "Cookies": { "Forward": "all" },
+              "QueryString": "true",
+              "Headers": [ "Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method" ]
+            },
+            "ViewerProtocolPolicy": "https-only"
+          },
+          "PriceClass" : { "Ref": "pPriceClass" },
+          "ViewerCertificate": { "CloudFrontDefaultCertificate" : "true" }
+        }
+      }
+    },
+
+    "rUpdateDistribution": {
+      "Type": "Custom::rUpdateDistribution",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [ "rProvisionLambdaFunction", "Outputs.oLambdaArn" ]
+        },
+
+        "PS_CHANNEL_ID": {
+          "Fn::If": [
+            "cChannelId",
+            { "Fn::Sub": "${pChannelId}" },
+            { "Fn::Sub": "${AWS::StackName}" }
+          ]
+        },
+
+        "PS_DISTRIBUTION_ID": {
+          "Ref": "rDistribution"
+        },
+
+        "PS_PRIMARY_HLS_URL": {
+          "Ref": "pPrimaryHlsUrl"
+        },
+
+        "PS_PRIMARY_DASH_URL": {
+          "Ref": "pPrimaryDashUrl"
+        },
+
+        "PS_PRIMARY_MSS_URL": {
+          "Ref": "pPrimaryMssUrl"
+        },
+
+        "PS_PRIMARY_CMAF_URL": {
+          "Ref": "pPrimaryCmafUrl"
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pS3": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
+      "Default": "mediapackage-demo"
+    },
+
+    "pSourceFolder": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "Default": "livestream-helpers"
+    },
+
+    "pPackageName": {
+      "Type": "String",
+      "Description": "lambda package zip file",
+      "Default": "psdemo-js-live-workflow_v0.3.0.zip"
+    },
+
+    "pProvisionLambdaHandler": {
+      "Type": "String",
+      "Description": "program entrypoint. Leave it as is.",
+      "Default": "orchestration.UpdateDistribution"
+    },
+
+    "pOrigin": {
+      "Type": "String",
+      "Description": "to be fronted by CloudFront",
+      "Default": ""
+    },
+
+    "pChannelId": {
+      "Type": "String",
+      "Description": "used for comments of the distribution",
+      "Default": ""
+    },
+
+    "pPriceClass": {
+      "Type": "String",
+      "Description": "see http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PriceClass.html for details",
+      "AllowedValues": [ "PriceClass_100", "PriceClass_200", "PriceClass_All" ],
+      "Default": "PriceClass_100"
+    },
+
+    "pS3CF": {
+      "Type": "String",
+      "Description": "for CloudFront logging",
+      "Default": "mediapackage-demo"
+    },
+
+    "pS3PrefixCF": {
+      "Type": "String",
+      "Description": "for CloudFront logging",
+      "Default": "cf-logs/"
+    },
+
+    "pPrimaryHlsUrl": {
+      "Type": "String",
+      "Description": "to configure cache behavior",
+      "Default": ""
+    },
+
+    "pPrimaryDashUrl": {
+      "Type": "String",
+      "Description": "to configure cache behavior",
+      "Default": ""
+    },
+
+    "pPrimaryMssUrl": {
+      "Type": "String",
+      "Description": "to configure cache behavior",
+      "Default": ""
+    },
+
+    "pPrimaryCmafUrl": {
+      "Type": "String",
+      "Description": "to configure cache behavior",
+      "Default": ""
+    }
+  },
+
+  "Conditions": {
+    "cS3CF": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pS3CF" }, "" ]
+        }
+      ]
+    },
+
+    "cChannelId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pChannelId" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oOrigin": {
+      "Value": { "Ref": "pOrigin" },
+      "Description": "Origin (MediaPackage) Domain Name"
+    },
+
+    "oDistributionId": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "DistributionId" ]
+      },
+      "Description": "CF Distribution ID"
+    },
+
+    "oDistributionDomain": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "DomainName" ]
+      },
+      "Description": "CF Distribution Domain Name"
+    },
+
+    "oPrimaryHlsEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "PrimaryHlsUrl" ]
+      },
+      "Description": "(P) CloudFront HLS Url"
+    },
+
+    "oPrimaryDashEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "PrimaryDashUrl" ]
+      },
+      "Description": "(P) CloudFront DASH Url"
+    },
+
+    "oPrimaryMssEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "PrimaryMssUrl" ]
+      },
+      "Description": "(P) CloudFront MSS Url"
+    },
+
+    "oPrimaryCmafEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [ "rUpdateDistribution", "PrimaryCmafUrl" ]
+      },
+      "Description": "(P) CloudFront CMAF Url"
+    }
+  }
+}

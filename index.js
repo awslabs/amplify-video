@@ -1,3 +1,4 @@
+const path = require('path');
 const category = 'video';
 
 async function add(context, providerName, service) {
@@ -18,7 +19,10 @@ async function console(context) {
 }
 
 async function onAmplifyCategoryOutputChange(context) {
-  context.getInfoAll();
+  //Hard coded to CF. Find a better way to handle this.
+  const infoController =
+          require(`../../provider-utils/awscloudformation/utils/video-getinfo`);
+  await infoController.getInfoVideoAll(context);
 }
 
 
@@ -51,9 +55,22 @@ async function migrate(context) {
   await Promise.all(migrateResourcePromises);
 }
 
+async function executeAmplifyCommand(context) {
+  let commandPath = path.normalize(path.join(__dirname, 'commands'));
+  if (context.input.command === 'help') {
+    commandPath = path.join(commandPath, category);
+  } else {
+    commandPath = path.join(commandPath, category, context.input.command);
+  }
+  
+  const commandModule = require(commandPath);
+  await commandModule.run(context);
+}
+
 module.exports = {
   add,
   console,
   migrate,
   onAmplifyCategoryOutputChange,
+  executeAmplifyCommand,
 };

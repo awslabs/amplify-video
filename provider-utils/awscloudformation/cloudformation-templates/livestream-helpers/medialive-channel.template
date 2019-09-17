@@ -1,0 +1,334 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Per MediaLive Channel resource",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Workflow: Provision Configuration" },
+          "Parameters": [
+            "pLambdaArn"
+          ]
+        },
+        {
+          "Label": { "default": "MediaLive: Channel Configuration" },
+          "Parameters": [
+            "pAccessRoleArn",
+            "pChannelId",
+            "pInputSecurityGroup",
+            "pIngestType",
+            "pEndpointUrls",
+            "pUsernames",
+            "pParameterStoreKeys",
+            "pMediaStoreEndpoint",
+            "pEncodingProfile",
+            "pGopSizeInSec",
+            "pGopPerSegment",
+            "pSegmentPerPlaylist",
+            "pStartChannel"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pLambdaArn": {
+          "default": "Lambda Function Arn"
+        },
+
+        "pAccessRoleArn": {
+          "default": "MediaLive Access Role Arn"
+        },
+
+        "pChannelId": {
+          "default": "Channel ID"
+        },
+
+        "pInputSecurityGroup": {
+          "default": "Input Security Group"
+        },
+
+        "pIngestType": {
+          "default": "Ingest Type"
+        },
+
+        "pEndpointUrls": {
+          "default": "Destination Urls"
+        },
+
+        "pUsernames": {
+          "default": "Usernames"
+        },
+
+        "pParameterStoreKeys": {
+          "default": "EC2 Parameter Store Keys"
+        },
+
+        "pMediaStoreEndpoint": {
+          "default": "MediaStore Destination"
+        },
+
+        "pEncodingProfile": {
+          "default": "Encoding Profile"
+        },
+
+        "pGopSizeInSec": {
+          "default": "GOP Size (in seconds)"
+        },
+
+        "pGopPerSegment": {
+          "default": "GOP Per Segment"
+        },
+
+        "pSegmentPerPlaylist": {
+          "default": "Segment(s) Per Playlist"
+        },
+
+        "pStartChannel": {
+          "default": "Auto-start"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rCreateChannelLambda": {
+      "Type": "Custom::rCreateChannelLambda",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::Sub": "${pLambdaArn}"
+        },
+
+        "PS_ROLE_ARN": {
+          "Fn::Sub": "${pAccessRoleArn}"
+        },
+
+        "PS_CHANNEL_ID": {
+          "Fn::If": [
+            "cChannelId",
+            { "Fn::Sub": "${pChannelId}" },
+            { "Fn::Sub": "${AWS::StackName}" }
+          ]
+        },
+
+        "PS_INPUT_SECURITY_GROUP": {
+          "Ref": "pInputSecurityGroup"
+        },
+
+        "PS_INGEST_TYPE": {
+          "Ref": "pIngestType"
+        },
+
+        "PS_ENDPOINT_URLS": {
+          "Fn::Sub": "${pEndpointUrls}"
+        },
+
+        "PS_USERNAMES": {
+          "Fn::Sub": "${pUsernames}"
+        },
+
+        "PS_PARAMETER_STORE_KEYS": {
+          "Fn::Sub": "${pParameterStoreKeys}"
+        },
+
+        "PS_MEDIASTORE_ENDPOINT": {
+          "Fn::Sub": "${pMediaStoreEndpoint}"
+        },
+
+        "PS_ENCODING_PROFILE": {
+          "Fn::Sub": "${pEncodingProfile}"
+        },
+
+        "PS_GOP_SIZE_IN_SEC": {
+          "Fn::Sub": "${pGopSizeInSec}"
+        },
+
+        "PS_GOP_PER_SEGMENT": {
+          "Fn::Sub": "${pGopPerSegment}"
+        },
+
+        "PS_SEGMENT_PER_PLAYLIST": {
+          "Fn::Sub": "${pSegmentPerPlaylist}"
+        },
+
+        "PS_START_CHANNEL": {
+          "Fn::Sub": "${pStartChannel}"
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pLambdaArn": {
+      "Type": "String",
+      "Description": "used for provisioning the worfklow",
+      "Default": ""
+    },
+
+    "pAccessRoleArn": {
+      "Type": "String",
+      "Description": "access role for MediaLive service",
+      "Default": ""
+    },
+
+    "pChannelId": {
+      "Type": "String",
+      "Description": "medialive channel id. Leave it blank to use Stack Name as Channel Name",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+    },
+
+    "pInputSecurityGroup": {
+      "Type": "CommaDelimitedList",
+      "Description": "comma delimited CIDR list. ie., 10.1.0.0/16,10.2.0.0/16",
+      "Default": "0.0.0.0/0"
+    },
+
+    "pIngestType": {
+      "Type": "String",
+      "Description": "medialive ingest type. Leave it as is",
+      "AllowedPattern" : "[A-Z_]*",
+      "Default": "RTP_PUSH"
+    },
+
+    "pEndpointUrls": {
+      "Type": "String",
+      "Description": "hls webdav ingest url(s) of your downstream packager, comma separator",
+      "Default": ""
+    },
+
+    "pUsernames": {
+      "Type": "String",
+      "Description": "your downstream pacakager username(s) to ingest, comma separator",
+      "Default": ""
+    },
+
+    "pParameterStoreKeys": {
+      "Type": "String",
+      "Description": "EC2 Parameter Store key(s) of your downstream pacakager password, comma separator",
+      "Default": ""
+    },
+
+    "pMediaStoreEndpoint": {
+      "Type": "String",
+      "Description": "ingest to mediastore. Leave it blank to disable it.",
+      "Default": ""
+    },
+
+    "pEncodingProfile": {
+      "Type": "String",
+      "Description": "FULL (6 renditions), MOBILE (3 renditions), HD (single 1080p), SD (single 432p)",
+      "Default": "FULL",
+      "AllowedValues": [ "FULL", "MOBILE", "HD", "SD" ]
+    },
+
+    "pGopSizeInSec": {
+      "Type": "Number",
+      "Description": "specify GOP size in seconds. Use 1s for low-latency (IP-frame only).",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pGopPerSegment": {
+      "Type": "Number",
+      "Description": "specify how many GOP per segment. Use 1s for low-latency.",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pSegmentPerPlaylist": {
+      "Type": "Number",
+      "Description": "specify number of segments per playlist/manifest, minimum 1 / recommend 3",
+      "Default": "3",
+      "MinValue": "1"
+    },
+
+    "pStartChannel": {
+      "Type": "String",
+      "Description": "starting the channel upon creation",
+      "Default": "NO",
+      "AllowedValues": [ "YES", "NO" ]
+    }
+  },
+
+  "Conditions": {
+    "cChannelId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pChannelId" }, "" ]
+        }
+      ]
+    },
+
+    "cMediaStoreEndpoint": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pMediaStoreEndpoint" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oLambdaArn": {
+      "Value": { "Ref": "pLambdaArn" },
+      "Description": "Provision Lambda Arn"
+    },
+
+    "oAccessRoleArn": {
+      "Value": { "Ref": "pAccessRoleArn" },
+      "Description": "MediaLive Access Role Arn"
+    },
+
+    "oInputSecurityGroupId": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "InputSecurityGroupId" ] },
+      "Description": "Input Security Group Id"
+    },
+
+    "oInputId": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "InputId" ] },
+      "Description": "Input Id"
+    },
+
+    "oInputName": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "InputName" ] },
+      "Description": "Input Name"
+    },
+
+    "oInputType": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "InputType" ] },
+      "Description": "Input Type"
+    },
+
+    "oChannelId": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "ChannelId" ] },
+      "Description": "Channel Id"
+    },
+
+    "oChannelName": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "ChannelName" ] },
+      "Description": "Channel Name"
+    },
+
+    "oPrimaryIngestUrl": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "PrimaryIngestUrl" ] },
+      "Description": "(P) Ingest Url"
+    },
+
+    "oBackupIngestUrl": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "BackupIngestUrl" ] },
+      "Description": "(B) Ingest Url"
+    },
+
+    "oPrimaryMediaStoreEgressUrl": {
+      "Condition": "cMediaStoreEndpoint",
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "PrimaryMediaStoreEgressUrl" ] },
+      "Description": "(P) MediaStore Egress Url"
+    },
+
+    "oBackupMediaStoreEgressUrl": {
+      "Condition": "cMediaStoreEndpoint",
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "BackupMediaStoreEgressUrl" ] },
+      "Description": "(B) MediaStore Egress Url"
+    }
+  }
+}

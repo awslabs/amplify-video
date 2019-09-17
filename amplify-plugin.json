@@ -1,0 +1,16 @@
+{
+    "name": "video",
+    "type": "category",
+    "commands": [
+        "add",
+        "help",
+        "get-info",
+        "push",
+        "remove",
+        "setup-obs",
+        "setup",
+        "start",
+        "stop",
+        "update"
+    ]
+}
