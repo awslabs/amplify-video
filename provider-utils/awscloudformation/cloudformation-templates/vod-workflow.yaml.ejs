@@ -1,0 +1,123 @@
+Description: <%= props.shared.resourceName %>
+
+Parameters:
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucket %>"
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: vod-helpers
+  pProjectName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: <%= props.shared.resourceName %>
+  pTemplateArn:
+    Type: String
+    Description: Arn for MediaConvert Template
+    Default: <%= props.template.arn %>
+
+Conditions:
+  HasEnvironmentParameter:
+    !Not [!Equals [!Ref env, NONE]]
+
+Outputs:
+  oVODInputS3:
+    Description: Put source video here for processing and hosting by Amplify Video
+    Value: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+  oVODOutputS3:
+    Description: Amplify Video hosts transcoded video content in this bucket
+    Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+
+Resources:
+  rS3InputBucket:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
+      Parameters:
+        pBucketName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'input'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'input'
+                
+  rS3OutputBucket:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
+      Parameters:
+        pBucketName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'output'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'output'
+  
+  rLambdaTriggerFunction:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/TriggerLambda.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+        pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+        pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
+        pMediaConvertTemplate: !Ref pTemplateArn
+        pFunctionName: 
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 's3watcher'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 's3watcher'
+
+  rLambdaTriggerSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3TriggerSetup.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
+        pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
+        pTriggerLambda: !GetAtt rLambdaTriggerFunction.Outputs.oLambdaFunction
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'cfTrigger'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'cfTrigger'

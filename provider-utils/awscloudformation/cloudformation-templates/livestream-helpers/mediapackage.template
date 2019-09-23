@@ -1,0 +1,343 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Create resources for MediaPackage service",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Provision: Source Files Configuration" },
+          "Parameters": [
+            "pS3",
+            "pSourceFolder",
+            "pPackageName",
+            "pProvisionLambdaHandler"
+          ]
+        },
+        {
+          "Label": { "default": "MediaPackage: Channel Configuration" },
+          "Parameters": [
+            "pChannelId",
+            "pIngestType",
+            "pEndpoints",
+            "pStartOverWindow",
+            "pGopSizeInSec",
+            "pGopPerSegment",
+            "pSegmentPerPlaylist"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pS3": {
+          "default": "S3 Bucket Name"
+        },
+
+        "pSourceFolder": {
+          "default": "Source Folder"
+        },
+
+        "pPackageName": {
+          "default": "Lambda Package Name"
+        },
+
+        "pProvisionLambdaHandler": {
+          "default": "Lambda Function Handler"
+        },
+
+        "pChannelId": {
+          "default": "Channel ID"
+        },
+
+        "pIngestType": {
+          "default": "Ingest Type"
+        },
+
+        "pEndpoints": {
+          "default": "Packaging Type(s)"
+        },
+
+        "pStartOverWindow": {
+          "default": "Content Window (in seconds)"
+        },
+
+        "pGopSizeInSec": {
+          "default": "GOP Size (in seconds)"
+        },
+
+        "pGopPerSegment": {
+          "default": "GOP Per Segment"
+        },
+
+        "pSegmentPerPlaylist": {
+          "default": "Segment(s) Per Playlist"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rIAM": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/mediapackage-iam.template"
+        },
+        "Parameters": {
+          "pPrefix": {
+            "Fn::If": [
+              "cChannelId",
+              { "Fn::Sub": "${pChannelId}" },
+              { "Fn::Sub": "${AWS::StackName}" }
+            ]
+          }
+        }
+      }
+    },
+
+    "rProvisionLambdaFunction": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/lambda.template"
+        },
+        "Parameters": {
+          "pS3": {
+            "Ref": "pS3"
+          },
+
+          "pZipFile": {
+            "Fn::Sub": "${pSourceFolder}/${pPackageName}"
+          },
+
+          "pLambdaHandler": {
+            "Ref": "pProvisionLambdaHandler"
+          },
+
+          "pLambdaRoleArn": {
+            "Fn::GetAtt": [ "rIAM", "Outputs.oProvisionRoleArn" ]
+          },
+
+          "pMemorySize": "512",
+
+          "pTimeout": "300"
+        }
+      }
+    },
+
+    "rChannel": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/mediapackage-channel.template"
+        },
+        "Parameters": {
+          "pLambdaArn": {
+            "Fn::GetAtt": [ "rProvisionLambdaFunction", "Outputs.oLambdaArn" ]
+          },
+
+          "pChannelId": {
+            "Fn::If": [
+              "cChannelId",
+              { "Fn::Sub": "${pChannelId}" },
+              { "Fn::Sub": "${AWS::StackName}" }
+            ]
+          },
+
+          "pIngestType": {
+            "Ref": "pIngestType"
+          },
+
+          "pEndpoints": {
+            "Fn::Join": [ ",", { "Ref": "pEndpoints" } ]
+          },
+
+          "pStartOverWindow": {
+            "Ref": "pStartOverWindow"
+          },
+
+          "pGopSizeInSec": {
+            "Ref": "pGopSizeInSec"
+          },
+
+          "pGopPerSegment": {
+            "Ref": "pGopPerSegment"
+          },
+
+          "pSegmentPerPlaylist": {
+            "Ref": "pSegmentPerPlaylist"
+          }
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pS3": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
+      "Default": "mediapackage-demo"
+    },
+
+    "pSourceFolder": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "Default": "livestream-helpers"
+    },
+
+    "pPackageName": {
+      "Type": "String",
+      "Description": "lambda package zip file",
+      "Default": "psdemo-js-live-workflow_v0.3.0.zip"
+    },
+
+    "pProvisionLambdaHandler": {
+      "Type": "String",
+      "Description": "program entrypoint. Leave it as is.",
+      "Default": "orchestration.MediaPackageChannel"
+    },
+
+    "pChannelId": {
+      "Type": "String",
+      "Description": "mediapackage channel id. Leave it blank to use Stack Name as Channel Name",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+    },
+
+    "pIngestType": {
+      "Type": "String",
+      "Description": "mediapackage ingest type. Leave it as is",
+      "Default": "hls"
+    },
+
+    "pEndpoints": {
+      "Type": "CommaDelimitedList",
+      "Description": "comma delimited list. ie., HLS,DASH,MSS",
+      "Default": "HLS,DASH"
+    },
+
+    "pStartOverWindow": {
+      "Type": "Number",
+      "Description": "specify how far the user can seek backward",
+      "Default": "300",
+      "MinValue": "60"
+    },
+
+    "pGopSizeInSec": {
+      "Type": "Number",
+      "Description": "specify GOP size in seconds. Use 1s for low-latency (IP-frame only).",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pGopPerSegment": {
+      "Type": "Number",
+      "Description": "specify how many GOP per segment. Use 1s for low-latency.",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pSegmentPerPlaylist": {
+      "Type": "Number",
+      "Description": "specify number of segments per playlist/manifest, minimum 1 / recommend 3",
+      "Default": "3",
+      "MinValue": "1"
+    }
+  },
+
+  "Conditions": {
+    "cChannelId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pChannelId" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oS3": {
+      "Value": { "Ref": "pS3" },
+      "Description": "S3 Bucket for source files"
+    },
+
+    "oPackagePath": {
+      "Value": { "Fn::Sub": "s3://${pS3}/${pSourceFolder}/${pPackageName}" },
+      "Description": "Lambda Package Path (Reference)"
+    },
+
+    "oManagedPolicy": {
+      "Value": {
+        "Fn::GetAtt": [ "rIAM", "Outputs.oManagedPolicy" ]
+      },
+      "Description": "MediaPackage Managed Policy"
+    },
+
+    "oProvisionRole": {
+      "Value": {
+        "Fn::GetAtt": [ "rIAM", "Outputs.oProvisionRoleArn" ]
+        },
+      "Description": "MediaPakage Provision Role"
+    },
+
+    "oProvisionLambdaArn": {
+      "Value": { "Fn::GetAtt": [ "rProvisionLambdaFunction", "Outputs.oLambdaArn" ] },
+      "Description": "Lambda Provision Arn"
+    },
+
+    "oChannelId": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oId" ] },
+      "Description": "(P) Channel Id"
+    },
+
+    "oIngestUrls": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oIngestUrls" ] },
+      "Description": "(P) Channel Ingest Url"
+    },
+
+    "oUsers": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oUsers" ] },
+      "Description": "(P) Channel User"
+    },
+
+    "oParameterStoreKeys": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oParameterStoreKeys" ] },
+      "Description": "(P) Channel Parameter Store Key"
+    },
+
+    "oPasswords": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oPasswords" ] },
+      "Description": "(P) Channel Password"
+    },
+
+    "oArn": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oArn" ] },
+      "Description": "(P) Channel Arn"
+    },
+
+    "oHlsEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oHlsEndpoint" ] },
+      "Description": "(P) HLS Endpoint Url"
+    },
+
+    "oDashEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oDashEndpoint" ] },
+      "Description": "(P) DASH Endpoint Url"
+    },
+
+    "oMssEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oMssEndpoint" ] },
+      "Description": "(P) MSS Endpoint Url"
+    },
+
+    "oCmafEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oCmafEndpoint" ] },
+      "Description": "(P) CMAF Endpoint Url"
+    },
+
+    "oDomainEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rChannel", "Outputs.oDomainEndpoint" ] },
+      "Description": "(P) Endpoint Domain"
+    }
+  }
+}
