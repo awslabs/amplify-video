@@ -6,12 +6,38 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
+  pCloudfrontEnabled:
+    Type: String
+    Description: Check if CF is enabled
+    Default: "False"
+
+Condition:
+  CreateCloudfront: [!Equals [!Ref pCloudfrontEnabled, "True"]]
 
 Resources:
   OutputBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref pBucketName
+
+  OriginAccessIdentity:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Condition: CreateCloudfront
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "OAI created by ${AWS::StackName} in ${AWS::Region}"
+
+  S3Policy:
+    Type: AWS::S3::BucketPolicy
+    Condition: CreateCloudfront
+    Properties:
+      - Action:
+          - "s3:getObject"
+        Effect: Allow
+        Resource: !Sub "arn:aws:s3:::${OutputBucket}/*"
+        Principal:
+          AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentity}"
+  
 Outputs:
   oOutputBucketArn:
     Value: !GetAtt OutputBucket.Arn
@@ -19,3 +45,7 @@ Outputs:
   oOutputBucketName:
     Value: !Ref OutputBucket
     Description: S3 Bucket Created
+  oOriginAccessIdentity:
+    Condition: CreateCloudfront
+    Value: !Ref OriginAccessIdentity
+    Description: Origin Access Identity for Cloudfront
