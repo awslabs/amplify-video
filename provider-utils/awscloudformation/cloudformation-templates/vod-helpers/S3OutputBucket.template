@@ -9,10 +9,10 @@ Parameters:
   pCloudfrontEnabled:
     Type: String
     Description: Check if CF is enabled
-    Default: "False"
+    Default: "true"
 
 Condition:
-  CreateCloudfront: [!Equals [!Ref pCloudfrontEnabled, "True"]]
+  CreateCloudfront: [!Equals [!Ref pCloudfrontEnabled, "true"]]
 
 Resources:
   OutputBucket:

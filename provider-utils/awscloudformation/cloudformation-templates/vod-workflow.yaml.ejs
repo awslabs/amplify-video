@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Description: Arn for MediaConvert Template
     Default: <%= props.template.arn %>
+  pCloudfrontEnabled:
+    Type: String
+    Description: Boolean to enable/disable cloudfront
+    Default: <%= props.contentDeliveryNetwork.enableDistribution %>
 
 Conditions:
   HasEnvironmentParameter:
@@ -73,6 +77,29 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'output'
+        pCloudfrontEnabled: !Ref pCloudfrontEnabled
+
+<% if (props.contentDeliveryNetwork.enableDistribution) { %>
+
+  rCloudfrontDistribution:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
+      Parameters:
+          pBucketName:
+           !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'output'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'output'
+        pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
+<% } %>
   
   rLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
