@@ -83,8 +83,6 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
 
   options.sha = sha1(JSON.stringify(props));
 
-  fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
-
   if (type === 'add') {
     context.amplify.updateamplifyMetaAfterResourceAdd(
       'video',
@@ -105,6 +103,8 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
   }
 
   await context.amplify.copyBatch(context, copyJobs, props);
+
+  await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder){
