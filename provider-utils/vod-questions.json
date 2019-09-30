@@ -46,7 +46,13 @@
               "type": "confirm",
               "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
               "required": true
-          }
+            },
+            {
+                "key":"enableCMS",
+                "type":"confirm",
+                "question":"Do you want Amplify to use your existing GraphQL API to manage your videos?",
+                "required":true
+            }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

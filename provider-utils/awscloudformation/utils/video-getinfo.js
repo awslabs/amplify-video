@@ -2,15 +2,15 @@ const chalk = require('chalk');
 
 module.exports = {
   getVideoInfo,
-  getInfoVideoAll
-}
+  getInfoVideoAll,
+};
 
 async function getInfoVideoAll(context) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if ("video" in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
+  if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
     Object.values(amplifyMeta.video).forEach((project) => {
-      if ("output" in project) {
-        if ("oMediaLivePrimaryIngestUrl" in project.output){
+      if ('output' in project) {
+        if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(project.output);
         }
       }
@@ -21,8 +21,8 @@ async function getInfoVideoAll(context) {
 
 async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if ("output" in amplifyMeta.video[resourceName]) {
-    if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[resourceName].output){
+  if ('output' in amplifyMeta.video[resourceName]) {
+    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
       await prettifyOutputLive(amplifyMeta.video[resourceName].output);
     }
   } else {

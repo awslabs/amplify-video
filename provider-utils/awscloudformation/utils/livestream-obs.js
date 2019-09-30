@@ -4,13 +4,13 @@ const ini = require('ini');
 
 module.exports = {
   setupOBS,
-}
+};
 
 async function setupOBS(context, resourceName) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
-  if ("output" in amplifyMeta.video[resourceName]) {
-    if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[resourceName].output){
+  if ('output' in amplifyMeta.video[resourceName]) {
+    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
       await createConfig(amplifyMeta.video[resourceName].output, resourceName);
     }
   } else {

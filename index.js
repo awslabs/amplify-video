@@ -1,4 +1,5 @@
 const path = require('path');
+
 const category = 'video';
 
 async function add(context, providerName, service) {
@@ -19,9 +20,8 @@ async function console(context) {
 }
 
 async function onAmplifyCategoryOutputChange(context) {
-  //Hard coded to CF. Find a better way to handle this.
-  const infoController =
-          require(`../../provider-utils/awscloudformation/utils/video-getinfo`);
+  // Hard coded to CF. Find a better way to handle this.
+  const infoController = require('./provider-utils/awscloudformation/utils/video-getinfo');
   await infoController.getInfoVideoAll(context);
 }
 
@@ -62,7 +62,7 @@ async function executeAmplifyCommand(context) {
   } else {
     commandPath = path.join(commandPath, category, context.input.command);
   }
-  
+
   const commandModule = require(commandPath);
   await commandModule.run(context);
 }
