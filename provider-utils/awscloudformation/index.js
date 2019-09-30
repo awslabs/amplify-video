@@ -1,4 +1,4 @@
-const {stageVideo, copyFilesToS3} = require('./utils/video-staging');
+const {stageVideo, resetupFiles} = require('./utils/video-staging');
 const fs = require('fs');
 const chalk = require('chalk');
 
@@ -60,7 +60,7 @@ async function livestreamStartStop(context, service, options, resourceName, star
 async function setupCloudFormation(context, service, options, resourceName){
     serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
     let { stackFolder } = serviceMetadata;
-    await copyFilesToS3(context, options, resourceName, stackFolder, 'update');
+    await resetupFiles(context, options, resourceName, stackFolder);
 }
 
 

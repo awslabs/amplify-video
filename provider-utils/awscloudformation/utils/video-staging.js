@@ -61,12 +61,10 @@ async function syncHelperCF(context, props, stackFolder){
   }
 
   fileuploads.forEach((filePath) => {
-    if (filePath != 'LambdaFunctions'){
+    if (filePath != 'LambdaFunctions' && filePath != '.DS_Store'){
       fs.copyFileSync(`${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}`);
     }
   });
-
-  fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function pushRootTemplate(context, options, props, cfnFilename, type){
@@ -105,6 +103,8 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
   }
 
   await context.amplify.copyBatch(context, copyJobs, props);
+
+  await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder){
@@ -113,10 +113,20 @@ async function updateWithProps(context, options, props, resourceName, cfnFilenam
   copyFilesToS3(context, options, resourceName, stackFolder);
 }
 
+async function resetupFiles(context, options, resourceName, stackFolder){
+  let props = {
+    shared:{
+      resourceName:resourceName
+    }
+  };
+  syncHelperCF(context, props, stackFolder);
+  copyFilesToS3(context, options, resourceName, stackFolder);
+}
+
 module.exports = {
     stageVideo,
-    copyFilesToS3,
-    updateWithProps
+    updateWithProps,
+    resetupFiles,
 };
 
 
