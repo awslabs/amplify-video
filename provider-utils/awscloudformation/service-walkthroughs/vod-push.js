@@ -1,4 +1,6 @@
 const inquirer = require('inquirer');
+const fs = require('fs-extra');
+const path = require('path');
 const chalk = require('chalk');
 const question = require('../../vod-questions.json');
 const {getAWSConfig} = require('../utils/get-aws');

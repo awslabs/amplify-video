@@ -78,9 +78,7 @@ Resources:
               - - !Ref pProjectName
                 - 'output'
         pCloudfrontEnabled: !Ref pCloudfrontEnabled
-
 <% if (props.contentDeliveryNetwork.enableDistribution) { %>
-
   rCloudfrontDistribution:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -98,9 +96,8 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'output'
-        pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
+          pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
 <% } %>
-  
   rLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
     Properties:

@@ -11,8 +11,8 @@ Parameters:
     Description: Check if CF is enabled
     Default: "true"
 
-Condition:
-  CreateCloudfront: [!Equals [!Ref pCloudfrontEnabled, "true"]]
+Conditions:
+  CreateCloudfront: !Equals [!Ref pCloudfrontEnabled, "true"]
 
 Resources:
   OutputBucket:
@@ -31,12 +31,15 @@ Resources:
     Type: AWS::S3::BucketPolicy
     Condition: CreateCloudfront
     Properties:
-      - Action:
-          - "s3:getObject"
-        Effect: Allow
-        Resource: !Sub "arn:aws:s3:::${OutputBucket}/*"
-        Principal:
-          AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentity}"
+      Bucket: !Ref pBucketName
+      PolicyDocument:
+        Statement:
+        - Action:
+            - "s3:getObject"
+          Effect: Allow
+          Resource: !Sub "arn:aws:s3:::${OutputBucket}/*"
+          Principal:
+            AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentity}"
   
 Outputs:
   oOutputBucketArn:

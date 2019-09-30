@@ -17,11 +17,11 @@ async function copyFilesToS3(context, options, resourceName, stackFolder) {
     const fileuploads = fs.readdirSync(distributionDirPath);
 
     fileuploads.forEach((filePath) => {
-        uploadFile(s3Client, targetBucket, distributionDirPath, filePath, options);
+        uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
     });
 }
   
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, options) {
+async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, stackFolder) {
     let relativeFilePath = path.relative(distributionDirPath, filePath);
 
     relativeFilePath = relativeFilePath.replace(/\\/g, '/');
@@ -30,7 +30,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
     const contentType = mime.lookup(relativeFilePath);
     const uploadParams = {
         Bucket: hostingBucketName,
-        Key: `${options.serviceType}-helpers/${filePath}`,
+        Key: `${stackFolder}/${filePath}`,
         Body: fileStream,
         ContentType: contentType || 'text/plain',
         ACL: 'public-read',
