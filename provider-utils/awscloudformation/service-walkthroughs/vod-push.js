@@ -100,5 +100,95 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.template.arn = jobTemplate.JobTemplate.Arn;
   props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
 
+  const cmsEnable = [
+    {
+      type: inputs[4].type,
+      name: inputs[4].key,
+      message: inputs[4].question,
+      validate: amplify.inputValidation(inputs[4]),
+      default: defaults.contentManagementSystem[inputs[4].key],
+    }];
+
+  const cmsResponse = await inquirer.prompt(cmsEnable);
+
+  if (cmsResponse.enableCMS) {
+    let apiName = getAPIName(context);
+    if (apiName === '') {
+      context.print.warning('Video On Demand only supports GraphQL right now.');
+      context.print.warning('If you want to only use API for CMS then choose the default ToDo and don\'t edit it until later.');
+      const apiPlugin = amplify.getPluginInstance(context, 'api');
+      context.input.command = 'add';
+      await apiPlugin.executeAmplifyCommand(context);
+      apiName = getAPIName(context);
+    } else {
+      context.print.info(`Using ${apiName} to manage API`);
+    }
+
+    //Auth question (paywall or subscription)
+
+    //Do you want to edit the schema that is generated? (Add new meta data).
+
+    //Total overwrite (not default), open editor with changes, add changes no editor
+
+    //Put custom resolvers and lambda function into our deploy.
+
+
+    /*
+    
+    type Todo @model {
+      id: ID!
+      name: String!
+      description: String
+    }
+
+
+    @auth(rules: [{allow: groups, groups: ["Admin"], operations:[update] }]
+
+    # Without Auth
+    type vodasset @model @auth(rules: [{allow: public, operations:[query, subscriptions]},{allow: groups, groups: ["Admin"], operations:[mutations]}]){
+      id:ID!
+      title:String!
+      description:String!
+      length:Int
+
+      #Do not edit
+      url:String!
+    }
+
+    # With Auth
+
+    type vodasset @model{
+      id:ID!
+      title:String!
+      description:String!
+      length:Int
+      subscription:String!
+
+      #Do not edit
+      url:String!
+    }
+
+
+    */
+
+  }
+
+  await inquirer.prompt(cmsEnable);
+
   return props;
+}
+
+function getAPIName(context) {
+  const { amplifyMeta } = context.amplify.getProjectDetails();
+  let apiName = '';
+
+  if (amplifyMeta.api) {
+    const categoryResources = amplifyMeta.api;
+    Object.keys(categoryResources).forEach((resource) => {
+      if (categoryResources[resource].service === 'AppSync') {
+        apiName = resource;
+      }
+    });
+  }
+  return apiName;
 }

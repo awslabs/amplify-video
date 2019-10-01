@@ -1,8 +1,11 @@
 {
   "encoder": {
     "encodingTemplate": "System-Ott_Hls_Ts_Avc_Aac"
-    },
+  },
   "contentDeliveryNetwork": {
-        "enableDistribution": true
-    }
+    "enableDistribution": true
+  },
+  "contentManagementSystem": {
+    "enableCMS":true
+  }
 }
