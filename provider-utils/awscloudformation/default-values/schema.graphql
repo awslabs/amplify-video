@@ -1,0 +1,12 @@
+
+
+type vodAsset @model {
+  id:ID!
+  title:String!
+  description:String!
+  length:Int
+  subscription:String!
+
+  #Do not edit
+  url:String!
+}

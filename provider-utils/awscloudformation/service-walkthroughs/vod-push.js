@@ -5,12 +5,16 @@ const chalk = require('chalk');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
 
+const DEBUG = true;
+
 module.exports = {
   serviceQuestions,
 };
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
+  const provider = getAWSConfig(context, options);
+  const aws = await provider.getConfiguredAWSClient(context);
   const projectMeta = context.amplify.getProjectMeta();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
@@ -36,15 +40,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.shared = nameDict;
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
-  const provider = getAWSConfig(context, options);
-  const aws = await provider.getConfiguredAWSClient(context);
-
-  let mcClient = new aws.MediaConvert();
-
-  const endpoints = await mcClient.describeEndpoints().promise();
-  aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
-  // Override so config applies
-  mcClient = new aws.MediaConvert();
   let jobTemplate = {};
   props.template = {};
   while (!('JobTemplate' in jobTemplate)) {
@@ -77,9 +72,18 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       Name: props.template.name,
     };
     try {
+      let mcClient = new aws.MediaConvert();
+
+      const endpoints = await mcClient.describeEndpoints().promise();
+      aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
+      // Override so config applies
+      mcClient = new aws.MediaConvert();
       jobTemplate = await mcClient.getJobTemplate(params).promise();
     } catch (e) {
       console.log(chalk.red(e.message));
+      if (DEBUG) {
+        break;
+      }
     }
   }
 
@@ -96,8 +100,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cdnResponse = await inquirer.prompt(cdnEnable);
 
+  if (!DEBUG) {
+    props.template.arn = jobTemplate.JobTemplate.Arn;
+  }
 
-  props.template.arn = jobTemplate.JobTemplate.Arn;
   props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
 
   const cmsEnable = [
@@ -124,58 +130,88 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       context.print.info(`Using ${apiName} to manage API`);
     }
 
-    //Auth question (paywall or subscription)
-
-    //Do you want to edit the schema that is generated? (Add new meta data).
-
-    //Total overwrite (not default), open editor with changes, add changes no editor
-
-    //Put custom resolvers and lambda function into our deploy.
-
-
-    /*
-    
-    type Todo @model {
-      id: ID!
-      name: String!
-      description: String
-    }
-
-
-    @auth(rules: [{allow: groups, groups: ["Admin"], operations:[update] }]
-
-    # Without Auth
-    type vodasset @model @auth(rules: [{allow: public, operations:[query, subscriptions]},{allow: groups, groups: ["Admin"], operations:[mutations]}]){
-      id:ID!
-      title:String!
-      description:String!
-      length:Int
-
-      #Do not edit
-      url:String!
-    }
-
-    # With Auth
-
-    type vodasset @model{
-      id:ID!
-      title:String!
-      description:String!
-      length:Int
-      subscription:String!
-
-      #Do not edit
-      url:String!
-    }
-
-
-    */
-
+    await createCMS(context, resourceName, apiName);
   }
 
   await inquirer.prompt(cmsEnable);
 
   return props;
+}
+
+async function createCMS(context, resourceName, apiName) {
+  const { inputs } = question.video;
+  const cmsEdit = [
+    {
+      type: inputs[5].type,
+      name: inputs[5].key,
+      message: inputs[5].question,
+      default: true,
+    },
+    {
+      type: inputs[6].type,
+      name: inputs[6].key,
+      message: inputs[6].question,
+      default: true,
+    }];
+  const backEndDir = context.amplify.pathManager.getBackendDirPath();
+  const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
+  let authConfig = {};
+  const amplifyMeta = context.amplify.getProjectMeta();
+  if ('api' in amplifyMeta && Object.keys(amplifyMeta.api).length !== 0) {
+    Object.values(amplifyMeta.api).forEach((project) => {
+      if ('output' in project) {
+        authConfig = project.output.authConfig;
+      }
+    });
+  }
+  const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/parameters.json`));
+  const cmsEditResponse = await inquirer.prompt(cmsEdit);
+  const editSchemaChoice = cmsEditResponse.editAPI;
+
+  await writeNewModel(context, resourceDir, cmsEditResponse.subscribeField);
+
+
+  if (editSchemaChoice) {
+    await context.amplify.openEditor(context, `${resourceDir}/schema.graphql`).then(async () => {
+      let notCompiled = true;
+      while (notCompiled) {
+        notCompiled = await compileSchema(context, resourceDir, parameters, authConfig);
+      }
+    });
+  } else {
+    await compileSchema(context, resourceDir, parameters, authConfig);
+  }
+}
+
+async function compileSchema(context, resourceDir, parameters, authConfig) {
+  try {
+    await context.amplify.executeProviderUtils(
+      context,
+      'awscloudformation',
+      'compileSchema',
+      { resourceDir, parameters, authConfig },
+    );
+    return false;
+  } catch (e) {
+    context.print.error('Failed compiling GraphQL schema:');
+    context.print.info(e.message);
+    const continueQuestion = {
+      type: 'input',
+      name: 'pressKey',
+      message: `Correct the errors in schema.graphql and press Enter to re-compile.\n\nPath to schema.graphql:\n${resourceDir}/schema.graphql`,
+    };
+    await inquirer.prompt(continueQuestion);
+    return true;
+  }
+}
+
+async function writeNewModel(context, resourceDir, subscription) {
+  const appendSchema = await fs.readFileSync(`${__dirname}/../default-values/schema.graphql`);
+  console.log(appendSchema);
+
+  await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+
+  return subscription;
 }
 
 function getAPIName(context) {
