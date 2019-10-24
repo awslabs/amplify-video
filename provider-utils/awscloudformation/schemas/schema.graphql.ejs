@@ -1,0 +1,37 @@
+
+
+type vodAsset @model
+@auth(
+  rules: [
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: private, operations: [read]}
+  ]
+)
+{
+  id:ID!
+  title:String!
+  description:String!
+  length:Int
+
+  #DO NOT EDIT
+  video:videoObject!
+} 
+
+#DO NOT EDIT
+type videoObject @model
+@auth(
+  rules: [
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: private, operations: [read]}
+  ]
+)
+{
+  id:ID!
+  objectID:String!
+  <% if (props.contentDeliveryNetwork.enableDistribution) { %>
+  cookie:String!
+  <% } %>
+  <% if (props.cms.subscribeField) { %>
+  subscription:String!
+  <% } <%>
+}

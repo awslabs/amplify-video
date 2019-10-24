@@ -1,11 +1,10 @@
 const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
+const ejs = require('ejs');
 const chalk = require('chalk');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
-
-const DEBUG = true;
 
 module.exports = {
   serviceQuestions,
@@ -43,16 +42,41 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   let jobTemplate = {};
   props.template = {};
   while (!('JobTemplate' in jobTemplate)) {
+    const pluginDir = path.join(`${__dirname}/..`);
+    const templates = fs.readdirSync(`${pluginDir}/templates/`);
+    const availableTemplates = [];
+    let mcClient = new aws.MediaConvert();
+
+    templates.forEach((filepath) => {
+      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${filepath}`));
+      availableTemplates.push({
+        name: templateInfo.Description,
+        value: filepath,
+      });
+    });
+
+    availableTemplates.push({
+      name: 'Bring your own template',
+      value: 'advanced',
+    });
     const templateQuestion = [
       {
         type: inputs[1].type,
         name: inputs[1].key,
         message: inputs[1].question,
-        validate: amplify.inputValidation(inputs[1]),
-        choices: inputs[1].options,
+        choices: availableTemplates,
       },
     ];
     const template = await inquirer.prompt(templateQuestion);
+
+    try {
+      const endpoints = await mcClient.describeEndpoints().promise();
+      aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
+      // Override so config applies
+      mcClient = new aws.MediaConvert();
+    } catch (e) {
+      console.log(chalk.red(e.message));
+    }
 
     if (template.encodingTemplate === 'advanced') {
       const encodingTemplateName = [
@@ -65,24 +89,24 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       ];
       const advTemplate = await inquirer.prompt(encodingTemplateName);
       props.template.name = advTemplate.encodingTemplate;
-    } else {
-      props.template.name = template.encodingTemplate;
-    }
-    const params = {
-      Name: props.template.name,
-    };
-    try {
-      let mcClient = new aws.MediaConvert();
+      const params = {
+        Name: props.template.name,
+      };
 
-      const endpoints = await mcClient.describeEndpoints().promise();
-      aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
-      // Override so config applies
-      mcClient = new aws.MediaConvert();
-      jobTemplate = await mcClient.getJobTemplate(params).promise();
-    } catch (e) {
-      console.log(chalk.red(e.message));
-      if (DEBUG) {
-        break;
+      try {
+        jobTemplate = await mcClient.getJobTemplate(params).promise();
+      } catch (e) {
+        console.log(chalk.red(e.message));
+      }
+    } else {
+      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
+      props.template.name = template.encodingTemplate;
+
+      try {
+        jobTemplate = await mcClient.createJobTemplate(templateInfo).promise();
+        console.log(jobTemplate);
+      } catch (e) {
+        console.log(chalk.red(e.message));
       }
     }
   }
@@ -99,10 +123,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }];
 
   const cdnResponse = await inquirer.prompt(cdnEnable);
-
-  if (!DEBUG) {
-    props.template.arn = jobTemplate.JobTemplate.Arn;
-  }
 
   props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
 
@@ -130,7 +150,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       context.print.info(`Using ${apiName} to manage API`);
     }
 
-    await createCMS(context, resourceName, apiName);
+    await createCMS(context, apiName, props);
   }
 
   await inquirer.prompt(cmsEnable);
@@ -138,7 +158,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   return props;
 }
 
-async function createCMS(context, resourceName, apiName) {
+async function createCMS(context, apiName, props) {
   const { inputs } = question.video;
   const cmsEdit = [
     {
@@ -160,16 +180,18 @@ async function createCMS(context, resourceName, apiName) {
   if ('api' in amplifyMeta && Object.keys(amplifyMeta.api).length !== 0) {
     Object.values(amplifyMeta.api).forEach((project) => {
       if ('output' in project) {
-        authConfig = project.output.authConfig;
+        ({ authConfig } = project.output);
       }
     });
   }
+
   const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/parameters.json`));
   const cmsEditResponse = await inquirer.prompt(cmsEdit);
   const editSchemaChoice = cmsEditResponse.editAPI;
 
-  await writeNewModel(context, resourceDir, cmsEditResponse.subscribeField);
+  props.cms = cmsEditResponse;
 
+  await writeNewModel(resourceDir, props);
 
   if (editSchemaChoice) {
     await context.amplify.openEditor(context, `${resourceDir}/schema.graphql`).then(async () => {
@@ -181,6 +203,14 @@ async function createCMS(context, resourceName, apiName) {
   } else {
     await compileSchema(context, resourceDir, parameters, authConfig);
   }
+}
+
+async function writeNewModel(resourceDir, parameters) {
+  const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../default-values/schema.graphql`);
+
+  const appendSchema = ejs.render(appendSchemaTemplate, parameters);
+
+  await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
 }
 
 async function compileSchema(context, resourceDir, parameters, authConfig) {
@@ -203,15 +233,6 @@ async function compileSchema(context, resourceDir, parameters, authConfig) {
     await inquirer.prompt(continueQuestion);
     return true;
   }
-}
-
-async function writeNewModel(context, resourceDir, subscription) {
-  const appendSchema = await fs.readFileSync(`${__dirname}/../default-values/schema.graphql`);
-  console.log(appendSchema);
-
-  await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
-
-  return subscription;
 }
 
 function getAPIName(context) {

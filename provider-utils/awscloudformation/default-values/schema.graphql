@@ -1,12 +1,17 @@
 
 
-type vodAsset @model {
+type vodAsset @model @searchable {
   id:ID!
   title:String!
   description:String!
   length:Int
-  subscription:String!
 
-  #Do not edit
+  #DO NOT EDIT
+  url:videoObject!
+} 
+
+#DO NOT EDIT
+type videoObject @model {
+  id:ID!
   url:String!
 }
