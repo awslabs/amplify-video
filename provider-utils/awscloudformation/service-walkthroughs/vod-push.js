@@ -111,6 +111,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
   }
 
+  props.template.arn = jobTemplate.JobTemplate.Arn;
+
+  console.log(props.template.arn);
+
   // prompt for cdn
   props.contentDeliveryNetwork = {};
   const cdnEnable = [
@@ -154,6 +158,15 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   }
 
   await inquirer.prompt(cmsEnable);
+
+  props.parameters = {
+    authRoleName: {
+      Ref: 'AuthRoleName',
+    },
+    unauthRoleName: {
+      Ref: 'UnauthRoleName',
+    },
+  };
 
   return props;
 }
@@ -205,10 +218,10 @@ async function createCMS(context, apiName, props) {
   }
 }
 
-async function writeNewModel(resourceDir, parameters) {
-  const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../default-values/schema.graphql`);
+async function writeNewModel(resourceDir, props) {
+  const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../schemas/schema.graphql.ejs`, { encoding: 'utf-8' });
 
-  const appendSchema = ejs.render(appendSchemaTemplate, parameters);
+  const appendSchema = ejs.render(appendSchemaTemplate, props);
 
   await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
 }

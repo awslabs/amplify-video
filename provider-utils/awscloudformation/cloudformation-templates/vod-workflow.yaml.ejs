@@ -5,6 +5,14 @@ Parameters:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
     Default: NONE
+  authRoleName:
+    Type: String
+    Description: Arn for authRoleArn
+    Default: NONE
+  unauthRoleName:
+    Type: String
+    Description: Arn for authRoleArn
+    Default: NONE
   pS3:
     Type: String
     Description: Store template and lambda package
@@ -47,6 +55,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
+        authRoleName: !Ref authRoleName
         pBucketName:
           !If
             - HasEnvironmentParameter

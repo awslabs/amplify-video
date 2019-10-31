@@ -104,6 +104,10 @@ async function pushRootTemplate(context, options, props, cfnFilename, type) {
 
   await context.amplify.copyBatch(context, copyJobs, props);
 
+  if (props.parameters !== undefined) {
+    await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/parameters.json`, JSON.stringify(props.parameters, null, 4));
+  }
+
   await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 

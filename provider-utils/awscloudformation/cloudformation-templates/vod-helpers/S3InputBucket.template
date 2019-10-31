@@ -6,12 +6,46 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
+  authRoleName:
+    Type: String
+    Description: Name of authRole
+    Default: NONE
 
 Resources:
   InputBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref pBucketName
+      CorsConfiguration:
+        CorsRules:
+         - AllowedHeaders: ['*']
+           AllowedMethods: ['GET', 'HEAD', 'PUT', 'POST', 'DELETE']
+           AllowedOrigins: ['*']
+           ExposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2']
+           MaxAge: '3000'
+  S3AuthPut:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AuthPut
+      Roles:
+        - !Ref authRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+           - "s3:PutObject"
+           - "s3:DeleteObject"
+          Resource:
+          - !Join
+            - ''
+            - - arn:aws:s3:::
+              - !Ref InputBucket
+              - "/public/*"
+
+
+
+
 Outputs:
   oInputBucketArn:
     Value: !GetAtt InputBucket.Arn
