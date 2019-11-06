@@ -20,6 +20,10 @@ module.exports = {
         description: `Takes you through a CLI flow to add a ${featureName} resource to your local backend`,
       },
       {
+        name: 'version',
+        description: `Prints the version of Amplify Video that you are using`,
+      },
+      {
         name: 'update',
         description: `Takes you through a CLI flow to update a ${featureName} resource`,
       },

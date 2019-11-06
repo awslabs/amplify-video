@@ -11,6 +11,7 @@
         "setup",
         "start",
         "stop",
-        "update"
+        "update",
+        "version"
     ]
 }
