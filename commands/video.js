@@ -20,20 +20,20 @@ module.exports = {
         description: `Takes you through a CLI flow to add a ${featureName} resource to your local backend`,
       },
       {
-        name: 'version',
-        description: `Prints the version of Amplify Video that you are using`,
-      },
-      {
-        name: 'update',
-        description: `Takes you through a CLI flow to update a ${featureName} resource`,
+        name: 'get-info',
+        description: `Gets info for ${featureName} resource from the CloudFormation template`,
       },
       {
         name: 'push',
         description: `Provisions ${featureName} cloud resources and it's dependencies with the latest local developments`,
       },
       {
-        name: 'get-info',
-        description: `Gets info for ${featureName} resource from the CloudFormation template`,
+        name: 'remove',
+        description: `Removes ${featureName} resource from your local backend and will remove them on amplify push`,
+      },
+      {
+        name: 'setup-obs',
+        description: 'Sets up OBS with your stream settings.',
       },
       {
         name: 'start',
@@ -44,12 +44,12 @@ module.exports = {
         description: `Puts your ${featureName} stream into an idle state`,
       },
       {
-        name: 'remove',
-        description: `Removes ${featureName} resource from your local backend and will remove them on amplify push`,
+        name: 'update',
+        description: `Takes you through a CLI flow to update a ${featureName} resource`,
       },
       {
-        name: 'setup-obs',
-        description: 'Sets up OBS with your stream settings.',
+        name: 'version',
+        description: `Prints the version of Amplify Video that you are using`,
       },
     ];
 

@@ -6,6 +6,6 @@ const category = 'video';
 module.exports = {
   name: subcommand,
   run: async (context) => {
-    await context.print.info('amplify-category-video@' + serviceMetadata.version);
+    context.print.info('amplify-category-video@' + serviceMetadata.version);
   }
 }
