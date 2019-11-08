@@ -23,28 +23,6 @@ Resources:
            AllowedOrigins: ['*']
            ExposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2']
            MaxAge: '3000'
-  S3AuthPut:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: AuthPut
-      Roles:
-        - !Ref authRoleName
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-        - Effect: Allow
-          Action:
-           - "s3:PutObject"
-           - "s3:DeleteObject"
-          Resource:
-          - !Join
-            - ''
-            - - arn:aws:s3:::
-              - !Ref InputBucket
-              - "/public/*"
-
-
-
 
 Outputs:
   oInputBucketArn:

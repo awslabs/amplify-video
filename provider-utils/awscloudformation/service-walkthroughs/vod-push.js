@@ -5,6 +5,7 @@ const ejs = require('ejs');
 const chalk = require('chalk');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
+const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
 
 module.exports = {
   serviceQuestions,
@@ -261,4 +262,104 @@ function getAPIName(context) {
     });
   }
   return apiName;
+}
+
+async function authGroupHack(context, bucketName) {
+  const userPoolGroupFile = path.join(
+    context.amplify.pathManager.getBackendDirPath(),
+    'auth',
+    'userPoolGroups',
+    'user-pool-group-precedence.json'
+  );
+
+  const amplifyMeta = context.amplify.getProjectMeta();
+
+  if (!('auth' in amplifyMeta) || Object.keys(amplifyMeta.auth).length === 0) {
+    context.print.error('You have no auth projects. Moving on.');
+    return;
+  }
+
+  let resourceName = '';
+
+  Object.keys(amplifyMeta.auth).forEach((authCategory) => {
+    if (amplifyMeta.auth[authCategory].service === 'Cognito') {
+      resourceName = authCategory;
+    }
+  });
+
+  if (fs.existsSync(userPoolGroupFile)) {
+    const userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
+    if (userPoolGroup.length === 0) {
+      userPoolGroup.push(generateIAMAdmin(resourceName, bucketName));
+    } else {
+      userPoolGroup.forEach((userGroup, index) => {
+        if (userGroup.groupName === 'Admin') {
+          if (!('customPolicies' in userGroup)) {
+            userGroup.customPolicies = [];
+          }
+          const policy = generateIAMAdminPolicy(resourceName, bucketName);
+          userGroup.customPolicies.push(policy);
+          return;
+        }
+        if (userPoolGroup.length === index + 1) {
+          userPoolGroup.push(generateIAMAdmin(resourceName, bucketName));
+        }
+    });
+  }
+  } else {
+    const admin = generateIAMAdmin(resourceName, bucketName);
+    const userPoolGroupList = [admin];
+    await createUserPoolGroups(context, resourceName, userPoolGroupList);
+  }
+}
+
+/*
+Pulled from Amplify CLI - Not mainted by plugin owner.
+*/
+async function createUserPoolGroups(context, resourceName, userPoolGroupList) {
+  if (userPoolGroupList && userPoolGroupList.length > 0) {
+    const userPoolGroupPrecedenceList = [];
+
+    for (let i = 0; i < userPoolGroupList.length; i += 1) {
+      userPoolGroupPrecedenceList.push({
+        groupName: userPoolGroupList[i],
+        precedence: i + 1,
+      });
+    }
+
+    const userPoolGroupFile = path.join(
+      context.amplify.pathManager.getBackendDirPath(),
+      'auth',
+      'userPoolGroups',
+      'user-pool-group-precedence.json',
+    );
+
+    const userPoolGroupParams = path.join(context.amplify.pathManager.getBackendDirPath(), 'auth', 'userPoolGroups', 'parameters.json');
+
+    /* eslint-disable */
+    const groupParams = {
+      AuthRoleArn: {
+        'Fn::GetAtt': ['AuthRole', 'Arn'],
+      },
+      UnauthRoleArn: {
+        'Fn::GetAtt': ['UnauthRole', 'Arn'],
+      },
+    };
+    /* eslint-enable */
+
+    fs.outputFileSync(userPoolGroupParams, JSON.stringify(groupParams, null, 4));
+    fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupPrecedenceList, null, 4));
+
+    context.amplify.updateamplifyMetaAfterResourceAdd('auth', 'userPoolGroups', {
+      service: 'Cognito-UserPool-Groups',
+      providerPlugin: 'awscloudformation',
+      dependsOn: [
+        {
+          category: 'auth',
+          resourceName,
+          attributes: ['UserPoolId', 'AppClientIDWeb', 'AppClientID', 'IdentityPoolId'],
+        },
+      ],
+    });
+  }
 }
