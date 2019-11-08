@@ -1,5 +1,9 @@
-# Amplify Video Plugin (Alpha) - Includes VOD
-
+# Amplify Video Plugin
+<p>
+  <a href="https://www.npmjs.com/package/amplify-category-video">
+      <img src="https://img.shields.io/npm/v/amplify-category-video.svg" />
+  </a>
+</p>
 An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
 ## Installation Guide

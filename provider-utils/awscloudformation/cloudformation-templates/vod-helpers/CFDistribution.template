@@ -1,0 +1,31 @@
+Description: CloudFront Distribution for output bucket
+
+Parameters:
+  pBucketName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pOriginAccessIdentity:
+    Type: String
+    Description: Policy for bucket
+    Default: NA
+
+Resources:
+  rCloudFrontDist:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          ForwardedValues:
+              QueryString: false
+          TargetOriginId: "vodS3Origin"
+          ViewerProtocolPolicy: "allow-all"
+        Origins: 
+          - 
+            DomainName: !Sub "${pBucketName}.s3.amazonaws.com"
+            Id: vodS3Origin
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${pOriginAccessIdentity}"
+        Enabled: 'true'
+        PriceClass: PriceClass_All

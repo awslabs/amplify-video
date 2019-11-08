@@ -6,7 +6,7 @@
                 "question": "Provide a friendly name for your resource to be used as a label for this category in the project:",
                 "validation": {
                     "operator": "regex",
-                    "value": "^[a-zA-Z0-9]+$",
+                    "value": "^[a-zA-Z0-9\\-]+$",
                     "onErrorMsg": "Resource name should be alphanumeric"
                 },
                 "required": true
@@ -40,7 +40,13 @@
                   "onErrorMsg": "Resource name should be alphanumeric"
               },
               "required": true
-            }
+            },
+            {
+              "key": "enableCDN",
+              "type": "confirm",
+              "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
+              "required": true
+          }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

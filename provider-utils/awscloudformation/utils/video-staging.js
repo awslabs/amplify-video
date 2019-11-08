@@ -17,11 +17,11 @@ async function copyFilesToS3(context, options, resourceName, stackFolder) {
     const fileuploads = fs.readdirSync(distributionDirPath);
 
     fileuploads.forEach((filePath) => {
-        uploadFile(s3Client, targetBucket, distributionDirPath, filePath, options);
+        uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
     });
 }
   
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, options) {
+async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, stackFolder) {
     let relativeFilePath = path.relative(distributionDirPath, filePath);
 
     relativeFilePath = relativeFilePath.replace(/\\/g, '/');
@@ -30,7 +30,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
     const contentType = mime.lookup(relativeFilePath);
     const uploadParams = {
         Bucket: hostingBucketName,
-        Key: `${options.serviceType}-helpers/${filePath}`,
+        Key: `${stackFolder}/${filePath}`,
         Body: fileStream,
         ContentType: contentType || 'text/plain',
         ACL: 'public-read',
@@ -61,12 +61,10 @@ async function syncHelperCF(context, props, stackFolder){
   }
 
   fileuploads.forEach((filePath) => {
-    if (filePath != 'LambdaFunctions'){
+    if (filePath != 'LambdaFunctions' && filePath != '.DS_Store'){
       fs.copyFileSync(`${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}`);
     }
   });
-
-  fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function pushRootTemplate(context, options, props, cfnFilename, type){
@@ -105,6 +103,8 @@ async function pushRootTemplate(context, options, props, cfnFilename, type){
   }
 
   await context.amplify.copyBatch(context, copyJobs, props);
+
+  await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
 }
 
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder){
@@ -113,10 +113,20 @@ async function updateWithProps(context, options, props, resourceName, cfnFilenam
   copyFilesToS3(context, options, resourceName, stackFolder);
 }
 
+async function resetupFiles(context, options, resourceName, stackFolder){
+  let props = {
+    shared:{
+      resourceName:resourceName
+    }
+  };
+  syncHelperCF(context, props, stackFolder);
+  copyFilesToS3(context, options, resourceName, stackFolder);
+}
+
 module.exports = {
     stageVideo,
-    copyFilesToS3,
-    updateWithProps
+    updateWithProps,
+    resetupFiles,
 };
 
 

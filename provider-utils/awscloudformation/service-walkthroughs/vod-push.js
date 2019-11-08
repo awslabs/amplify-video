@@ -1,4 +1,6 @@
 const inquirer = require('inquirer');
+const fs = require('fs-extra');
+const path = require('path');
 const chalk = require('chalk');
 const question = require('../../vod-questions.json');
 const {getAWSConfig} = require('../utils/get-aws');
@@ -7,9 +9,11 @@ module.exports={
     serviceQuestions,
 }
 
-async function serviceQuestions(context, options, resourceName){
+async function serviceQuestions(context, options, defaultValuesFilename, resourceName){
     const { amplify } = context;
     const projectMeta = context.amplify.getProjectMeta();
+    const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
+    let defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
     let props = {};
     let nameDict = {};
 
@@ -79,7 +83,22 @@ async function serviceQuestions(context, options, resourceName){
         }
     }
     
+  //prompt for cdn
+  props.contentDeliveryNetwork = {};
+  const cdnEnable = [
+    {
+        type: inputs[3].type,
+        name: inputs[3].key,
+        message: inputs[3].question,
+        validate: amplify.inputValidation(inputs[3]),
+        default: defaults.contentDeliveryNetwork[inputs[3].key],
+    }];
+
+    let cdnResponse = await inquirer.prompt(cdnEnable)
+
+
     props.template.arn = jobTemplate.JobTemplate.Arn
+    props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
     
     return props;
 }
