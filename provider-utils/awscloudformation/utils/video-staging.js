@@ -75,18 +75,15 @@ async function syncHelperCF(context, props, stackFolder){
       const archive = archiver('zip');
 
       archive.on('warning', function(err) {
-        console.log(err);
         if (err.code === 'ENOENT') {
-
-          // log warning
+          context.print.warning(err);
         } else {
-          // throw error
-          throw err;
+          context.print.error(err);
         }
       });
 
       archive.on('error', function(err) {
-        console.log(err);
+        context.print.error(err);
         throw err;
       });
 
