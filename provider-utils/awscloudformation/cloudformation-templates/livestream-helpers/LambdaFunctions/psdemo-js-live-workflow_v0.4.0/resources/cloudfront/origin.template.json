@@ -1,0 +1,23 @@
+{
+  "Id": "##ORIGIN ID GOES HERE",
+  "DomainName": "##DOMAIN NAME GOES HERE",
+  "OriginPath": "",
+  "CustomOriginConfig": {
+    "OriginSslProtocols": {
+      "Quantity": 3,
+      "Items": [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2"
+      ]
+    },
+    "OriginProtocolPolicy": "https-only",
+    "OriginReadTimeout": 30,
+    "HTTPPort": 80,
+    "HTTPSPort": 443,
+    "OriginKeepaliveTimeout": 5
+  },
+  "CustomHeaders": {
+    "Quantity": 0
+  }
+}

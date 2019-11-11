@@ -1,4 +1,5 @@
 const fs = require('fs-extra');
+const archiver = require('archiver');
 const path = require('path');
 const mime = require('mime-types');
 const chalk = require('chalk');
@@ -58,6 +59,41 @@ async function syncHelperCF(context, props, stackFolder){
 
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
+  }
+
+  if(fs.existsSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`)){
+    const foldersToZip = fs.readdirSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`);
+    foldersToZip.forEach((filePath) => {
+      if (filePath === '.DS_Store'){
+        return;
+      }
+      const zipName = `${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}.zip`;
+      if (fs.existsSync(zipName)){
+        fs.unlinkSync(zipName);
+      }
+      const output = fs.createWriteStream(zipName);
+      const archive = archiver('zip');
+
+      archive.on('warning', function(err) {
+        console.log(err);
+        if (err.code === 'ENOENT') {
+
+          // log warning
+        } else {
+          // throw error
+          throw err;
+        }
+      });
+
+      archive.on('error', function(err) {
+        console.log(err);
+        throw err;
+      });
+
+      archive.pipe(output);
+      archive.directory(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/${filePath}`, false);
+      archive.finalize();
+    });
   }
 
   fileuploads.forEach((filePath) => {
