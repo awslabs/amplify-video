@@ -190,7 +190,7 @@
                 "required": true
             }, 
             {
-                "key": "enableDistrubtion",
+                "key": "enableDistribution",
                 "question": "Create distribution: ",
                 "type":"list",
                 "options": [

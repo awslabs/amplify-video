@@ -16,6 +16,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const provider = getAWSConfig(context, options);
   const aws = await provider.getConfiguredAWSClient(context);
   const projectMeta = context.amplify.getProjectMeta();
+  const projectDetails = context.amplify.getProjectDetails();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   const props = {};
@@ -33,11 +34,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   if (resourceName) {
     nameDict.resourceName = resourceName;
+    props.shared = nameDict;
   } else {
     nameDict = await inquirer.prompt(nameProject);
+    props.shared = nameDict;
+    const uuid = Math.random().toString(36).substring(2, 6)
+                + Math.random().toString(36).substring(2, 6);
+    props.shared.bucketInput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-i${uuid}`.slice(0, 63);
+    props.shared.bucketOutput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-o${uuid}`.slice(0, 63);
   }
 
-  props.shared = nameDict;
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
   let jobTemplate = {};
@@ -114,22 +120,20 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   props.template.arn = jobTemplate.JobTemplate.Arn;
 
-  console.log(props.template.arn);
-
   // prompt for cdn
   props.contentDeliveryNetwork = {};
-  const cdnEnable = [
-    {
-      type: inputs[3].type,
-      name: inputs[3].key,
-      message: inputs[3].question,
-      validate: amplify.inputValidation(inputs[3]),
-      default: defaults.contentDeliveryNetwork[inputs[3].key],
-    }];
+  // const cdnEnable = [
+  //   {
+  //     type: inputs[3].type,
+  //     name: inputs[3].key,
+  //     message: inputs[3].question,
+  //     validate: amplify.inputValidation(inputs[3]),
+  //     default: defaults.contentDeliveryNetwork[inputs[3].key],
+  //   }];
+  //
+  // const cdnResponse = await inquirer.prompt(cdnEnable);
 
-  const cdnResponse = await inquirer.prompt(cdnEnable);
-
-  props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
+  props.contentDeliveryNetwork.enableDistribution = false;
 
   const cmsEnable = [
     {
@@ -217,6 +221,8 @@ async function createCMS(context, apiName, props) {
   } else {
     await compileSchema(context, resourceDir, parameters, authConfig);
   }
+
+  authGroupHack(context, props.shared.bucketInput);
 }
 
 async function writeNewModel(resourceDir, props) {
@@ -269,7 +275,7 @@ async function authGroupHack(context, bucketName) {
     context.amplify.pathManager.getBackendDirPath(),
     'auth',
     'userPoolGroups',
-    'user-pool-group-precedence.json'
+    'user-pool-group-precedence.json',
   );
 
   const amplifyMeta = context.amplify.getProjectMeta();
@@ -304,8 +310,9 @@ async function authGroupHack(context, bucketName) {
         if (userPoolGroup.length === index + 1) {
           userPoolGroup.push(generateIAMAdmin(resourceName, bucketName));
         }
-    });
-  }
+      });
+    }
+    await createUserPoolGroups(context, resourceName, userPoolGroup);
   } else {
     const admin = generateIAMAdmin(resourceName, bucketName);
     const userPoolGroupList = [admin];
@@ -313,20 +320,8 @@ async function authGroupHack(context, bucketName) {
   }
 }
 
-/*
-Pulled from Amplify CLI - Not mainted by plugin owner.
-*/
 async function createUserPoolGroups(context, resourceName, userPoolGroupList) {
   if (userPoolGroupList && userPoolGroupList.length > 0) {
-    const userPoolGroupPrecedenceList = [];
-
-    for (let i = 0; i < userPoolGroupList.length; i += 1) {
-      userPoolGroupPrecedenceList.push({
-        groupName: userPoolGroupList[i],
-        precedence: i + 1,
-      });
-    }
-
     const userPoolGroupFile = path.join(
       context.amplify.pathManager.getBackendDirPath(),
       'auth',
@@ -348,7 +343,7 @@ async function createUserPoolGroups(context, resourceName, userPoolGroupList) {
     /* eslint-enable */
 
     fs.outputFileSync(userPoolGroupParams, JSON.stringify(groupParams, null, 4));
-    fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupPrecedenceList, null, 4));
+    fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupList, null, 4));
 
     context.amplify.updateamplifyMetaAfterResourceAdd('auth', 'userPoolGroups', {
       service: 'Cognito-UserPool-Groups',

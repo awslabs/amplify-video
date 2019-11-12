@@ -10,6 +10,10 @@ Parameters:
     Type: String
     Description: Check if CF is enabled
     Default: "true"
+  authRoleName:
+    Type: String
+    Description: Name of authRole
+    Default: NONE
 
 Conditions:
   CreateCloudfront: !Equals [!Ref pCloudfrontEnabled, "true"]
@@ -19,6 +23,24 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref pBucketName
+  S3AuthGet:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AuthGet
+      Roles:
+        - !Ref authRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+           - "s3:GetObject"
+          Resource:
+          - !Join
+            - ''
+            - - arn:aws:s3:::'
+              - !Ref OutputBucket
+              - "/${cognito-identity.amazonaws.com:sub}/*"
 
   OriginAccessIdentity:
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"

@@ -1,6 +1,5 @@
-const path = require('path');
-
 const category = 'video';
+const path = require('path');
 
 async function add(context, providerName, service) {
   const options = {

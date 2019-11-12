@@ -18,6 +18,16 @@ Parameters:
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: "<%= props.shared.bucket %>"
+  pS3InputName:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucketInput %>"
+  pS3OutputName:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucketOutput %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -56,36 +66,15 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
-        pBucketName:
-          !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'input'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'input'
+        pBucketName: !Ref pS3InputName
                 
   rS3OutputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
       Parameters:
-        pBucketName:
-          !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'output'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'output'
+        authRoleName: !Ref authRoleName
+        pBucketName: !Ref pS3OutputName
         pCloudfrontEnabled: !Ref pCloudfrontEnabled
 <% if (props.contentDeliveryNetwork.enableDistribution) { %>
   rCloudfrontDistribution:
@@ -93,18 +82,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
       Parameters:
-          pBucketName:
-           !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'output'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'output'
+          pBucketName: !Ref pS3OutputName
           pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
 <% } %>
   rLambdaTriggerFunction:

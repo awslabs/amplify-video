@@ -1,0 +1,44 @@
+{
+  "DistributionConfig": {
+    "CallerReference": "##CALLER REFERENCE",
+    "Comment": "##COMMENT GOES HERE",
+    "PriceClass": "##PRICE CLASS GOES HERE",
+    "DefaultCacheBehavior": {},
+    "CacheBehaviors": {
+      "Quantity": 0,
+      "Items": []
+    },
+    "IsIPV6Enabled": false,
+    "Logging": {
+      "Bucket": "## S3 BUCKET GOES HERE",
+      "Prefix": "cf_logs/",
+      "Enabled": true,
+      "IncludeCookies": true
+    },
+    "WebACLId": "",
+    "Origins": {
+      "Quantity": 0,
+      "Items": []
+    },
+    "DefaultRootObject": "",
+    "Enabled": true,
+    "ViewerCertificate": {
+      "CloudFrontDefaultCertificate": true,
+      "MinimumProtocolVersion": "TLSv1",
+      "CertificateSource": "cloudfront"
+    },
+    "CustomErrorResponses": {
+      "Quantity": 0
+    },
+    "HttpVersion": "http1.1",
+    "Restrictions": {
+      "GeoRestriction": {
+        "Quantity": 0,
+        "RestrictionType": "none"
+      }
+    },
+    "Aliases": {
+      "Quantity": 0
+    }
+  }
+}
