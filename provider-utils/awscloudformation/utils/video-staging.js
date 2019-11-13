@@ -67,7 +67,7 @@ async function syncHelperCF(context, props, stackFolder) {
       if (filePath === '.DS_Store') {
         return;
       }
-      const zipName = `${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}.zip`;
+      const zipName = `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}.zip`;
       if (fs.existsSync(zipName)) {
         fs.unlinkSync(zipName);
       }

@@ -12,7 +12,7 @@ function generateIAMAdminPolicy(resourceName, bucketName) {
   const adminPolicy = {
     PolicyName: `${resourceName}-admin-group-policy`,
     PolicyDocument: {
-      Verision: '2012-10-17',
+      Version: '2012-10-17',
       Statement: [
         {
           Sid: 'VisualEditor0',
