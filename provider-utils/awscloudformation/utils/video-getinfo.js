@@ -12,6 +12,8 @@ async function getInfoVideoAll(context) {
       if ('output' in project) {
         if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(project.output);
+        } else {
+          prettifyOutputVod(context, project.output);
         }
       }
     });
@@ -24,6 +26,8 @@ async function getVideoInfo(context, resourceName) {
   if ('output' in amplifyMeta.video[resourceName]) {
     if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
       await prettifyOutputLive(amplifyMeta.video[resourceName].output);
+    } else {
+      await prettifyOutputVod(context, amplifyMeta.video[resourceName].output);
     }
   } else {
     console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
@@ -60,4 +64,11 @@ async function prettifyOutputLive(output) {
     console.log(chalk.bold('\nMediaStore'));
     console.log(chalk`MediaStore Output Url: {blue.underline ${output.oPrimaryMediaStoreEgressUrl}}`);
   }
+}
+
+async function prettifyOutputVod(context, output) {
+  context.print.blue('Input Storage bucket:');
+  context.print.blue(`${output.oVODInputS3}\n`);
+  context.print.blue('Output Storage bucket:');
+  context.print.blue(`${output.oVODOutputS3}\n`);
 }
