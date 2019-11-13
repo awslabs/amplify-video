@@ -60,39 +60,38 @@ async function syncHelperCF(context, props, stackFolder) {
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
   }
+  const zipFiles = [];
 
   if (fs.existsSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`)) {
     const foldersToZip = fs.readdirSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`);
-    foldersToZip.forEach((filePath) => {
+    foldersToZip.forEach(async (filePath) => {
       if (filePath === '.DS_Store') {
         return;
       }
-      const zipName = `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}.zip`;
+      const zipName = `${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}.zip`;
       if (fs.existsSync(zipName)) {
         fs.unlinkSync(zipName);
       }
       const output = fs.createWriteStream(zipName);
       const archive = archiver('zip');
-
       archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
           context.print.warning(err);
-        } else {
+        }
+        else {
           context.print.error(err);
         }
       });
-
       archive.on('error', (err) => {
         context.print.error(err);
         throw err;
       });
-
       archive.pipe(output);
       archive.directory(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/${filePath}`, false);
-      archive.finalize();
+      zipFiles.push(archive.finalize());
     });
   }
-
+  await Promise.all(zipFiles);
   fileuploads.forEach((filePath) => {
     if (filePath !== 'LambdaFunctions' && filePath !== '.DS_Store') {
       fs.copyFileSync(`${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}`);

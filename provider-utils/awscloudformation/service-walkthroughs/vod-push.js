@@ -162,8 +162,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     await createCMS(context, apiName, props);
   }
 
-  await inquirer.prompt(cmsEnable);
-
   props.parameters = {
     authRoleName: {
       Ref: 'AuthRoleName',
