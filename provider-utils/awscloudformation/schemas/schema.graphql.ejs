@@ -1,6 +1,6 @@
 
 
-type vodAsset @model
+type vodAsset @model (subscriptions: {level: public})
 @auth(
   rules: [
     {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},

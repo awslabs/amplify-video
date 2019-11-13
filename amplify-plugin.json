@@ -13,5 +13,8 @@
         "stop",
         "update",
         "version"
+    ],
+    "eventHandlers":[
+        "PrePush"
     ]
 }

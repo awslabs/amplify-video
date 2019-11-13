@@ -18,7 +18,40 @@ async function copyFilesToS3(context, options, resourceName, stackFolder) {
   const fileuploads = fs.readdirSync(distributionDirPath);
 
   fileuploads.forEach((filePath) => {
-    uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
+    if (filePath === 'LambdaFunctions') {
+      const relativeFilePath = `${distributionDirPath}/${filePath}`;
+      const foldersToZip = fs.readdirSync(relativeFilePath);
+      foldersToZip.forEach(async (lambdaName) => {
+        if (lambdaName === '.DS_Store') {
+          return;
+        }
+        const newFilePath = `${lambdaName}.zip`;
+        const zipName = `${targetDir}/video/${resourceName}/${stackFolder}/${lambdaName}.zip`;
+        if (fs.existsSync(zipName)) {
+          fs.unlinkSync(zipName);
+        }
+        const output = fs.createWriteStream(zipName);
+        const archive = archiver('zip');
+        archive.on('warning', (err) => {
+          if (err.code === 'ENOENT') {
+            context.print.warning(err);
+          } else {
+            context.print.error(err);
+          }
+        });
+        archive.on('error', (err) => {
+          context.print.error(err);
+          throw err;
+        });
+        archive.pipe(output);
+        archive.directory(`${targetDir}/video/${resourceName}/${stackFolder}/${filePath}/${lambdaName}`, false);
+        await archive.finalize();
+        await uploadFile(s3Client, targetBucket, distributionDirPath, newFilePath, stackFolder);
+      });
+    } else {
+      uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
+    }
+    
   });
 }
 
@@ -47,7 +80,6 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
 async function stageVideo(context, options, props, cfnFilename, stackFolder, type) {
   await pushRootTemplate(context, options, props, cfnFilename, type);
   await syncHelperCF(context, props, stackFolder);
-  await copyFilesToS3(context, options, props.shared.resourceName, stackFolder);
 }
 
 async function syncHelperCF(context, props, stackFolder) {
@@ -55,49 +87,11 @@ async function syncHelperCF(context, props, stackFolder) {
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
 
-  const fileuploads = fs.readdirSync(`${pluginDir}/cloudformation-templates/${stackFolder}/`);
-
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
   }
-  /*
-  const zipFiles = [];
-  
-  if (fs.existsSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`)) {
-    const foldersToZip = fs.readdirSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`);
-    foldersToZip.forEach(async (filePath) => {
-      if (filePath === '.DS_Store') {
-        return;
-      }
-      const zipName = `${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}.zip`;
-      if (fs.existsSync(zipName)) {
-        fs.unlinkSync(zipName);
-      }
-      const output = fs.createWriteStream(zipName);
-      const archive = archiver('zip');
-      archive.on('warning', (err) => {
-        if (err.code === 'ENOENT') {
-          context.print.warning(err);
-        } else {
-          context.print.error(err);
-        }
-      });
-      archive.on('error', (err) => {
-        context.print.error(err);
-        throw err;
-      });
-      archive.pipe(output);
-      archive.directory(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/${filePath}`, false);
-      zipFiles.push(archive.finalize());
-    });
-  }
-  await Promise.all(zipFiles);
-  */
-  fileuploads.forEach((filePath) => {
-    if (filePath !== 'LambdaFunctions' && filePath !== '.DS_Store') {
-      fs.copyFileSync(`${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}`);
-    }
-  });
+
+  fs.copySync(`${pluginDir}/cloudformation-templates/${stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
 }
 
 async function pushRootTemplate(context, options, props, cfnFilename, type) {
@@ -147,7 +141,6 @@ async function pushRootTemplate(context, options, props, cfnFilename, type) {
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder) {
   pushRootTemplate(context, options, props, cfnFilename, 'update');
   syncHelperCF(context, props, stackFolder);
-  copyFilesToS3(context, options, resourceName, stackFolder);
 }
 
 async function resetupFiles(context, options, resourceName, stackFolder) {
@@ -157,11 +150,11 @@ async function resetupFiles(context, options, resourceName, stackFolder) {
     },
   };
   syncHelperCF(context, props, stackFolder);
-  copyFilesToS3(context, options, resourceName, stackFolder);
 }
 
 module.exports = {
   stageVideo,
   updateWithProps,
   resetupFiles,
+  copyFilesToS3,
 };
