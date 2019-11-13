@@ -60,8 +60,9 @@ async function syncHelperCF(context, props, stackFolder) {
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
   }
+  /*
   const zipFiles = [];
-
+  
   if (fs.existsSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`)) {
     const foldersToZip = fs.readdirSync(`${pluginDir}/cloudformation-templates/${stackFolder}/LambdaFunctions/`);
     foldersToZip.forEach(async (filePath) => {
@@ -77,8 +78,7 @@ async function syncHelperCF(context, props, stackFolder) {
       archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
           context.print.warning(err);
-        }
-        else {
+        } else {
           context.print.error(err);
         }
       });
@@ -92,6 +92,7 @@ async function syncHelperCF(context, props, stackFolder) {
     });
   }
   await Promise.all(zipFiles);
+  */
   fileuploads.forEach((filePath) => {
     if (filePath !== 'LambdaFunctions' && filePath !== '.DS_Store') {
       fs.copyFileSync(`${pluginDir}/cloudformation-templates/${stackFolder}/${filePath}`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/${filePath}`);

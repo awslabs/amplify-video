@@ -111,7 +111,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
       try {
         jobTemplate = await mcClient.createJobTemplate(templateInfo).promise();
-        console.log(jobTemplate);
       } catch (e) {
         console.log(chalk.red(e.message));
       }
