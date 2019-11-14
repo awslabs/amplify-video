@@ -51,7 +51,6 @@ async function copyFilesToS3(context, options, resourceName, stackFolder) {
     } else {
       uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
     }
-    
   });
 }
 

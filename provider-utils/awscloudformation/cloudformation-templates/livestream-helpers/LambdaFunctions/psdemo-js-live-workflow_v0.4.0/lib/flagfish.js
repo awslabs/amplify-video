@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-console */
+/* eslint-disable */
 const FS = require('fs');
 const URL = require('url');
 const PATH = require('path');
@@ -730,6 +731,7 @@ class Flagfish extends mxStoreResponse(class { }) {
         WhitelistRules: diff.PS_INPUT_SECURITY_GROUP.map(Cidr => ({ Cidr })),
       };
       const currentStuff = await this.flagfish.updateInputSecurityGroup(inputSecurityParam).promise();
+      console.log(currentStuff);
       delete diff.PS_INPUT_SECURITY_GROUP;
       // We will need to return stuff but we will work on it.
     }
@@ -806,6 +808,7 @@ class Flagfish extends mxStoreResponse(class { }) {
       const startChannelParams = {
         ChannelId: channel.Id,
       };
+      console.log(startChannelParams);
       await this.startChannel(ChannelId);
     } else if (diff.PS_START_CHANNEL == 'NO') {
       console.log('Stopping');
@@ -813,6 +816,7 @@ class Flagfish extends mxStoreResponse(class { }) {
         ChannelId: channel.Id,
       };
       await this.stopChannel(ChannelId);
+      console.log(stopChannelParam);
     }
 
     console.log(JSON.stringify(this.responseData, null, 2));
@@ -841,3 +845,4 @@ class Flagfish extends mxStoreResponse(class { }) {
 }
 
 module.exports.Flagfish = Flagfish;
+/* eslint-enable */

@@ -72,6 +72,8 @@ async function executeAmplifyCommand(context) {
 async function handleAmplifyEvent(context, args) {
   if (args.event === 'PrePush') {
     handlePrePush(context);
+  } else {
+    // console.log(args.event);
   }
 }
 

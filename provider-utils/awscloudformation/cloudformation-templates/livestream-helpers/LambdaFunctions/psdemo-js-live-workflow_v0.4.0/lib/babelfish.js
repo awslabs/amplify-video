@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-console */
+/* eslint-disable */
 
 const URL = require('url');
 const { SSM, MediaPackage } = require('aws-sdk');
@@ -399,7 +400,6 @@ class Babelfish extends mxStoreResponse(class {}) {
       OriginEndpoints,
     } = await this.listOrigins();
     console.log(`deleting endpoint Ids: ${OriginEndpoints.map(x => x.Id).join(', ')}`);
-
     const promises = OriginEndpoints.map(x => this.babelfish.deleteOriginEndpoint({ Id: x.Id }).promise());
     await Promise.all(promises);
 
@@ -654,3 +654,4 @@ class Babelfish extends mxStoreResponse(class {}) {
 
 
 module.exports.Babelfish = Babelfish;
+/* eslint-enable */

@@ -14,7 +14,11 @@ exports.handler = function (event, context) {
 
   switch (event.RequestType) {
     case 'Create':
-      createNotifications(config);
+      if (config.BucketFunction === 'Input') {
+        createInputNotifications(config);
+      } else {
+        createOutputNotifications(config);
+      }
       break;
     case 'Delete':
       deleteNotifications(config);
@@ -75,7 +79,48 @@ function sendResponse(event, context, responseStatus, responseData) {
   request.end();
 }
 
-function createNotifications(config) {
+function createOutputNotifications(config) {
+  const params = {
+    Bucket: config.BucketName,
+    NotificationConfiguration: {
+      LambdaFunctionConfigurations: [
+        {
+          Events: ['s3:ObjectCreated:*'],
+          LambdaFunctionArn: config.IngestArn,
+          Filter: {
+            Key: {
+              FilterRules: [{
+                Name: 'suffix',
+                Value: '.m3u8',
+              }],
+            },
+          },
+        },
+        {
+          Events: ['s3:ObjectCreated:*'],
+          LambdaFunctionArn: config.IngestArn,
+          Filter: {
+            Key: {
+              FilterRules: [{
+                Name: 'suffix',
+                Value: '.ts',
+              }],
+            },
+          },
+        },
+      ],
+    },
+  };
+
+  console.log(params);
+
+  s3.putBucketNotificationConfiguration(params, (err, data) => {
+    if (err) console.log(err, err.stack);
+    else console.log(data);
+  });
+}
+
+function createInputNotifications(config) {
   const params = {
     Bucket: config.BucketName,
     NotificationConfiguration: {
