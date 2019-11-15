@@ -177,12 +177,6 @@ async function createCMS(context, apiName, props) {
   const { inputs } = question.video;
   const cmsEdit = [
     {
-      type: inputs[5].type,
-      name: inputs[5].key,
-      message: inputs[5].question,
-      default: true,
-    },
-    {
       type: inputs[6].type,
       name: inputs[6].key,
       message: inputs[6].question,

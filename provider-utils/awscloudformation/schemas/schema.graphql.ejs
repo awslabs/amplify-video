@@ -26,6 +26,4 @@ type videoObject @model
 )
 {
   id:ID!
-  <% if (contentDeliveryNetwork.enableDistribution) { %>cookie:String!<% } %>
-  <% if (cms.subscribeField) { %>subscription:String!<% } %>
 }
