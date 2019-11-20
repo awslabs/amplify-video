@@ -23,11 +23,11 @@ async function getInfoVideoAll(context) {
 }
 
 async function generateAWSExportsVideo(context) {
-  // console.log(context.amplify.getProjectConfig());
   const projectConfig = context.amplify.getProjectConfig();
   const amplifyMeta = context.amplify.getProjectMeta();
   const props = {};
   let filePath = '';
+
   if (projectConfig.frontend === 'ios') {
     filePath = './aws-video-exports.json';
   } else if (projectConfig.frontend === 'android') {
