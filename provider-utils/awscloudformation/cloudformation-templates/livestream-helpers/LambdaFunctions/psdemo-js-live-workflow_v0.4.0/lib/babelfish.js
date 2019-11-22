@@ -91,17 +91,14 @@ class Babelfish extends mxStoreResponse(class {}) {
     const { ResourceProperties: { PS_STARTOVER_WINDOW = 300 } } = this.$event;
     return Number.parseInt(PS_STARTOVER_WINDOW, 10);
   }
-
   get gopSizeInSec() {
     const { ResourceProperties: { PS_GOP_SIZE_IN_SEC = 1 } } = this.$event;
     return Number.parseInt(PS_GOP_SIZE_IN_SEC, 10);
   }
-
   get gopPerSegment() {
     const { ResourceProperties: { PS_GOP_PER_SEGMENT = 1 } } = this.$event;
     return Number.parseInt(PS_GOP_PER_SEGMENT, 10);
   }
-
   get segmentPerPlaylist() {
     const { ResourceProperties: { PS_SEGMENT_PER_PLAYLIST = 3 } } = this.$event;
     return Number.parseInt(PS_SEGMENT_PER_PLAYLIST, 10);

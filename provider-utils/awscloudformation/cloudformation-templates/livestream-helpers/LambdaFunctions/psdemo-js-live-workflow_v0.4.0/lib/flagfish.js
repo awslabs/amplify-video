@@ -123,12 +123,10 @@ class Flagfish extends mxStoreResponse(class { }) {
     const { ResourceProperties: { PS_GOP_SIZE_IN_SEC = 1 } } = this.$event;
     return Number.parseInt(PS_GOP_SIZE_IN_SEC, 10);
   }
-
   get gopPerSegment() {
     const { ResourceProperties: { PS_GOP_PER_SEGMENT = 1 } } = this.$event;
     return Number.parseInt(PS_GOP_PER_SEGMENT, 10);
   }
-
   get segmentPerPlaylist() {
     const { ResourceProperties: { PS_SEGMENT_PER_PLAYLIST = 3 } } = this.$event;
     const x = Number.parseInt(PS_SEGMENT_PER_PLAYLIST, 10);
@@ -146,7 +144,6 @@ class Flagfish extends mxStoreResponse(class { }) {
       PasswordParam: this.$storeKeys[0],
     };
   }
-
   get backupEndpoint() {
     return {
       Url: this.$endpoints[1],
@@ -174,28 +171,24 @@ class Flagfish extends mxStoreResponse(class { }) {
     }
     return `mediastoressl://${this.mediastoreHost}/p/index`;
   }
-
   get backupMediaStoreIngestUrl() {
     if (!this.hasMediaStore) {
       return undefined;
     }
     return `mediastoressl://${this.mediastoreHost}/b/index`;
   }
-
   get primaryMediaStoreEgressUrl() {
     if (!this.hasMediaStore) {
       return undefined;
     }
     return `https://${this.mediastoreHost}/p/index.m3u8`;
   }
-
   get backupMediaStoreEgressUrl() {
     if (!this.hasMediaStore) {
       return undefined;
     }
     return `https://${this.mediastoreHost}/b/index.m3u8`;
   }
-
   /* END: MediaStore-specific */
   get flagfish() { return this.$instance; }
 
@@ -669,7 +662,6 @@ class Flagfish extends mxStoreResponse(class { }) {
     console.log(JSON.stringify(this.responseData, null, 2));
     return this.responseData;
   }
-
   /*
    * @function compareUpdates
    * obj1 - old param
