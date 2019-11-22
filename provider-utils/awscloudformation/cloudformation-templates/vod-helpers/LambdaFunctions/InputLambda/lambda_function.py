@@ -28,7 +28,7 @@ def lambda_handler(event, context):
         # MediaInfo will extract the technical metadata from the asset
         # The extracted metadata will be outputted in XML format and
         # stored in the variable xml_output
-        xml_output = subprocess.check_output(["./mediainfo", "--full", "--output=XML", signed_url])
+        # xml_output = subprocess.check_output(["./mediainfo", "--full", "--output=XML", signed_url])
         #logger.info("Output: {}".format(xml_output))
         #save_record(key, xml_output)
         s3key = "s3://"+bucket+'/'+key

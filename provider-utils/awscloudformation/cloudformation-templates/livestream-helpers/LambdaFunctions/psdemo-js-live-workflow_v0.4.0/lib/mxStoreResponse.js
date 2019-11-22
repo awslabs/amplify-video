@@ -34,4 +34,3 @@ const mxStoreResponse = Super => class extends Super {
 };
 
 module.exports.mxStoreResponse = mxStoreResponse;
-

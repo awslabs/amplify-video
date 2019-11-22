@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-console */
+/* eslint-disable */
 
 const URL = require('url');
 const { SSM, MediaPackage } = require('aws-sdk');
@@ -75,11 +76,17 @@ class Babelfish extends mxStoreResponse(class {}) {
   }
 
   get event() { return this.$event; }
+
   get context() { return this.$context; }
+
   get requestType() { return this.$event.RequestType; }
+
   get channelId() { return this.$event.ResourceProperties.PS_CHANNEL_ID; }
+
   get channelDescription() { return this.$event.ResourceProperties.PS_CHANNEL_DESC; }
+
   get ingestType() { return this.$event.ResourceProperties.PS_INGEST_TYPE; }
+
   get startoverWindowSeconds() {
     const { ResourceProperties: { PS_STARTOVER_WINDOW = 300 } } = this.$event;
     return Number.parseInt(PS_STARTOVER_WINDOW, 10);
@@ -96,17 +103,23 @@ class Babelfish extends mxStoreResponse(class {}) {
     const { ResourceProperties: { PS_SEGMENT_PER_PLAYLIST = 3 } } = this.$event;
     return Number.parseInt(PS_SEGMENT_PER_PLAYLIST, 10);
   }
+
   get segmentDurationSeconds() {
     return this.gopSizeInSec * this.gopPerSegment;
   }
+
   get playlistWindowSeconds() {
     return this.segmentPerPlaylist * this.segmentDurationSeconds;
   }
+
   get manifestWindowSeconds() {
     return this.playlistWindowSeconds;
   }
+
   get endpoints() { return this.$endpoints; }
+
   get ssmKey() { return `/mediapackage/${this.channelId}`; }
+
   get babelfish() { return this.$instance; }
 
   /**
@@ -331,18 +344,15 @@ class Babelfish extends mxStoreResponse(class {}) {
     this.storeResponseData('Arn', Arn);
     /* store parameters as list, comma separator */
     ['Url', 'Username', 'Password'].forEach((k) => {
-      this.storeResponseData(k, IngestEndpoints.map(x =>
-        x[k]).join(','));
+      this.storeResponseData(k, IngestEndpoints.map(x => x[k]).join(','));
     });
     /* create parameter store to store secret */
     const secrets = await this.writeToParameterStore(IngestEndpoints);
-    this.storeResponseData('ParameterStoreKey', secrets.map(x =>
-      x.Name).join(','));
+    this.storeResponseData('ParameterStoreKey', secrets.map(x => x.Name).join(','));
 
     /* create origin endpoints */
     const endpoints = await this.createEndpoints();
-    Object.keys(endpoints).forEach(x =>
-      this.storeResponseData(x, endpoints[x]));
+    Object.keys(endpoints).forEach(x => this.storeResponseData(x, endpoints[x]));
 
     console.log(`responseData = ${JSON.stringify(this.responseData, null, 2)}`);
     return this.responseData;
@@ -387,9 +397,7 @@ class Babelfish extends mxStoreResponse(class {}) {
       OriginEndpoints,
     } = await this.listOrigins();
     console.log(`deleting endpoint Ids: ${OriginEndpoints.map(x => x.Id).join(', ')}`);
-
-    const promises = OriginEndpoints.map(x =>
-      this.babelfish.deleteOriginEndpoint({ Id: x.Id }).promise());
+    const promises = OriginEndpoints.map(x => this.babelfish.deleteOriginEndpoint({ Id: x.Id }).promise());
     await Promise.all(promises);
 
     /* wait for deletion */
@@ -412,10 +420,9 @@ class Babelfish extends mxStoreResponse(class {}) {
   async deleteParameterStore(ingestEndpoints) {
     try {
       const ssm = new SSM({ apiVersion: '2014-11-06' });
-      const promises = ingestEndpoints.map((x, idx) =>
-        ssm.deleteParameter({
-          Name: `${this.ssmKey}-${idx}`,
-        }).promise());
+      const promises = ingestEndpoints.map((x, idx) => ssm.deleteParameter({
+        Name: `${this.ssmKey}-${idx}`,
+      }).promise());
       await Promise.all(promises);
       return true;
     } catch (e) {
@@ -463,45 +470,40 @@ class Babelfish extends mxStoreResponse(class {}) {
   }
 
   compareUpdates(obj1, obj2) {
-
-    var result = {};
-    var key = "";
+    const result = {};
+    let key = '';
     for (key in obj1) {
-      if (typeof obj2[key] == 'object' && typeof obj1[key] == 'object') {
-
+      if (typeof obj2[key] === 'object' && typeof obj1[key] === 'object') {
         if (this.arraysEqual(obj2[key], obj1[key])) {
-          //Same array, no change needed
+          // Same array, no change needed
         } else {
-          result[key] = obj2[key]
+          result[key] = obj2[key];
         }
       } else if (obj2[key] != obj1[key]) {
         result[key] = obj2[key];
       }
-
     }
     return result;
   }
 
 
   arraysEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length)
-      return false;
-    arr1.sort()
-    arr2.sort()
-    for (var i = arr1.length; i--;) {
-      if (arr1[i] !== arr2[i])
-        return false;
+    if (arr1.length !== arr2.length) return false;
+    arr1.sort();
+    arr2.sort();
+    for (let i = arr1.length; i--;) {
+      if (arr1[i] !== arr2[i]) return false;
     }
 
     return true;
   }
 
   async update() {
-    //first get existing endpoints
+    // first get existing endpoints
 
-    const diff = this.compareUpdates(this.$event.OldResourceProperties, this.$event.ResourceProperties)
+    const diff = this.compareUpdates(this.$event.OldResourceProperties, this.$event.ResourceProperties);
     if (Object.keys(diff).length === 0) {
-      return "Nothing has changed";
+      return 'Nothing has changed';
     }
 
     const response = await this.describeChannel();
@@ -513,46 +515,42 @@ class Babelfish extends mxStoreResponse(class {}) {
     this.storeResponseData('Arn', Arn);
     /* store parameters as list, comma separator */
     ['Url', 'Username', 'Password'].forEach((k) => {
-      this.storeResponseData(k, IngestEndpoints.map(x =>
-        x[k]).join(','));
+      this.storeResponseData(k, IngestEndpoints.map(x => x[k]).join(','));
     });
 
-    const streamsUp = OriginEndpoints.map(x =>
-       x.Id.replace(`${this.channelId.toLowerCase()}-`,'').toUpperCase());
+    const streamsUp = OriginEndpoints.map(x => x.Id.replace(`${this.channelId.toLowerCase()}-`, '').toUpperCase());
 
-    let promises = streamsUp.map(x => {
-      let location = diff.PS_ENDPOINTS.indexOf(x);
+    let promises = streamsUp.map((x) => {
+      const location = diff.PS_ENDPOINTS.indexOf(x);
       let params;
-      if(location >= 0){
-        //Update'
-        switch(x.toLowerCase()){
+      if (location >= 0) {
+        // Update'
+        switch (x.toLowerCase()) {
           case 'hls':
-          params = this.createHlsPackageParams();
-          break;
-        case 'dash':
-          params = this.createDashPackageParams();
-          break;
-        case 'mss':
-          params = this.createMssPackageParams();
-          break;
-        case 'cmaf':
-          params = this.createCmafPackageParams();
-          break;
+            params = this.createHlsPackageParams();
+            break;
+          case 'dash':
+            params = this.createDashPackageParams();
+            break;
+          case 'mss':
+            params = this.createMssPackageParams();
+            break;
+          case 'cmaf':
+            params = this.createCmafPackageParams();
+            break;
         }
         delete params.ChannelId;
-        diff.PS_ENDPOINTS.splice(location,1);
+        diff.PS_ENDPOINTS.splice(location, 1);
         return (params !== undefined)
-        ? this.babelfish.updateOriginEndpoint(params).promise()
-        : undefined;
-        
-      } else {
-        //Delete
-        return this.babelfish.deleteOriginEndpoint({ Id: `${this.channelId.toLowerCase()}-${x.toLowerCase()}` }).promise();
+          ? this.babelfish.updateOriginEndpoint(params).promise()
+          : undefined;
       }
+      // Delete
+      return this.babelfish.deleteOriginEndpoint({ Id: `${this.channelId.toLowerCase()}-${x.toLowerCase()}` }).promise();
     });
 
-    if(diff.PS_ENDPOINTS){
-      let createPromises = diff.PS_ENDPOINTS.map((endpoint) => {
+    if (diff.PS_ENDPOINTS) {
+      const createPromises = diff.PS_ENDPOINTS.map((endpoint) => {
         let params;
         switch (endpoint.toLowerCase()) {
           case 'hls':
@@ -590,8 +588,8 @@ class Babelfish extends mxStoreResponse(class {}) {
       const {
         Url, CmafPackage, DashPackage, HlsPackage, MssPackage,
       } = cur;
-      if (Object.keys(cur).length != 0){
-        
+      if (Object.keys(cur).length != 0) {
+
       }
       acc.DomainEndpoint = acc.DomainEndpoint || new Set();
       console.log(cur);
@@ -618,15 +616,13 @@ class Babelfish extends mxStoreResponse(class {}) {
      */
     const [DomainEndpoint] = Array.from(results.DomainEndpoint);
     results.DomainEndpoint = DomainEndpoint;
-    
-    this.storeResponseData('ParameterStoreKey', `${this.ssmKey}-0,${this.ssmKey}-1`)
 
-    Object.keys(results).forEach(x =>
-      this.storeResponseData(x, results[x]));
-    
+    this.storeResponseData('ParameterStoreKey', `${this.ssmKey}-0,${this.ssmKey}-1`);
+
+    Object.keys(results).forEach(x => this.storeResponseData(x, results[x]));
+
     console.log(`responseData = ${JSON.stringify(this.responseData, null, 2)}`);
     return this.responseData;
-
   }
 
   /**
@@ -655,3 +651,4 @@ class Babelfish extends mxStoreResponse(class {}) {
 
 
 module.exports.Babelfish = Babelfish;
+/* eslint-enable */

@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+
 const subcommand = 'push';
 const category = 'video';
 

@@ -49,7 +49,7 @@ module.exports = {
       },
       {
         name: 'version',
-        description: `Prints the version of Amplify Video that you are using`,
+        description: 'Prints the version of Amplify Video that you are using',
       },
     ];
 

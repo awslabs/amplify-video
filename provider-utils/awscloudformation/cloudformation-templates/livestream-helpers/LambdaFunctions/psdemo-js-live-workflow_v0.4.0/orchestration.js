@@ -46,7 +46,7 @@ const context = ${JSON.stringify(context, null, 2)};
   let response;
   const cfResponse = new CloudFormationResponse(event, context);
   try {
-    let instance = new Flagfish(event, context);
+    const instance = new Flagfish(event, context);
     response = await instance.entry();
     response = await cfResponse.send(response);
     return response;

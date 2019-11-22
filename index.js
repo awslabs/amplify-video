@@ -1,5 +1,8 @@
 const category = 'video';
 const path = require('path');
+const ora = require('ora');
+
+const { copyFilesToS3 } = require('./provider-utils/awscloudformation/utils/video-staging');
 
 async function add(context, providerName, service) {
   const options = {
@@ -19,9 +22,8 @@ async function console(context) {
 }
 
 async function onAmplifyCategoryOutputChange(context) {
-  //Hard coded to CF. Find a better way to handle this.
-  const infoController =
-          require(`../../provider-utils/awscloudformation/utils/video-getinfo`);
+  // Hard coded to CF. Find a better way to handle this.
+  const infoController = require('./provider-utils/awscloudformation/utils/video-getinfo');
   await infoController.getInfoVideoAll(context);
 }
 
@@ -62,9 +64,37 @@ async function executeAmplifyCommand(context) {
   } else {
     commandPath = path.join(commandPath, category, context.input.command);
   }
-  
+
   const commandModule = require(commandPath);
   await commandModule.run(context);
+}
+
+async function handleAmplifyEvent(context, args) {
+  if (args.event === 'PrePush') {
+    handlePrePush(context);
+  } else {
+    // console.log(args.event);
+  }
+}
+
+async function handlePrePush(context) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const spinner = ora('Copying video resources. This may take a few minutes...');
+
+  if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
+    return;
+  }
+
+  spinner.start();
+
+  Object.keys(amplifyMeta[category]).forEach((resourceName) => {
+    const options = amplifyMeta.video[resourceName];
+    const serviceMetadata = context.amplify.readJsonFile(`${__dirname}/provider-utils/supported-services.json`)[options.serviceType];
+    const { stackFolder } = serviceMetadata;
+    copyFilesToS3(context, options, resourceName, stackFolder);
+  });
+  spinner.succeed('All resources copied.');
 }
 
 module.exports = {
@@ -73,4 +103,5 @@ module.exports = {
   migrate,
   onAmplifyCategoryOutputChange,
   executeAmplifyCommand,
+  handleAmplifyEvent,
 };

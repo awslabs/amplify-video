@@ -1,12 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-console */
+/* eslint-disable */
 const FS = require('fs');
 const URL = require('url');
 const PATH = require('path');
 const { MediaLive } = require('aws-sdk');
-const { mxStoreResponse } = require('./mxStoreResponse');
 const util = require('util');
+const { mxStoreResponse } = require('./mxStoreResponse');
 
 const PS_PARAMS = [
   'PS_CHANNEL_ID',
@@ -103,13 +104,21 @@ class Flagfish extends mxStoreResponse(class { }) {
   }
 
   get event() { return this.$event; }
+
   get context() { return this.$context; }
+
   get requestType() { return this.$event.RequestType; }
+
   get channelId() { return this.$event.ResourceProperties.PS_CHANNEL_ID; }
+
   get inputSecurityGroup() { return this.$event.ResourceProperties.PS_INPUT_SECURITY_GROUP; }
+
   get ingestType() { return this.$event.ResourceProperties.PS_INGEST_TYPE.toUpperCase(); }
+
   get roleArn() { return this.$event.ResourceProperties.PS_ROLE_ARN; }
+
   get encodingProfile() { return this.$event.ResourceProperties.PS_ENCODING_PROFILE.toLowerCase(); }
+
   get gopSizeInSec() {
     const { ResourceProperties: { PS_GOP_SIZE_IN_SEC = 1 } } = this.$event;
     return Number.parseInt(PS_GOP_SIZE_IN_SEC, 10);
@@ -123,9 +132,11 @@ class Flagfish extends mxStoreResponse(class { }) {
     const x = Number.parseInt(PS_SEGMENT_PER_PLAYLIST, 10);
     return (x < 3) ? 3 : x;
   }
+
   get shouldStartChannel() {
     return this.$event.ResourceProperties.PS_START_CHANNEL.toUpperCase() === 'YES';
   }
+
   get primaryEndpoint() {
     return {
       Url: this.$endpoints[0],
@@ -149,9 +160,11 @@ class Flagfish extends mxStoreResponse(class { }) {
   get mediastoreHost() {
     return this.$mediastoreHost;
   }
+
   get hasMediaStore() {
     return !!this.mediastoreHost;
   }
+
   get primaryMediaStoreIngestUrl() {
     if (!this.hasMediaStore) {
       return undefined;
@@ -203,8 +216,7 @@ class Flagfish extends mxStoreResponse(class { }) {
     };
     const response = await this.flagfish.createInputSecurityGroup(payload).promise();
     /* sanity check */
-    const missing = ['Id', 'Arn', 'WhitelistRules'].filter(x =>
-      response.SecurityGroup[x] === undefined);
+    const missing = ['Id', 'Arn', 'WhitelistRules'].filter(x => response.SecurityGroup[x] === undefined);
     if (missing.length) {
       throw new Error(`response.SecurityGroup missing ${missing.join(', ')}`);
     }
@@ -222,14 +234,12 @@ class Flagfish extends mxStoreResponse(class { }) {
     };
     /* RTMP specifically needs StreamName to be set */
     if (this.ingestType === 'RTMP_PUSH') {
-      payload.Destinations = ['p', 'b'].map(x =>
-        ({ StreamName: `${this.channelId}-${x}` }));
+      payload.Destinations = ['p', 'b'].map(x => ({ StreamName: `${this.channelId}-${x}` }));
     }
 
     const response = await this.flagfish.createInput(payload).promise();
     const { Input } = response;
-    const missing = ['Id', 'Arn', 'Name', 'Destinations'].filter(x =>
-      Input[x] === undefined);
+    const missing = ['Id', 'Arn', 'Name', 'Destinations'].filter(x => Input[x] === undefined);
     if (missing.length) {
       throw new Error(`response.Input missing ${missing.join(', ')}`);
     }
@@ -352,8 +362,7 @@ class Flagfish extends mxStoreResponse(class { }) {
       });
     });
     /* clone HLS output group and modify to mediastore */
-    const clonedOG = Flagfish.deepCopy(OutputGroups.find(x =>
-      !!(x.OutputGroupSettings.HlsGroupSettings)));
+    const clonedOG = Flagfish.deepCopy(OutputGroups.find(x => !!(x.OutputGroupSettings.HlsGroupSettings)));
 
     clonedOG.Name = `${prefix}${clonedOG.Name}`;
     const {
@@ -398,12 +407,11 @@ class Flagfish extends mxStoreResponse(class { }) {
       payload.InputAttachments[0].InputId = inputId;
 
       this.updateEncodingSettings(payload);
-      this.configureDestinations(payload); //Add if statement for check if destination has mediapackage
+      this.configureDestinations(payload); // Add if statement for check if destination has mediapackage
       this.addMediaStoreOutputGroup(payload);
-      const response = await this.flagfish.createChannel(payload).promise(); //Should work
+      const response = await this.flagfish.createChannel(payload).promise(); // Should work
       /* sanity check */
-      const missing = ['Id', 'Arn', 'Name'].filter(x =>
-        response.Channel[x] === undefined);
+      const missing = ['Id', 'Arn', 'Name'].filter(x => response.Channel[x] === undefined);
       if (missing.length) {
         throw new Error(`response.Channel missing ${missing.join(', ')}`);
       }
@@ -600,18 +608,16 @@ class Flagfish extends mxStoreResponse(class { }) {
     await this.flagfish.deleteInput({ InputId }).promise();
 
     /* and delete InputSecurityGroup */
-    const promises = InputSecurityGroupIds.map(InputSecurityGroupId =>
-      this.flagfish.deleteInputSecurityGroup({
-        InputSecurityGroupId,
-      }).promise());
+    const promises = InputSecurityGroupIds.map(InputSecurityGroupId => this.flagfish.deleteInputSecurityGroup({
+      InputSecurityGroupId,
+    }).promise());
     await Promise.all(promises);
     return true;
   }
 
   async deleteInputs(InputIds) {
     try {
-      const promises = InputIds.map(InputId =>
-        this.deleteInput(InputId));
+      const promises = InputIds.map(InputId => this.deleteInput(InputId));
       const responses = await Promise.all(promises);
       return responses.map(x => x === true).length;
     } catch (e) {
@@ -662,34 +668,29 @@ class Flagfish extends mxStoreResponse(class { }) {
    * obj2 - new param
    */
   compareUpdates(obj1, obj2) {
-
-    var result = {};
-    var key = "";
+    const result = {};
+    let key = '';
     for (key in obj1) {
-      if (typeof obj2[key] == 'object' && typeof obj1[key] == 'object') {
-
+      if (typeof obj2[key] === 'object' && typeof obj1[key] === 'object') {
         if (this.arraysEqual(obj2[key], obj1[key])) {
-          //Same array, no change needed
+          // Same array, no change needed
         } else {
-          result[key] = obj2[key]
+          result[key] = obj2[key];
         }
       } else if (obj2[key] != obj1[key]) {
         result[key] = obj2[key];
       }
-
     }
     return result;
   }
 
 
   arraysEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length)
-      return false;
-    arr1.sort()
-    arr2.sort()
-    for (var i = arr1.length; i--;) {
-      if (arr1[i] !== arr2[i])
-        return false;
+    if (arr1.length !== arr2.length) return false;
+    arr1.sort();
+    arr2.sort();
+    for (let i = arr1.length; i--;) {
+      if (arr1[i] !== arr2[i]) return false;
     }
 
     return true;
@@ -698,16 +699,16 @@ class Flagfish extends mxStoreResponse(class { }) {
   async update() {
     let response;
 
-    const diff = this.compareUpdates(this.$event.OldResourceProperties, this.$event.ResourceProperties)
+    const diff = this.compareUpdates(this.$event.OldResourceProperties, this.$event.ResourceProperties);
     console.log(diff);
     if (Object.keys(diff).length === 0) {
-      return "Nothing has changed"
+      return 'Nothing has changed';
     }
     const channel = await this.findChannelByName(this.channelId) || {};
     const { Id: ChannelId } = channel;
     const inputParam = {
-      InputId: channel.InputAttachments[0].InputId
-    }
+      InputId: channel.InputAttachments[0].InputId,
+    };
     const currentInput = await this.flagfish.describeInput(inputParam).promise();
     const inputId = channel.InputAttachments[0].InputId;
     if (diff.PS_INGEST_TYPE) {
@@ -720,13 +721,14 @@ class Flagfish extends mxStoreResponse(class { }) {
       const inputSecurityParam = {
         InputSecurityGroupId: currentInput.SecurityGroups[0],
         WhitelistRules: diff.PS_INPUT_SECURITY_GROUP.map(Cidr => ({ Cidr })),
-      }
+      };
       const currentStuff = await this.flagfish.updateInputSecurityGroup(inputSecurityParam).promise();
-      delete diff['PS_INPUT_SECURITY_GROUP'];
-      //We will need to return stuff but we will work on it.
+      console.log(currentStuff);
+      delete diff.PS_INPUT_SECURITY_GROUP;
+      // We will need to return stuff but we will work on it.
     }
 
-    if (diff.PS_ENDPOINT_URLS || diff.PS_MEDIASTORE_ENDPOINT){
+    if (diff.PS_ENDPOINT_URLS || diff.PS_MEDIASTORE_ENDPOINT) {
       const {
         ResourceProperties: {
           PS_ENDPOINT_URLS: urls,
@@ -735,11 +737,11 @@ class Flagfish extends mxStoreResponse(class { }) {
         },
       } = this.$event;
       /* mediapackage ingest points / usernames / parameter stores */
-    
+
       this.$endpoints = (Array.isArray(urls) ? urls : urls.split(',')).filter(x => x);
       this.$usernames = (Array.isArray(usernames) ? usernames : usernames.split(',')).filter(x => x);
       this.$storeKeys = (Array.isArray(storeKeys) ? storeKeys : storeKeys.split(',')).filter(x => x);
-  
+
       /* optional */
       const {
         ResourceProperties: {
@@ -750,7 +752,6 @@ class Flagfish extends mxStoreResponse(class { }) {
     }
 
     if (Object.keys(diff).length > 1 || (Object.keys(diff).length > 0 && !diff.PS_START_CHANNEL)) {
-
       response = await this.stopChannel(ChannelId);
       if (!response) {
         this.storeResponseData('ChannelStop', false);
@@ -765,12 +766,11 @@ class Flagfish extends mxStoreResponse(class { }) {
         payload.ChannelId = channel.Id;
 
         this.updateEncodingSettings(payload);
-        this.configureDestinations(payload); //Add if statement for check if destination has mediapackage
+        this.configureDestinations(payload); // Add if statement for check if destination has mediapackage
         this.addMediaStoreOutputGroup(payload);
-        const response = await this.flagfish.updateChannel(payload).promise()
+        const response = await this.flagfish.updateChannel(payload).promise();
         /* sanity check */
-        const missing = ['Id', 'Arn', 'Name'].filter(x =>
-          response.Channel[x] === undefined);
+        const missing = ['Id', 'Arn', 'Name'].filter(x => response.Channel[x] === undefined);
         if (missing.length) {
           throw new Error(`response.Channel missing ${missing.join(', ')}`);
         }
@@ -796,22 +796,23 @@ class Flagfish extends mxStoreResponse(class { }) {
 
 
     if (diff.PS_START_CHANNEL == 'YES' || this.$event.ResourceProperties.PS_START_CHANNEL == 'YES') {
-      console.log("Starting");
+      console.log('Starting');
       const startChannelParams = {
-        ChannelId: channel.Id
-      }
+        ChannelId: channel.Id,
+      };
+      console.log(startChannelParams);
       await this.startChannel(ChannelId);
     } else if (diff.PS_START_CHANNEL == 'NO') {
-      console.log("Stopping");
+      console.log('Stopping');
       const stopChannelParam = {
-        ChannelId: channel.Id
+        ChannelId: channel.Id,
       };
       await this.stopChannel(ChannelId);
+      console.log(stopChannelParam);
     }
 
     console.log(JSON.stringify(this.responseData, null, 2));
     return this.responseData;
-
   }
 
   async entry() {
@@ -836,3 +837,4 @@ class Flagfish extends mxStoreResponse(class { }) {
 }
 
 module.exports.Flagfish = Flagfish;
+/* eslint-enable */

@@ -5,11 +5,29 @@ Parameters:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
     Default: NONE
+  authRoleName:
+    Type: String
+    Description: Arn for authRoleArn
+    Default: NONE
+  unauthRoleName:
+    Type: String
+    Description: Arn for authRoleArn
+    Default: NONE
   pS3:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: "<%= props.shared.bucket %>"
+  pS3InputName:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucketInput %>"
+  pS3OutputName:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucketOutput %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -47,36 +65,16 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
-        pBucketName:
-          !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'input'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'input'
+        authRoleName: !Ref authRoleName
+        pBucketName: !Ref pS3InputName
                 
   rS3OutputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
       Parameters:
-        pBucketName:
-          !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'output'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'output'
+        authRoleName: !Ref authRoleName
+        pBucketName: !Ref pS3OutputName
         pCloudfrontEnabled: !Ref pCloudfrontEnabled
 <% if (props.contentDeliveryNetwork.enableDistribution) { %>
   rCloudfrontDistribution:
@@ -84,24 +82,13 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
       Parameters:
-          pBucketName:
-           !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'output'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'output'
+          pBucketName: !Ref pS3OutputName
           pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
 <% } %>
-  rLambdaTriggerFunction:
+  rInputLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/TriggerLambda.template"
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/InputTriggerLambda.template"
       Parameters:
         pS3: !Ref pS3
         pSourceFolder: !Ref pSourceFolder
@@ -117,11 +104,32 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - !Ref env
-                - 's3watcher'
+                - 'inputWatcher'
             - !Join
               - '-'
               - - !Ref pProjectName
-                - 's3watcher'
+                - 'inputWatcher'
+  rOutputLambdaTriggerFunction:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/OutputTriggerLambda.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+        pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
+        pFunctionName: 
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'outputWatcher'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'outputWatcher'
 
   rLambdaTriggerSetup:
     Type: AWS::CloudFormation::Stack
@@ -132,7 +140,10 @@ Resources:
         pSourceFolder: !Ref pSourceFolder
         pInputS3: !GetAtt rS3InputBucket.Outputs.oInputBucketName
         pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
-        pTriggerLambda: !GetAtt rLambdaTriggerFunction.Outputs.oLambdaFunction
+        pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+        pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
+        pInputTriggerLambda: !GetAtt rInputLambdaTriggerFunction.Outputs.oLambdaFunction
+        pOutputTriggerLambda: !GetAtt rOutputLambdaTriggerFunction.Outputs.oLambdaFunction
         pFunctionName:
           !If
             - HasEnvironmentParameter

@@ -1,30 +1,78 @@
 const chalk = require('chalk');
+const fs = require('fs-extra');
 
 module.exports = {
   getVideoInfo,
-  getInfoVideoAll
-}
+  getInfoVideoAll,
+};
 
 async function getInfoVideoAll(context) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if ("video" in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
+  if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
     Object.values(amplifyMeta.video).forEach((project) => {
-      if ("output" in project) {
-        if ("oMediaLivePrimaryIngestUrl" in project.output){
+      if ('output' in project) {
+        if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(project.output);
+        } else if ('oVODInputS3' in project.output) {
+          prettifyOutputVod(context, project.output);
         }
       }
     });
+    await generateAWSExportsVideo(context);
+  }
+}
+
+async function generateAWSExportsVideo(context) {
+  const projectConfig = context.amplify.getProjectConfig();
+  const amplifyMeta = context.amplify.getProjectMeta();
+  const props = {};
+  let filePath = '';
+
+  if (projectConfig.frontend === 'ios') {
+    filePath = './aws-video-exports.json';
+  } else if (projectConfig.frontend === 'android') {
+    filePath = `./${projectConfig.android.config.ResDir}/aws-video-exports.json`;
+  } else if (projectConfig.frontend === 'javascript') {
+    filePath = `./${projectConfig.javascript.config.SourceDir}/aws-video-exports.js`;
+  } else {
+    // Default location in json. Worst case scenario
+    filePath = './aws-video-exports.json';
+  }
+
+  // TODO write a way to handle multiple projects. Only handles one vod project for right now!
+  Object.values(amplifyMeta.video).forEach((project) => {
+    if ('output' in project) {
+      if ('oVODInputS3' in project.output) {
+        props.awsInputVideo = project.output.oVODInputS3;
+        props.awsOutputVideo = project.output.oVODOutputS3;
+      }
+    }
+  });
+
+  if (projectConfig.frontend === 'javascript') {
+    const copyJobs = [
+      {
+        dir: __dirname,
+        template: 'exports-templates/aws-video-exports.js.ejs',
+        target: filePath,
+      },
+    ];
+    await context.amplify.copyBatch(context, copyJobs, props);
+  } else {
+    fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
   }
 }
 
 
 async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
-  if ("output" in amplifyMeta.video[resourceName]) {
-    if ("oMediaLivePrimaryIngestUrl" in amplifyMeta.video[resourceName].output){
+  if ('output' in amplifyMeta.video[resourceName]) {
+    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
       await prettifyOutputLive(amplifyMeta.video[resourceName].output);
+    } else {
+      await prettifyOutputVod(context, amplifyMeta.video[resourceName].output);
     }
+    await generateAWSExportsVideo(context);
   } else {
     console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
@@ -60,4 +108,11 @@ async function prettifyOutputLive(output) {
     console.log(chalk.bold('\nMediaStore'));
     console.log(chalk`MediaStore Output Url: {blue.underline ${output.oPrimaryMediaStoreEgressUrl}}`);
   }
+}
+
+async function prettifyOutputVod(context, output) {
+  context.print.blue('Input Storage bucket:');
+  context.print.blue(`${output.oVODInputS3}\n`);
+  context.print.blue('Output Storage bucket:');
+  context.print.blue(`${output.oVODOutputS3}\n`);
 }

@@ -63,12 +63,19 @@ class Distribution extends mxStoreResponse(class {}) {
   }
 
   get event() { return this.$event; }
+
   get resourceProperties() { return this.$event.ResourceProperties; }
+
   get context() { return this.$context; }
+
   get requestType() { return this.$event.RequestType; }
+
   get endpoints() { return this.$endpoints; }
+
   get channelId() { return this.$event.ResourceProperties.PS_CHANNEL_ID; }
+
   get distributionId() { return this.$event.ResourceProperties.PS_DISTRIBUTION_ID; }
+
   get cloudFront() { return this.$instance; }
 
   isRequestType(type) {

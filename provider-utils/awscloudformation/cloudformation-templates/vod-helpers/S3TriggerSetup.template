@@ -20,7 +20,20 @@ Parameters:
     Type: String
     Description: Input S3 Arn
     Default: arn-default
-  pTriggerLambda:
+  pOutputS3:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pOutputS3Arn:
+    Type: String
+    Description: Input S3 Arn
+    Default: arn-default
+  pInputTriggerLambda:
+    Type: String
+    Description: Arn for lambda for triggering
+    Default: arn-default
+  pOutputTriggerLambda:
     Type: String
     Description: Arn for lambda for triggering
     Default: arn-default
@@ -31,10 +44,17 @@ Parameters:
 
 
 Resources:
-  rS3TriggerPermissions:
+  rS3InputTriggerPermissions:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref pTriggerLambda
+      FunctionName: !Ref pInputTriggerLambda
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+  rS3OutputTriggerPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref pOutputTriggerLambda
       Action: lambda:InvokeFunction
       Principal: s3.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
@@ -51,12 +71,21 @@ Resources:
         S3Bucket: !Ref pS3
         S3Key: vod-helpers/SetupTriggerLambda.zip
 
-  rCreateTrigger:
-    Type: "Custom::Trigger"
+  rCreateInputTrigger:
+    Type: "Custom::InputTrigger"
     Properties:
       ServiceToken: !GetAtt rCreateSetupTriggerLambda.Arn
       BucketName: !Ref pInputS3
-      IngestArn: !Ref pTriggerLambda
+      IngestArn: !Ref pInputTriggerLambda
+      BucketFunction: "Input"
+
+  rCreateOutputTrigger:
+    Type: "Custom::OutputTrigger"
+    Properties:
+      ServiceToken: !GetAtt rCreateSetupTriggerLambda.Arn
+      BucketName: !Ref pOutputS3
+      IngestArn: !Ref pOutputTriggerLambda
+      BucketFunction: "Output"
 
   rSetupTriggerLambdaRole:
     Type: AWS::IAM::Role
@@ -84,6 +113,7 @@ Resources:
                   - s3:putObjectAcl
                 Resource:
                   - !Ref pInputS3Arn
+                  - !Ref pOutputS3Arn
                -
                 Effect: Allow
                 Action:

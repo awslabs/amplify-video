@@ -15,20 +15,6 @@
                 "key": "encodingTemplate",
                 "question": "Select a system-provided encoding template, specify an already-created template name: ",
                 "type":"list",
-                "options": [
-                    {
-                        "name": "Apple HLS Standard H.264 HD",
-                        "value": "System-Ott_Hls_Ts_Avc_Aac"
-                    },
-                    {
-                        "name": "MPEG DASH H.264 HD",
-                        "value": "System-Ott_Dash_Mp4_Avc_Aac"
-                    },
-                    {
-                        "name": "Advanced (specify template name)",
-                        "value": "advanced"
-                    }
-                ],
                 "required": true
             },
             {
@@ -36,17 +22,35 @@
               "question": "Provide a specific MediaConvert template name (must be available in project region):",
               "validation": {
                   "operator": "regex",
-                  "value": "^[a-zA-Z0-9]+$",
+                  "value": "^[a-zA-Z0-9_]+$",
                   "onErrorMsg": "Resource name should be alphanumeric"
               },
               "required": true
             },
             {
-              "key": "enableCDN",
-              "type": "confirm",
-              "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
-              "required": true
-          }
+                "key": "enableCDN",
+                "type": "confirm",
+                "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
+                "required": true
+            },
+            {
+                "key":"enableCMS",
+                "type":"confirm",
+                "question":"Do you want Amplify to use your existing GraphQL API to manage your videos?",
+                "required":true
+            },
+            {
+                "key":"subscribeField",
+                "type":"confirm",
+                "question":"Do you want to lock your videos with a subscription?",
+                "required":true
+            },
+            {
+                "key":"editAPI",
+                "type":"confirm",
+                "question":"Do you want to edit your newly created model?",
+                "required":true
+            }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

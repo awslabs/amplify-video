@@ -61,8 +61,7 @@ class Jellyfish extends mxStoreResponse(class {}) {
       const {
         ResourceProperties: { PS_CONTAINER_NAME },
       } = this.$event;
-      this.$containerName =
-        PS_CONTAINER_NAME.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_');
+      this.$containerName = PS_CONTAINER_NAME.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_');
 
       /* jellyfish instance */
       this.$instance = new MediaStore({
@@ -74,9 +73,13 @@ class Jellyfish extends mxStoreResponse(class {}) {
   }
 
   get event() { return this.$event; }
+
   get context() { return this.$context; }
+
   get requestType() { return this.$event.RequestType; }
+
   get containerName() { return this.$containerName; }
+
   get mediastore() { return this.$instance; }
 
   /**
@@ -241,8 +244,7 @@ class Jellyfish extends mxStoreResponse(class {}) {
       Files.push(PATH.join(Path, x.Name));
     });
     /* collect folders and get objects under the folder */
-    const promises = Items.filter(x => x.Type === 'FOLDER').map(x =>
-      this.listAllItems(instance, { Path: PATH.join(Path, x.Name) }));
+    const promises = Items.filter(x => x.Type === 'FOLDER').map(x => this.listAllItems(instance, { Path: PATH.join(Path, x.Name) }));
     /* check NextToken */
     if (NextToken) {
       promises.push(this.listAllItems(instance, { Path, NextToken }));
@@ -275,8 +277,7 @@ class Jellyfish extends mxStoreResponse(class {}) {
     /* eslint-disable no-await-in-loop */
     while (Files.length > 0) {
       const batch = Files.splice(0, 10);
-      const promises = batch.map(Path =>
-        instance.deleteObject({ Path }).promise());
+      const promises = batch.map(Path => instance.deleteObject({ Path }).promise());
       await Promise.all(promises);
     }
     /* eslint-enable no-await-in-loop */

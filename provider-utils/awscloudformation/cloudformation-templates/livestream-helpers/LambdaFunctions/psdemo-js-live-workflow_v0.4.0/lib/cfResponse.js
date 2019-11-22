@@ -39,11 +39,17 @@ class CloudFormationResponse {
   }
 
   get event() { return this.$event; }
+
   get context() { return this.$context; }
+
   get stackId() { return this.event.StackId; }
+
   get requestId() { return this.event.RequestId; }
+
   get responseUrl() { return this.event.ResponseURL; }
+
   get logicalResourceId() { return this.event.LogicalResourceId; }
+
   get logStreamName() { return this.context.logStreamName; }
 
   isUnitTest() {
