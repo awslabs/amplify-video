@@ -40,8 +40,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.shared = nameDict;
     const uuid = Math.random().toString(36).substring(2, 6)
                 + Math.random().toString(36).substring(2, 6);
-    props.shared.bucketInput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-i${uuid}`.slice(0, 63);
-    props.shared.bucketOutput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-o${uuid}`.slice(0, 63);
+    props.shared.bucketInput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-input-${uuid}`.slice(0, 63);
+    props.shared.bucketOutput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-output-${uuid}`.slice(0, 63);
   }
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
