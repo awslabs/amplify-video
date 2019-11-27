@@ -14,6 +14,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Install eslint
+      run : npx install-peerdeps --dev eslint-config-airbnb
     - name: eslint
       run : npm run lint
     - name: build
