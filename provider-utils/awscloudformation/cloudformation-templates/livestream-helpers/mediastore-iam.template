@@ -1,0 +1,137 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "IAM role and policy for MediaStore",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Global Configuration" },
+          "Parameters": [
+            "pPrefix"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pPrefix": {
+          "default": "Prefix"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rManagedPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "ManagedPolicyName": {
+          "Fn::If": [
+            "cPrefix",
+            { "Fn::Sub": "${pPrefix}-mediastore-managed-policy-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-mediastore-managed-policy-${AWS::Region}" }
+          ]
+        },
+        "Description": "AWS Elemental MediaStore Managed Policy",
+        "Path": "/",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "mediastore:*"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents"
+              ],
+              "Resource": [
+                "arn:aws:logs:*:*:*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:PassRole"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+
+    "rProvisionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "${AWS::AccountId}"
+                },
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          {
+            "Ref": "rManagedPolicy"
+          }
+        ],
+        "Path": "/service-role/",
+        "RoleName": {
+          "Fn::If": [
+            "cPrefix",
+            { "Fn::Sub": "${pPrefix}-mediastore-role-${AWS::Region}" },
+            { "Fn::Sub": "${AWS::StackName}-mediastore-role-${AWS::Region}" }
+          ]
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pPrefix": {
+      "Type": "String",
+      "Description": "used to prefix resource name",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+    }
+  },
+
+  "Conditions": {
+    "cPrefix": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pPrefix" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oManagedPolicy": {
+      "Value": { "Ref": "rManagedPolicy" },
+      "Description": "Managed Policy"
+    },
+
+    "oProvisionRoleArn": {
+      "Value": { "Fn::GetAtt": [ "rProvisionRole", "Arn" ] },
+      "Description": "Lambda Provision Role"
+    }
+  }
+}

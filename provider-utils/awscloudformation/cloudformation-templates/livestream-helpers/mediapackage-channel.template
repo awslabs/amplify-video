@@ -1,0 +1,236 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Per MediaPackage Channel resource",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "MediaPackage Channel: Provision Configuration" },
+          "Parameters": [
+            "pLambdaArn"
+          ]
+        },
+        {
+          "Label": { "default": "MediaPackage Channel: Configuration" },
+          "Parameters": [
+            "pChannelId",
+            "pIngestType",
+            "pEndpoints",
+            "pStartOverWindow",
+            "pGopSizeInSec",
+            "pGopPerSegment",
+            "pSegmentPerPlaylist"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pLambdaArn": {
+          "default": "Lambda Function Arn"
+        },
+
+        "pChannelId": {
+          "default": "Channel ID"
+        },
+
+        "pIngestType": {
+          "default": "Ingest Type"
+        },
+
+        "pEndpoints": {
+          "default": "Packaging Type(s)"
+        },
+
+        "pStartOverWindow": {
+          "default": "Content Window (in seconds)"
+        },
+
+        "pGopSizeInSec": {
+          "default": "GOP Size (in seconds)"
+        },
+
+        "pGopPerSegment": {
+          "default": "GOP Per Segment"
+        },
+
+        "pSegmentPerPlaylist": {
+          "default": "Segment(s) Per Playlist"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rCreateChannelLambda": {
+      "Type": "Custom::rCreateChannelLambda",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::Sub": "${pLambdaArn}"
+        },
+
+        "PS_CHANNEL_ID": {
+          "Fn::If": [
+            "cChannelId",
+            { "Fn::Sub": "${pChannelId}" },
+            { "Fn::Sub": "${AWS::StackName}" }
+          ]
+        },
+
+        "PS_CHANNEL_DESC": {
+          "Fn::If": [
+            "cChannelId",
+            { "Fn::Sub": "Channel ${pChannelId} created by ${AWS::StackName}" },
+            { "Fn::Sub": "Channel ${AWS::StackName} created by ${AWS::StackName}" }
+          ]          
+        },
+
+        "PS_INGEST_TYPE": {
+          "Ref": "pIngestType"
+        },
+
+        "PS_ENDPOINTS": {
+          "Ref": "pEndpoints"
+        },
+
+        "PS_STARTOVER_WINDOW": {
+          "Ref": "pStartOverWindow"
+        },
+
+        "PS_GOP_SIZE_IN_SEC": {
+          "Ref": "pGopSizeInSec"
+        },
+
+        "PS_GOP_PER_SEGMENT": {
+          "Ref": "pGopPerSegment"
+        },
+
+        "PS_SEGMENT_PER_PLAYLIST": {
+          "Ref": "pSegmentPerPlaylist"
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pLambdaArn": {
+      "Type": "String",
+      "Description": "used for provisioning the worfklow",
+      "Default": ""
+    },
+
+    "pChannelId": {
+      "Type": "String",
+      "Description": "mediapackage channel id. Leave it blank to use Stack Name as Channel Name",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+    },
+
+    "pIngestType": {
+      "Type": "String",
+      "Description": "mediapackage ingest type. Leave it as is",
+      "AllowedPattern" : "[a-z]*",
+      "Default": "hls"
+    },
+
+    "pEndpoints": {
+      "Type": "CommaDelimitedList",
+      "Description": "comma delimited list. ie., HLS,DASH,MSS",
+      "Default": "HLS,DASH"
+    },
+
+    "pStartOverWindow": {
+      "Type": "Number",
+      "Description": "specify how far the user can seek backward",
+      "Default": "300",
+      "MinValue": "60"
+    },
+
+    "pGopSizeInSec": {
+      "Type": "Number",
+      "Description": "specify GOP size in seconds. Use 1s for low-latency (IP-frame only).",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pGopPerSegment": {
+      "Type": "Number",
+      "Description": "specify how many GOP per segment. Use 1s for low-latency.",
+      "Default": "1",
+      "MinValue": "1"
+    },
+
+    "pSegmentPerPlaylist": {
+      "Type": "Number",
+      "Description": "specify number of segments per playlist/manifest, minimum 1 / recommend 3",
+      "Default": "3",
+      "MinValue": "1"
+    }
+  },
+
+  "Conditions": {
+    "cChannelId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pChannelId" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oId": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "Id" ] },
+      "Description": "Channel Id"
+    },
+
+    "oIngestUrls": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "Url" ] },
+      "Description": "Channel Ingest Url"
+    },
+
+    "oUsers": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "Username" ] },
+      "Description": "Channel User"
+    },
+
+    "oParameterStoreKeys": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "ParameterStoreKey" ] },
+      "Description": "Channel Parameter Store Key"
+    },
+
+    "oPasswords": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "Password" ] },
+      "Description": "Channel Password"
+    },
+
+    "oArn": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "Arn" ] },
+      "Description": "Channel Arn"
+    },
+
+    "oHlsEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "HlsEndpoint" ] },
+      "Description": "HLS Endpoint Url"
+    },
+
+    "oDashEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "DashEndpoint" ] },
+      "Description": "DASH Endpoint Url"
+    },
+
+    "oMssEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "MssEndpoint" ] },
+      "Description": "MSS Endpoint Url"
+    },
+
+    "oCmafEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "CmafEndpoint" ] },
+      "Description": "CMAF Endpoint Url"
+    },
+
+    "oDomainEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateChannelLambda", "DomainEndpoint" ] },
+      "Description": "Endpoint Domain"
+    }
+  }
+}

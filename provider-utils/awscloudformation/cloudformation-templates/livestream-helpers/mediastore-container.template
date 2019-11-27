@@ -1,0 +1,97 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Per MediaStore Container resource",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Workflow: Provision Configuration" },
+          "Parameters": [
+            "pLambdaArn"
+          ]
+        },
+        {
+          "Label": { "default": "MediaStore: Container Configuration" },
+          "Parameters": [
+            "pContainerName"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pLambdaArn": {
+          "default": "Lambda Function Arn"
+        },
+
+        "pContainerName": {
+          "default": "Container Name"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rCreateContainerLambda": {
+      "Type": "Custom::rCreateContainerLambda",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::Sub": "${pLambdaArn}"
+        },
+
+        "PS_CONTAINER_NAME": {
+          "Fn::If": [
+            "cContainerName",
+            { "Fn::Sub": "${pContainerName}" },
+            { "Fn::Sub": "${AWS::StackName}" }
+          ]
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pLambdaArn": {
+      "Type": "String",
+      "Description": "used for provisioning the worfklow",
+      "Default": ""
+    },
+
+    "pContainerName": {
+      "Type": "String",
+      "Description": "mediastore container name. Leave it blank to use Stack Name as Container Name"
+    }
+  },
+
+  "Conditions": {
+    "cContainerName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pContainerName" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oLambdaArn": {
+      "Value": { "Ref": "pLambdaArn" },
+      "Description": "Provision Lambda Arn"
+    },
+
+    "oContainerArn": {
+      "Value": { "Fn::GetAtt": [ "rCreateContainerLambda", "ContainerArn" ] },
+      "Description": "Container Arn"
+    },
+
+    "oContainerName": {
+      "Value": { "Fn::GetAtt": [ "rCreateContainerLambda", "ContainerName" ] },
+      "Description": "Container Name"
+    },
+
+    "oContainerEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rCreateContainerLambda", "ContainerEndpoint" ] },
+      "Description": "Container Endpoint"
+    }
+  }
+}

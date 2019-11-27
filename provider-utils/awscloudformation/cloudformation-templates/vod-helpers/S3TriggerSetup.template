@@ -1,0 +1,125 @@
+Description: S3 Workflow
+
+Parameters:
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: amazonbooth
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: vod-helpers
+  pInputS3:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pInputS3Arn:
+    Type: String
+    Description: Input S3 Arn
+    Default: arn-default
+  pOutputS3:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pOutputS3Arn:
+    Type: String
+    Description: Input S3 Arn
+    Default: arn-default
+  pInputTriggerLambda:
+    Type: String
+    Description: Arn for lambda for triggering
+    Default: arn-default
+  pOutputTriggerLambda:
+    Type: String
+    Description: Arn for lambda for triggering
+    Default: arn-default
+  pFunctionName:
+    Type: String
+    Description: Name of function
+    Default: arn-default
+
+
+Resources:
+  rS3InputTriggerPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref pInputTriggerLambda
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+  rS3OutputTriggerPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref pOutputTriggerLambda
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+  rCreateSetupTriggerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref pFunctionName
+      Description: Sends a notification when a new object is put into the bucket
+      Handler: index.handler
+      Role: !GetAtt rSetupTriggerLambdaRole.Arn
+      Runtime: nodejs10.x
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref pS3
+        S3Key: vod-helpers/SetupTriggerLambda.zip
+
+  rCreateInputTrigger:
+    Type: "Custom::InputTrigger"
+    Properties:
+      ServiceToken: !GetAtt rCreateSetupTriggerLambda.Arn
+      BucketName: !Ref pInputS3
+      IngestArn: !Ref pInputTriggerLambda
+      BucketFunction: "Input"
+
+  rCreateOutputTrigger:
+    Type: "Custom::OutputTrigger"
+    Properties:
+      ServiceToken: !GetAtt rCreateSetupTriggerLambda.Arn
+      BucketName: !Ref pOutputS3
+      IngestArn: !Ref pOutputTriggerLambda
+      BucketFunction: "Output"
+
+  rSetupTriggerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        -
+          PolicyName: !Sub "${AWS::StackName}-internal-trigger-role"
+          PolicyDocument:
+            Statement:
+               -
+                Effect: Allow
+                Action:
+                  - s3:PutBucketNotification
+                  - s3:PutObject
+                  - s3:putObjectAcl
+                Resource:
+                  - !Ref pInputS3Arn
+                  - !Ref pOutputS3Arn
+               -
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*

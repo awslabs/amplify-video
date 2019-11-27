@@ -1,0 +1,52 @@
+{
+  "TargetOriginId": "##ORIGIN ID GOES HERE",
+  "PathPattern": "##PATH PATTERN GOES HERE",
+  "SmoothStreaming": false,
+  "ViewerProtocolPolicy": "https-only",
+  "MinTTL": 0,
+  "MaxTTL": 31536000,
+  "DefaultTTL": 86400,
+  "Compress": false,
+  "ForwardedValues": {
+    "Headers": {
+      "Quantity": 4,
+      "Items": [
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    "Cookies": {
+      "Forward": "all"
+    },
+    "QueryStringCacheKeys": {
+      "Quantity": 0
+    },
+    "QueryString": true
+  },
+  "TrustedSigners": {
+    "Quantity": 0,
+    "Enabled": false
+  },
+  "LambdaFunctionAssociations": {
+    "Quantity": 0
+  },
+  "AllowedMethods": {
+    "Quantity": 3,
+    "Items": [
+      "HEAD",
+      "GET",
+      "OPTIONS"
+    ],
+    "CachedMethods": {
+      "Quantity": 3,
+      "Items": [
+        "HEAD",
+        "GET",
+        "OPTIONS"
+      ]
+    }
+  },
+  "FieldLevelEncryptionId": ""
+}

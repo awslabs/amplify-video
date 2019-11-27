@@ -1,0 +1,208 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "Create resources for MediaStore service",
+
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Provision: Source Files Configuration" },
+          "Parameters": [
+            "pS3",
+            "pSourceFolder",
+            "pPackageName",
+            "pProvisionLambdaHandler"
+          ]
+        },
+        {
+          "Label": { "default": "MediaStore: Container Configuration" },
+          "Parameters": [
+            "pContainerName"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "pS3": {
+          "default": "S3 Bucket Name"
+        },
+
+        "pSourceFolder": {
+          "default": "Source Folder"
+        },
+
+        "pPackageName": {
+          "default": "Lambda Package Name"
+        },
+
+        "pProvisionLambdaHandler": {
+          "default": "Lambda Function Handler"
+        },
+
+        "pContainerName": {
+          "default": "Container Name"
+        }
+      }
+    }
+  },
+
+  "Resources": {
+    "rIAM": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/mediastore-iam.template"
+        },
+        "Parameters": {
+          "pPrefix": {
+            "Fn::If": [
+              "cContainerName",
+              { "Fn::Sub": "${pContainerName}" },
+              { "Fn::Sub": "${AWS::StackName}" }
+            ]
+          }
+        }
+      }
+    },
+
+    "rProvisionLambdaFunction": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/lambda.template"
+        },
+        "Parameters": {
+          "pS3": {
+            "Ref": "pS3"
+          },
+
+          "pZipFile": {
+            "Fn::Sub": "${pSourceFolder}/${pPackageName}"
+          },
+
+          "pLambdaHandler": {
+            "Ref": "pProvisionLambdaHandler"
+          },
+
+          "pLambdaRoleArn": {
+            "Fn::GetAtt": [ "rIAM", "Outputs.oProvisionRoleArn" ]
+          },
+
+          "pMemorySize": "512",
+
+          "pTimeout": "300"
+        }
+      }
+    },
+
+    "rContainer": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": {
+          "Fn::Sub": "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/mediastore-container.template"
+        },
+        "Parameters": {
+          "pLambdaArn": {
+            "Fn::GetAtt": [ "rProvisionLambdaFunction", "Outputs.oLambdaArn" ]
+          },
+
+          "pContainerName": {
+            "Fn::If": [
+              "cContainerName",
+              { "Fn::Sub": "${pContainerName}" },
+              { "Fn::Sub": "${AWS::StackName}" }
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "Parameters": {
+    "pS3": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
+      "Default": "mediapackage-demo"
+    },
+
+    "pSourceFolder": {
+      "Type": "String",
+      "Description": "store template and lambda package",
+      "Default": "livestream-helpers"
+    },
+
+    "pPackageName": {
+      "Type": "String",
+      "Description": "lambda package zip file",
+      "Default": "psdemo-js-live-workflow_v0.3.0.zip"
+    },
+
+    "pProvisionLambdaHandler": {
+      "Type": "String",
+      "Description": "program entrypoint. Leave it as is.",
+      "Default": "orchestration.MediaStoreContainer"
+    },
+
+    "pContainerName": {
+      "Type": "String",
+      "Description": "mediastore container name. Use Stack Name for Container name if blank"
+    }
+  },
+
+  "Conditions": {
+    "cContainerName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [ { "Ref": "pContainerName" }, "" ]
+        }
+      ]
+    }
+  },
+
+  "Outputs": {
+    "oS3": {
+      "Value": { "Ref": "pS3" },
+      "Description": "S3 Bucket for source files"
+    },
+
+    "oPackagePath": {
+      "Value": { "Fn::Sub": "s3://${pS3}/${pSourceFolder}/${pPackageName}" },
+      "Description": "Lambda Package Path (Reference)"
+    },
+
+    "oManagedPolicy": {
+      "Value": {
+        "Fn::GetAtt": [ "rIAM", "Outputs.oManagedPolicy" ]
+      },
+      "Description": "MediaStore Managed Policy"
+    },
+
+    "oProvisionRole": {
+      "Value": {
+        "Fn::GetAtt": [ "rIAM", "Outputs.oProvisionRoleArn" ]
+        },
+      "Description": "MediaStore Provision Role"
+    },
+
+    "oProvisionLambdaArn": {
+      "Value": { "Fn::GetAtt": [ "rProvisionLambdaFunction", "Outputs.oLambdaArn" ] },
+      "Description": "Lambda Provision Arn"
+    },
+
+    "oContainerArn": {
+      "Value": { "Fn::GetAtt": [ "rContainer", "Outputs.oContainerArn" ] },
+      "Description": "MediaStore Container Arn"
+    },
+
+    "oContainerName": {
+      "Value": { "Fn::GetAtt": [ "rContainer", "Outputs.oContainerName" ] },
+      "Description": "MediaStore Container Name"
+    },
+
+    "oContainerEndpoint": {
+      "Value": { "Fn::GetAtt": [ "rContainer", "Outputs.oContainerEndpoint" ] },
+      "Description": "MediaStore Container Endpoint"
+    }
+  }
+}
