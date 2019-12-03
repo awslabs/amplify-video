@@ -29,7 +29,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[0].key,
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
-      default: amplify.getProjectDetails().projectConfig.projectName,
+      default: 'myvodstreams',
     }];
 
   if (resourceName) {
