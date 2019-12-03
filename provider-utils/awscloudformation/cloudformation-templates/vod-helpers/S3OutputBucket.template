@@ -4,7 +4,7 @@ Parameters:
   pBucketName:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: DefaultName
   pCloudfrontEnabled:
     Type: String

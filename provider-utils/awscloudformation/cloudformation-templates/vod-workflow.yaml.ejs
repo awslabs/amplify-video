@@ -16,27 +16,27 @@ Parameters:
   pS3:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: "<%= props.shared.bucket %>"
   pS3InputName:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: "<%= props.shared.bucketInput %>"
   pS3OutputName:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: "<%= props.shared.bucketOutput %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: vod-helpers
   pProjectName:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: <%= props.shared.resourceName %>
   pTemplateArn:
     Type: String

@@ -225,7 +225,7 @@
     "pS3": {
       "Type": "String",
       "Description": "store template and lambda package",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
+      "AllowedPattern" : "[a-zA-Z0-9][a-zA-Z0-9-]*",
       "Default": "mediapackage-demo"
     },
 
@@ -250,7 +250,7 @@
     "pChannelId": {
       "Type": "String",
       "Description": "medialive channel id. Use Stack Name for Channel name if blank",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+      "AllowedPattern" : "[a-zA-Z0-9][a-zA-Z0-9-]*"
     },
 
     "pInputSecurityGroup": {

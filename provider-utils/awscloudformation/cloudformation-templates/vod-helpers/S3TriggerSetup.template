@@ -4,17 +4,17 @@ Parameters:
   pS3:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: amazonbooth
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: vod-helpers
   pInputS3:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: DefaultName
   pInputS3Arn:
     Type: String
@@ -23,7 +23,7 @@ Parameters:
   pOutputS3:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: DefaultName
   pOutputS3Arn:
     Type: String

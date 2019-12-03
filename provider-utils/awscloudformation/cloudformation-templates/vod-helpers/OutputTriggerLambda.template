@@ -4,17 +4,17 @@ Parameters:
   pS3:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: s3default
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: vod-helpers
   pOutputS3:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: DefaultName
   pOutputS3Arn:
     Type: String
@@ -23,7 +23,7 @@ Parameters:
   pFunctionName:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    AllowedPattern: "[a-zA-Z0-9][a-zA-Z0-9-]*"
     Default: BucketWatcher
 
 Resources:

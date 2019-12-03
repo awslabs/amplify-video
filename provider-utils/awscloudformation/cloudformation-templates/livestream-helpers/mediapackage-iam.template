@@ -129,7 +129,7 @@
     "pPrefix": {
       "Type": "String",
       "Description": "used to prefix resource name",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+      "AllowedPattern" : "[a-zA-Z0-9][a-zA-Z0-9-]*"
     }
   },
 

@@ -176,7 +176,7 @@
     "pS3": {
       "Type": "String",
       "Description": "store template and lambda package",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
+      "AllowedPattern" : "[a-zA-Z0-9][a-zA-Z0-9-]*",
       "Default": "mediapackage-demo"
     },
 
@@ -201,7 +201,7 @@
     "pChannelId": {
       "Type": "String",
       "Description": "mediapackage channel id. Leave it blank to use Stack Name as Channel Name",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*"
+      "AllowedPattern" : "[a-zA-Z0-9][a-zA-Z0-9-]*"
     },
 
     "pIngestType": {
