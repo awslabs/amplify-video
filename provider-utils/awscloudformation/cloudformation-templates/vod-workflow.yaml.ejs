@@ -83,7 +83,29 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
       Parameters:
           pBucketName: !Ref pS3OutputName
-          pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
+          pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity
+  rCloudfrontTokenGenerator:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFTokenGen.template"
+      Parameters:
+          pPemID: <%= props.contentDeliveryNetwork.pemID %>
+          pSecretPem: <%= props.contentDeliveryNetwork.secretPem %>
+          pSecretPemArn: <%= props.contentDeliveryNetwork.secretPemArn %>
+          pDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+          pS3: !Ref pS3
+          pFunctionName: 
+            !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'tokenGen'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'tokenGen'
 <% } %>
   rInputLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
