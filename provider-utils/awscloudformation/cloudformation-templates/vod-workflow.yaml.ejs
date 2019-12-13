@@ -58,9 +58,11 @@ Outputs:
   oVODOutputS3:
     Description: Amplify Video hosts transcoded video content in this bucket
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+<% if (props.contentDeliveryNetwork.enableDistribution) { %>
   oVodOutputUrl:
     Description: Amplify Video CloudFront Url
     Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+<% } %>
 
 Resources:
   rS3InputBucket:
