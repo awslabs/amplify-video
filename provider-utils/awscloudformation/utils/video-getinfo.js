@@ -123,5 +123,4 @@ async function prettifyOutputVod(context, output) {
     context.print.blue('Output Storage bucket:');
     context.print.blue(`${output.oVODOutputS3}\n`);
   }
-
 }
