@@ -42,9 +42,12 @@ async function generateAWSExportsVideo(context) {
   // TODO write a way to handle multiple projects. Only handles one vod project for right now!
   Object.values(amplifyMeta.video).forEach((project) => {
     if ('output' in project) {
-      if ('oVODInputS3' in project.output) {
+      if ('oVODOutputS3' in project.output) {
         props.awsInputVideo = project.output.oVODInputS3;
         props.awsOutputVideo = project.output.oVODOutputS3;
+      } else if ('oVodOutputUrl' in project.output) {
+        props.awsInputVideo = project.output.oVODInputS3;
+        props.awsOutputVideo = project.output.oVodOutputUrl;
       }
     }
   });
@@ -113,6 +116,12 @@ async function prettifyOutputLive(output) {
 async function prettifyOutputVod(context, output) {
   context.print.blue('Input Storage bucket:');
   context.print.blue(`${output.oVODInputS3}\n`);
-  context.print.blue('Output Storage bucket:');
-  context.print.blue(`${output.oVODOutputS3}\n`);
+  if (output.oVodOutputUrl) {
+    context.print.blue('Output URL for content:');
+    context.print.blue(`${output.oVodOutputUrl}\n`);
+  } else {
+    context.print.blue('Output Storage bucket:');
+    context.print.blue(`${output.oVODOutputS3}\n`);
+  }
+
 }
