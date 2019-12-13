@@ -1,11 +1,11 @@
 const url = require('url');
 /* eslint-disable */
-const aws = require('./node_modules/aws-sdk');
+const aws = require('aws-sdk');
 var globalPem;
 /* eslint-enable */
 
 exports.handler = async (event) => {
-  const response = await signPath(event.id);
+  const response = await signPath(event.source.id);
   return response;
 };
 
@@ -40,9 +40,5 @@ async function signPath(id) {
   const signedUrl = await sign(tobeSigned);
   const urlParams = signedUrl.replace(`https://${host}/${videoPath}`, '');
 
-  return {
-    status: 200,
-    statusDescription: `https://${host}/${videoPath} is signed`,
-    body: urlParams,
-  };
+  return urlParams;
 }
