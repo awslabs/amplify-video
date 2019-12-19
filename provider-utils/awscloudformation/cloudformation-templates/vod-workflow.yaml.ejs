@@ -62,6 +62,10 @@ Outputs:
   oVodOutputUrl:
     Description: Amplify Video CloudFront Url
     Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+<% } else { %>
+  oVodOutputUrl:
+    Description: Amplify Video CloudFront Url
+    Value: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
 <% } %>
 
 Resources:

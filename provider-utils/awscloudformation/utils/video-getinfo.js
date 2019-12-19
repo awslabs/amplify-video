@@ -42,12 +42,26 @@ async function generateAWSExportsVideo(context) {
   // TODO write a way to handle multiple projects. Only handles one vod project for right now!
   Object.values(amplifyMeta.video).forEach((project) => {
     if ('output' in project) {
-      if ('oVODOutputS3' in project.output) {
-        props.awsInputVideo = project.output.oVODInputS3;
-        props.awsOutputVideo = project.output.oVODOutputS3;
-      } else if ('oVodOutputUrl' in project.output) {
-        props.awsInputVideo = project.output.oVODInputS3;
-        props.awsOutputVideo = project.output.oVodOutputUrl;
+      const { output } = project;
+      if ('oVodOutputUrl' in output) {
+        props.awsInputVideo = output.oVODInputS3;
+        props.awsOutputVideo = output.oVodOutputUrl;
+      } else if ('oMediaLivePrimaryIngestUrl' in output) {
+        if (output.oPrimaryHlsEgress) {
+          props.awsOutputLiveHLS = output.oPrimaryHlsEgress;
+        }
+        if (output.oPrimaryDashEgress) {
+          props.awsOutputLiveDash = output.oPrimaryDashEgress;
+        }
+        if (output.oPrimaryMssEgress) {
+          props.awsOutputLiveMss = output.oPrimaryMssEgress;
+        }
+        if (output.oPrimaryCmafEgress) {
+          props.awsOutputLiveCmaf = output.oPrimaryCmafEgress;
+        }
+        if (output.oMediaStoreContainerName) {
+          props.awsOutputLiveLL = output.oPrimaryMediaStoreEgressUrl;
+        }
       }
     }
   });

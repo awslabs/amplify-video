@@ -82,3 +82,6 @@ Outputs:
     Condition: CreateCloudfront
     Value: !Ref OriginAccessIdentity
     Description: Origin Access Identity for Cloudfront
+  oOutputUrl:
+    Value: !GetAtt OutputBucket.RegionalDomainName
+    Description: URL for the bucket

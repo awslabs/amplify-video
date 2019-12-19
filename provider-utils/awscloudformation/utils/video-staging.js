@@ -4,6 +4,8 @@ const path = require('path');
 const mime = require('mime-types');
 const chalk = require('chalk');
 const sha1 = require('sha1');
+const inquirer = require('inquirer');
+const ejs = require('ejs');
 const { getAWSConfig } = require('./get-aws');
 
 async function copyFilesToS3(context, options, resourceName, stackFolder) {
@@ -80,16 +82,84 @@ async function stageVideo(context, options, props, cfnFilename, stackFolder, typ
   await syncHelperCF(context, props, stackFolder);
 }
 
+function getFiles(dir, init, files_) {
+  files_ = files_ || [];
+  const files = fs.readdirSync(dir);
+  for (let i = 0; i < files.length; i++) {
+    if (files[i] !== '.DS_Store') {
+      const name = `${dir}/${files[i]}`;
+      if (fs.statSync(name).isDirectory()) {
+        getFiles(name, init || dir, files_);
+      } else if (init) {
+        files_.push(name.replace(`${init}/`, ''));
+      } else {
+        files_.push(files[i]);
+      }
+    }
+  }
+  return files_;
+}
+
 async function syncHelperCF(context, props, stackFolder) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
+  let overwriteAll = true;
 
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
+  } else {
+    overwriteAll = await context.prompt.confirm('Would you like to overwrite all files?');
   }
 
-  fs.copySync(`${pluginDir}/cloudformation-templates/${stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
+  let filterForEJS;
+
+  if (overwriteAll) {
+    filterForEJS = (src, dest) => {
+      if (src.includes('.ejs')) {
+        const ejsFormated = fs.readFileSync(src, { encoding: 'utf-8' });
+        const ejsOutput = ejs.render(ejsFormated, { props });
+        const newDest = dest.replace('.ejs', '');
+        fs.writeFileSync(newDest, ejsOutput);
+        return false;
+      }
+      return true;
+    };
+  } else {
+    const listOfFiles = getFiles(`${pluginDir}/cloudformation-templates/${stackFolder}`);
+    const chooseFiles = [
+      {
+        type: 'checkbox',
+        name: 'fileList',
+        message: 'Choose what file you want to overwrite:',
+        choices: listOfFiles,
+        default: listOfFiles,
+      },
+    ];
+    const answer = await inquirer.prompt(chooseFiles);
+    const locations = answer.fileList.map(file => `${pluginDir}/cloudformation-templates/${stackFolder}/${file}`);
+    filterForEJS = (src, dest) => {
+      if (fs.statSync(src).isDirectory()) {
+        return true;
+      }
+
+      if (!locations.includes(src)) {
+        return false;
+      }
+
+      if (src.includes('.ejs')) {
+        const ejsFormated = fs.readFileSync(src, { encoding: 'utf-8' });
+        const ejsOutput = ejs.render(ejsFormated, { props });
+        const newDest = dest.replace('.ejs', '');
+        fs.writeFileSync(newDest, ejsOutput);
+        context.print.warning(`Overwrote: ${newDest}`);
+        return false;
+      }
+      context.print.warning(`Overwrote: ${src}`);
+      return true;
+    };
+  }
+  fs.copySync(`${pluginDir}/cloudformation-templates/${stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`, { filter: filterForEJS });
 }
 
 async function pushRootTemplate(context, options, props, cfnFilename, type) {
@@ -142,11 +212,8 @@ async function updateWithProps(context, options, props, resourceName, cfnFilenam
 }
 
 async function resetupFiles(context, options, resourceName, stackFolder) {
-  const props = {
-    shared: {
-      resourceName,
-    },
-  };
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
+  const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
   syncHelperCF(context, props, stackFolder);
 }
 
