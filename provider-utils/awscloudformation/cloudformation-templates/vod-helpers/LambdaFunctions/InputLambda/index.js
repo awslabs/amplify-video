@@ -1,7 +1,9 @@
 
 // Load the AWS SDK for Node.js
 // eslint-disable-next-line import/no-extraneous-dependencies
+/* eslint-disable */
 const AWS = require('aws-sdk');
+/* eslint-enable */
 const jobSettings = require('./settings.json');
 // Set the region
 
