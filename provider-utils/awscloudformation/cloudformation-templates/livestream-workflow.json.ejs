@@ -30,7 +30,8 @@
             "pEncodingProfile",
             "pGopSizeInSec",
             "pGopPerSegment",
-            "pStartChannel"
+            "pStartChannel",
+            "pMp4URL"
           ]
         },
         {
@@ -93,6 +94,10 @@
 
         "pIngestType": {
           "default": "Ingest Type"
+        },
+        
+        "pMp4URL": {
+          "default": "URL to MP4 File"
         },
 
         "pEncodingProfile": {
@@ -253,6 +258,10 @@
 
           "pIngestType": {
             "Ref": "pIngestType"
+          },
+
+          "pMp4URL": {
+            "Ref": "pMp4URL"
           },
 
           "pEncodingProfile": {
@@ -466,8 +475,14 @@
     "pIngestType": {
       "Type": "String",
       "Description": "medialive ingest type",
-      "AllowedValues": [ "RTP_PUSH", "UDP_PUSH", "RTMP_PUSH" ],
+      "AllowedValues": [ "RTP_PUSH", "UDP_PUSH", "RTMP_PUSH", "MP4_FILE" ],
       "Default": "<%= props.mediaLive.ingestType %>"
+    },
+
+    "pMp4URL": {
+      "Type": "String",
+      "Description": "URL to MP4 File",
+      "Default": "<%= props.mediaLive.mp4URL %>"
     },
 
     "pEncodingProfile": {

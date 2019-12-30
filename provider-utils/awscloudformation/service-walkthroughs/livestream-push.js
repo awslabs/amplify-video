@@ -1,11 +1,11 @@
 const inquirer = require('inquirer');
+const question = require('../../livestream-questions.json');
 const fs = require('fs-extra');
 const path = require('path');
-const question = require('../../livestream-questions.json');
 
 module.exports = {
   serviceQuestions,
-};
+}
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
@@ -14,11 +14,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();
   let advancedAnswers = {};
+  let mediaLiveAnswers = {};
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   const props = {};
   let defaults = {};
-
+  
   defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   defaults.resourceName = 'mylivestream';
   try {
@@ -40,7 +41,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       validate: amplify.inputValidation(inputs[0]),
       default: defaults.resourceName,
     }];
-
+  
   // prompt for advanced options
   const advanced = [
     {
@@ -48,8 +49,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[16].key,
       message: inputs[16].question,
       default: defaults.advanced[inputs[16].key],
-    },
-  ];
+    }
+  ]
 
   // advanced options (currently only segmentation settings)
   const advancedQuestions = [
@@ -74,7 +75,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       validate: amplify.inputValidation(inputs[3]),
       default: defaults.advanced[inputs[3].key],
     },
-  ];
+  ]
 
   const mediaLiveQuestions = [
     {
@@ -105,6 +106,15 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       choices: inputs[7].options,
       default: defaults.mediaLive[inputs[7].key],
     },
+  ];
+  
+  const mp4Questions = [
+    {
+      type: inputs[17].type,
+      name: inputs[17].key,
+      message: inputs[17].question,
+      default: defaults.advanced[inputs[17].key],
+    }
   ];
 
   const mediaPackageQuestions = [
@@ -172,7 +182,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   } else {
     resource = await inquirer.prompt(nameProject);
   }
-
+  
   // main question control flow
   const answers = {};
   answers.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
@@ -180,7 +190,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   answers.resourceName = resource.name;
 
   const advancedEnable = await inquirer.prompt(advanced);
-  if (advancedEnable.advancedChoice === false) {
+  if (advancedEnable.advancedChoice == false) {
     advancedAnswers.gopSize = '1';
     advancedAnswers.gopPerSegment = '2';
     advancedAnswers.segsPerPlist = '3';
@@ -190,7 +200,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     advancedAnswers.advancedChoice = true;
   }
 
-  const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
+  //const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
+  mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
+  if (mediaLiveAnswers.ingestType === 'MP4_FILE') {
+    const mp4Answers = await inquirer.prompt(mp4Questions);
+    mediaLiveAnswers.mp4URL = mp4Answers.mp4URL;
+  }
   const mediaStorageAnswers = await inquirer.prompt(mediaStorage);
   if (mediaStorageAnswers.storageType === 'mPackageStore' || mediaStorageAnswers.storageType === 'mPackage') {
     mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);

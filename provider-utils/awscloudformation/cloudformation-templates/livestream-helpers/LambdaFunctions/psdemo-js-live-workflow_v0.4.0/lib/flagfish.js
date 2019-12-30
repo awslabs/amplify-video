@@ -23,6 +23,7 @@ const PS_PARAMS = [
   'PS_GOP_PER_SEGMENT',
   'PS_SEGMENT_PER_PLAYLIST',
   'PS_START_CHANNEL',
+  'PS_MP4_URL',
 ];
 
 const REQUIRED_ENV = [
@@ -114,6 +115,8 @@ class Flagfish extends mxStoreResponse(class { }) {
   get inputSecurityGroup() { return this.$event.ResourceProperties.PS_INPUT_SECURITY_GROUP; }
 
   get ingestType() { return this.$event.ResourceProperties.PS_INGEST_TYPE.toUpperCase(); }
+  
+  get mp4URL() { return this.$event.ResourceProperties.PS_MP4_URL; }
 
   get roleArn() { return this.$event.ResourceProperties.PS_ROLE_ARN; }
 
@@ -236,12 +239,22 @@ class Flagfish extends mxStoreResponse(class { }) {
     if (this.ingestType === 'RTMP_PUSH') {
       payload.Destinations = ['p', 'b'].map(x => ({ StreamName: `${this.channelId}-${x}` }));
     }
+     /* MP4 file hack */
+    if (this.ingestType === 'MP4_FILE') {
+      payload.Sources = ['p', 'b'].map(x =>
+        ({ Url: `${this.mp4URL}` }));
+      //payload.Sources =  [{ Url: this.mp4URL }, {Url: this.mp4URL} }];
+    }
 
     const response = await this.flagfish.createInput(payload).promise();
     const { Input } = response;
     const missing = ['Id', 'Arn', 'Name', 'Destinations'].filter(x => Input[x] === undefined);
     if (missing.length) {
       throw new Error(`response.Input missing ${missing.join(', ')}`);
+    }
+    if (this.ingestType === 'MP4_FILE') {
+      console.log(`MP4_FILE just return`);
+      return response;
     }
     const { Destinations } = Input;
     if (Destinations.length < 2) {
@@ -409,7 +422,15 @@ class Flagfish extends mxStoreResponse(class { }) {
       this.updateEncodingSettings(payload);
       this.configureDestinations(payload); // Add if statement for check if destination has mediapackage
       this.addMediaStoreOutputGroup(payload);
+      if (this.ingestType === "MP4_FILE") {
+        payload.InputAttachments[0].InputSettings.NetworkInputSettings = null;
+        payload.InputAttachments[0].InputSettings.SourceEndBehavior = "LOOP";
+        console.log("Calling createChannel");
+        console.log(JSON.stringify(payload));
+      }
       const response = await this.flagfish.createChannel(payload).promise(); // Should work
+      console.log("Returned from createChannel");
+      console.log(JSON.stringify(response));
       /* sanity check */
       const missing = ['Id', 'Arn', 'Name'].filter(x => response.Channel[x] === undefined);
       if (missing.length) {
@@ -492,8 +513,15 @@ class Flagfish extends mxStoreResponse(class { }) {
     this.storeResponseData('InputId', InputId);
     this.storeResponseData('InputName', InputName);
     this.storeResponseData('InputType', InputType);
-    this.storeResponseData('PrimaryIngestUrl', Destinations[0].Url);
-    this.storeResponseData('BackupIngestUrl', Destinations[1].Url);
+    if (this.ingestType === "MP4_FILE") {
+      console.log("MP4_FILE Input");
+      console.log(JSON.stringify(this.responseData, null, 2));
+      this.storeResponseData('PrimaryIngestUrl', this.mp4URL);
+      this.storeResponseData('BackupIngestUrl', this.mp4URL);
+    } else { 
+      this.storeResponseData('PrimaryIngestUrl', Destinations[0].Url);
+      this.storeResponseData('BackupIngestUrl', Destinations[1].Url);
+    }
 
     /* Next, create channel */
     response = await this.createChannel(InputId);
