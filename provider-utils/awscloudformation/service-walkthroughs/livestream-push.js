@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
-const question = require('../../livestream-questions.json');
 const fs = require('fs-extra');
 const path = require('path');
+const question = require('../../livestream-questions.json');
 
 module.exports = {
   serviceQuestions,
