@@ -19,7 +19,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   let cloudFrontAnswers = {};
   const props = {};
   let defaults = {};
- 
   defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   defaults.resourceName = 'mylivestream';
   try {
