@@ -41,7 +41,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       validate: amplify.inputValidation(inputs[0]),
       default: defaults.resourceName,
     }];
- 
+
   // prompt for advanced options
   const advanced = [
     {
@@ -107,7 +107,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       default: defaults.mediaLive[inputs[7].key],
     },
   ];
- 
+
   const mp4Questions = [
     {
       type: inputs[17].type,
@@ -182,7 +182,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   } else {
     resource = await inquirer.prompt(nameProject);
   }
- 
+
   // main question control flow
   const answers = {};
   answers.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
@@ -200,7 +200,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     advancedAnswers.advancedChoice = true;
   }
 
-  //const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
   mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
   if (mediaLiveAnswers.ingestType === 'MP4_FILE') {
     const mp4Answers = await inquirer.prompt(mp4Questions);
