@@ -251,7 +251,6 @@ class Flagfish extends mxStoreResponse(class { }) {
       throw new Error(`response.Input missing ${missing.join(', ')}`);
     }
     if (this.ingestType === 'MP4_FILE') {
-      console.log(`MP4_FILE just return`);
       return response;
     }
     const { Destinations } = Input;
@@ -423,12 +422,8 @@ class Flagfish extends mxStoreResponse(class { }) {
       if (this.ingestType === "MP4_FILE") {
         payload.InputAttachments[0].InputSettings.NetworkInputSettings = null;
         payload.InputAttachments[0].InputSettings.SourceEndBehavior = "LOOP";
-        console.log("Calling createChannel");
-        console.log(JSON.stringify(payload));
       }
       const response = await this.flagfish.createChannel(payload).promise(); // Should work
-      console.log("Returned from createChannel");
-      console.log(JSON.stringify(response));
       /* sanity check */
       const missing = ['Id', 'Arn', 'Name'].filter(x => response.Channel[x] === undefined);
       if (missing.length) {
@@ -512,8 +507,6 @@ class Flagfish extends mxStoreResponse(class { }) {
     this.storeResponseData('InputName', InputName);
     this.storeResponseData('InputType', InputType);
     if (this.ingestType === "MP4_FILE") {
-      console.log("MP4_FILE Input");
-      console.log(JSON.stringify(this.responseData, null, 2));
       this.storeResponseData('PrimaryIngestUrl', this.mp4URL);
       this.storeResponseData('BackupIngestUrl', this.mp4URL);
     } else { 
