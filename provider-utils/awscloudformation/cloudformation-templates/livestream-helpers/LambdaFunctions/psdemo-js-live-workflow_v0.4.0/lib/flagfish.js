@@ -251,6 +251,7 @@ class Flagfish extends mxStoreResponse(class { }) {
       throw new Error(`response.Input missing ${missing.join(', ')}`);
     }
     if (this.ingestType === 'MP4_FILE') {
+      /* Just return when it is MP4_FILE */
       return response;
     }
     const { Destinations } = Input;
