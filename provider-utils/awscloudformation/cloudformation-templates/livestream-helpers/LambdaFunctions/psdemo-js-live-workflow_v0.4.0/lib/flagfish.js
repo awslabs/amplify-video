@@ -239,11 +239,9 @@ class Flagfish extends mxStoreResponse(class { }) {
     if (this.ingestType === 'RTMP_PUSH') {
       payload.Destinations = ['p', 'b'].map(x => ({ StreamName: `${this.channelId}-${x}` }));
     }
-     /* MP4 file hack */
+     /* Set MediaLive input Source as the Url to MP4 file*/
     if (this.ingestType === 'MP4_FILE') {
-      payload.Sources = ['p', 'b'].map(x =>
-        ({ Url: `${this.mp4URL}` }));
-      //payload.Sources =  [{ Url: this.mp4URL }, {Url: this.mp4URL} }];
+      payload.Sources =  [{ Url: this.mp4URL }, {Url: this.mp4URL}];
     }
 
     const response = await this.flagfish.createInput(payload).promise();
