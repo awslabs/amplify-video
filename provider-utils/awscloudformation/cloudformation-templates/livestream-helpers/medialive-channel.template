@@ -27,7 +27,8 @@
             "pGopSizeInSec",
             "pGopPerSegment",
             "pSegmentPerPlaylist",
-            "pStartChannel"
+            "pStartChannel",
+            "pMp4URL"
           ]
         }
       ],
@@ -86,6 +87,9 @@
 
         "pStartChannel": {
           "default": "Auto-start"
+        },
+        "pMp4URL" : {
+          "default": "MP4 URL"
         }
       }
     }
@@ -153,6 +157,10 @@
 
         "PS_START_CHANNEL": {
           "Fn::Sub": "${pStartChannel}"
+        },
+
+        "PS_MP4_URL": {
+          "Fn::Sub": "${pMp4URL}"
         }
       }
     }
@@ -186,10 +194,16 @@
     "pIngestType": {
       "Type": "String",
       "Description": "medialive ingest type. Leave it as is",
-      "AllowedPattern" : "[A-Z_]*",
+      "AllowedPattern" : "[A-Z0-9_]*",
       "Default": "RTP_PUSH"
     },
 
+    "pMp4URL": {
+      "Type": "String",
+      "Description": "URL to MP4 File",
+      "Default": ""
+    },
+    
     "pEndpointUrls": {
       "Type": "String",
       "Description": "hls webdav ingest url(s) of your downstream packager, comma separator",

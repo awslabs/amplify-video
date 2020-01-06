@@ -29,7 +29,8 @@
             "pGopSizeInSec",
             "pGopPerSegment",
             "pSegmentPerPlaylist",
-            "pStartChannel"
+            "pStartChannel",
+            "pMp4URL"
           ]
         }
       ],
@@ -96,6 +97,9 @@
 
         "pStartChannel": {
           "default": "Start Channel"
+        },
+        "pMp4URL" : {
+          "default": "MP4 URL"
         }
       }
     }
@@ -215,6 +219,9 @@
 
           "pStartChannel": {
             "Ref": "pStartChannel"
+          },
+          "pMp4URL": {
+            "Ref": "pMp4URL"
           }
         }
       }
@@ -262,7 +269,7 @@
     "pIngestType": {
       "Type": "String",
       "Description": "medialive ingest type. Leave it as is",
-      "AllowedPattern" : "[A-Z_]*",
+      "AllowedPattern" : "[A-Z0-9_]*",
       "Default": "RTP_PUSH"
     },
 
@@ -323,6 +330,11 @@
       "Description": "starting the channel upon creation",
       "Default": "NO",
       "AllowedValues": [ "YES", "NO" ]
+    },
+    "pMp4URL": {
+      "Type": "String",
+      "Description": "URL to MP4 File",
+      "Default": ""
     }
   },
 
