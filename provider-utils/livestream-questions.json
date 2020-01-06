@@ -281,7 +281,7 @@
                 "validation": {
                     "operator": "regex",
                     "value": "^[a-z0-9_:\\\/]+$",
-                    "onErrorMsg": "mp4URL can only be a valid url"
+                    "onErrorMsg": "Error the provided URL is not valid"
                 },
                 "required": true
             }
