@@ -30,7 +30,7 @@
             {
                 "key": "enableCDN",
                 "type": "confirm",
-                "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
+                "question": "Is this a production enviroment?",
                 "required": true
             },
             {
@@ -50,6 +50,18 @@
                 "type":"confirm",
                 "question":"Do you want to edit your newly created model?",
                 "required":true
+            }, 
+            {
+                "key": "pemKeyLocation",
+                "type":"input",
+                "question": "Provide the location to the pem key you want CloudFront you want to sign urls with:",
+                "required": true
+            },
+            {
+                "key": "pemKeyID",
+                "type":"input",
+                "question": "What is the ID associated with the pem key?",
+                "required": true
             }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",

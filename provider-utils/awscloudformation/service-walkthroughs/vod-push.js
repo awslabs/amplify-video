@@ -121,18 +121,61 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   // prompt for cdn
   props.contentDeliveryNetwork = {};
-  // const cdnEnable = [
-  //   {
-  //     type: inputs[3].type,
-  //     name: inputs[3].key,
-  //     message: inputs[3].question,
-  //     validate: amplify.inputValidation(inputs[3]),
-  //     default: defaults.contentDeliveryNetwork[inputs[3].key],
-  //   }];
-  //
-  // const cdnResponse = await inquirer.prompt(cdnEnable);
+  const cdnEnable = [
+    {
+      type: inputs[3].type,
+      name: inputs[3].key,
+      message: inputs[3].question,
+      validate: amplify.inputValidation(inputs[3]),
+      default: defaults.contentDeliveryNetwork[inputs[3].key],
+    }];
 
-  props.contentDeliveryNetwork.enableDistribution = false;
+  const cdnResponse = await inquirer.prompt(cdnEnable);
+
+  props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
+
+  if (cdnResponse.enableCDN === true) {
+    const validateFile = (input) => {
+      if (fs.existsSync(input)) {
+        return true;
+      }
+      return 'File does not exist';
+    };
+
+    const tokenGenQuestions = [
+      {
+        type: inputs[7].type,
+        name: inputs[7].key,
+        message: inputs[7].question,
+        validate: validateFile,
+        default: '',
+      },
+      {
+        type: inputs[8].type,
+        name: inputs[8].key,
+        message: inputs[8].question,
+        validate: amplify.inputValidation(inputs[8]),
+        default: '',
+      },
+    ];
+
+    const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
+
+    const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
+
+    const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
+    const createSecretParams = {
+      Name: `${props.shared.resourceName}-pem`,
+      SecretBinary: pemKey,
+    };
+    const secretCreate = await smClient.createSecret(createSecretParams).promise();
+
+    props.contentDeliveryNetwork.pemID = tokenGenResponse.pemKeyID;
+    props.contentDeliveryNetwork.secretPem = secretCreate.Name;
+    props.contentDeliveryNetwork.secretPemArn = secretCreate.ARN;
+    props.contentDeliveryNetwork.functionName = (projectDetails.localEnvInfo.envName)
+      ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+  }
 
   const cmsEnable = [
     {
@@ -214,6 +257,7 @@ async function createCMS(context, apiName, props) {
   }
 
   authGroupHack(context, props.shared.bucketInput);
+  createDependency(context, props, apiName);
 }
 
 async function writeNewModel(resourceDir, props) {
@@ -222,6 +266,18 @@ async function writeNewModel(resourceDir, props) {
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
   await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+}
+
+async function createDependency(context, props, apiName) {
+  if (props.contentDeliveryNetwork.pemID && props.contentDeliveryNetwork.secretPemArn) {
+    context.amplify.updateamplifyMetaAfterResourceUpdate('api', apiName, 'dependsOn', [
+      {
+        category: 'video',
+        resourceName: props.shared.resourceName,
+        attributes: [],
+      },
+    ]);
+  }
 }
 
 async function compileSchema(context, resourceDir, parameters, authConfig) {
