@@ -29,7 +29,8 @@
     "inquirer": "^6.5.0",
     "mime-types": "^2.1.21",
     "ora": "^4.0.3",
-    "sha1": "^1.1.1"
+    "sha1": "^1.1.1",
+    "yaml": "^1.7.2"
   },
   "devDependencies": {
     "eslint-config-airbnb-base": "^13.2.0",
