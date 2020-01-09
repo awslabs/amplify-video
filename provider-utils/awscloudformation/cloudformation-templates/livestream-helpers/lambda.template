@@ -62,7 +62,7 @@
             { "Ref": "AWS::NoValue" }
           ]
         },
-        "Runtime": "nodejs8.10",
+        "Runtime": "nodejs10.x",
         "MemorySize": { "Ref": "pMemorySize" },
         "Timeout": { "Ref": "pTimeout" },
         "Handler": { "Ref": "pLambdaHandler" },
