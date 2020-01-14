@@ -13,14 +13,14 @@ module.exports = {
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
-  const provider = getAWSConfig(context, options);
-  const aws = await provider.getConfiguredAWSClient(context);
   const projectMeta = context.amplify.getProjectMeta();
   const projectDetails = context.amplify.getProjectDetails();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
+  const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
   let nameDict = {};
+  let aws;
 
   const { inputs } = question.video;
   const nameProject = [
@@ -46,46 +46,44 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
-  let jobTemplate = {};
+  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`);
+  }
+
   props.template = {};
-  while (!('JobTemplate' in jobTemplate)) {
-    const pluginDir = path.join(`${__dirname}/..`);
-    const templates = fs.readdirSync(`${pluginDir}/templates/`);
-    const availableTemplates = [];
-    let mcClient = new aws.MediaConvert();
 
-    templates.forEach((filepath) => {
-      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${filepath}`));
-      availableTemplates.push({
-        name: templateInfo.Description,
-        value: filepath,
-      });
-    });
+  const pluginDir = path.join(`${__dirname}/..`);
+  const templates = fs.readdirSync(`${pluginDir}/templates/`);
+  const availableTemplates = [];
 
+  templates.forEach((filepath) => {
+    const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${filepath}`));
     availableTemplates.push({
-      name: 'Bring your own template',
-      value: 'advanced',
+      name: templateInfo.Description,
+      value: filepath,
     });
-    const templateQuestion = [
-      {
-        type: inputs[1].type,
-        name: inputs[1].key,
-        message: inputs[1].question,
-        choices: availableTemplates,
-      },
-    ];
-    const template = await inquirer.prompt(templateQuestion);
+  });
 
-    try {
-      const endpoints = await mcClient.describeEndpoints().promise();
-      aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
-      // Override so config applies
-      mcClient = new aws.MediaConvert();
-    } catch (e) {
-      console.log(chalk.red(e.message));
-    }
+  availableTemplates.push({
+    name: 'Bring your own template',
+    value: 'advanced',
+  });
+  const templateQuestion = [
+    {
+      type: inputs[1].type,
+      name: inputs[1].key,
+      message: inputs[1].question,
+      choices: availableTemplates,
+    },
+  ];
+  const template = await inquirer.prompt(templateQuestion);
 
-    if (template.encodingTemplate === 'advanced') {
+  if (template.encodingTemplate === 'advanced') {
+    let jobTemplate = {};
+    while (!('JobTemplate' in jobTemplate)) {
+      const provider = getAWSConfig(context, options);
+      aws = await provider.getConfiguredAWSClient(context);
+      let mcClient = new aws.MediaConvert();
       const encodingTemplateName = [
         {
           type: inputs[2].type,
@@ -94,6 +92,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           validate: amplify.inputValidation(inputs[2]),
         },
       ];
+      try {
+        const endpoints = await mcClient.describeEndpoints().promise();
+        aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
+        // Override so config applies
+        mcClient = new aws.MediaConvert();
+      } catch (e) {
+        console.log(chalk.red(e.message));
+      }
       const advTemplate = await inquirer.prompt(encodingTemplateName);
       props.template.name = advTemplate.encodingTemplate;
       const params = {
@@ -105,19 +111,11 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       } catch (e) {
         console.log(chalk.red(e.message));
       }
-    } else {
-      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
-      props.template.name = template.encodingTemplate;
-
-      try {
-        jobTemplate = await mcClient.createJobTemplate(templateInfo).promise();
-      } catch (e) {
-        console.log(chalk.red(e.message));
-      }
     }
+  } else {
+    props.template.name = template.encodingTemplate;
+    fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`);
   }
-
-  props.template.arn = jobTemplate.JobTemplate.Arn;
 
   // prompt for cdn
   props.contentDeliveryNetwork = {};
@@ -162,7 +160,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
 
     const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
-
+    if (!aws) {
+      const provider = getAWSConfig(context, options);
+      aws = await provider.getConfiguredAWSClient(context);
+    }
     const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
     const createSecretParams = {
       Name: `${props.shared.resourceName}-pem`,
