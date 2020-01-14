@@ -108,6 +108,13 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
       try {
         jobTemplate = await mcClient.getJobTemplate(params).promise();
+        delete jobTemplate.JobTemplate.Arn;
+        delete jobTemplate.JobTemplate.CreatedAt;
+        delete jobTemplate.JobTemplate.LastUpdated;
+        delete jobTemplate.JobTemplate.Type;
+        delete jobTemplate.JobTemplate.StatusUpdateInterval;
+        delete jobTemplate.JobTemplate.Priority;
+        fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`, JSON.stringify(jobTemplate.JobTemplate, null, 4));
       } catch (e) {
         console.log(chalk.red(e.message));
       }
