@@ -47,7 +47,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
-    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`);
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`, { recursive: true });
   }
 
   props.template = {};
@@ -215,9 +215,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.parameters = {
     authRoleName: {
       Ref: 'AuthRoleName',
-    },
-    unauthRoleName: {
-      Ref: 'UnauthRoleName',
     },
   };
 

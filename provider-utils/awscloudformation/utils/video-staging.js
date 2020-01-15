@@ -180,7 +180,7 @@ async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
       Outputs: {
         oJobArn: {
           Value: {
-            'Fn::GetAtt:':
+            'Fn::GetAtt':
               ['JobTemplate', 'Arn'],
           },
           Description: 'Job Arn',
