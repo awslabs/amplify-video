@@ -1,5 +1,3 @@
-const inquirer = require('inquirer');
-
 const subcommand = 'setup';
 const category = 'video';
 
@@ -24,7 +22,7 @@ module.exports = {
       },
     ];
 
-    const props = await inquirer.prompt(chooseProject);
+    const props = await context.prompt.ask(chooseProject);
 
     const options = amplifyMeta.video[props.resourceName];
 

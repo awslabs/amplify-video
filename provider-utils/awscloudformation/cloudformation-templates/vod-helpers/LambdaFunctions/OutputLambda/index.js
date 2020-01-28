@@ -6,6 +6,12 @@ const s3 = new AWS.S3({});
 /* eslint-disable */
 exports.handler = function (event, context) {
 /* eslint-enable */
+
+  /*
+Function that triggers on the output bucket.
+
+event.Records contains an array of S3 records that you can take action on.
+*/
   event.Records.forEach((s3Record) => {
     console.log(s3Record.s3.object.key);
     const objectKey = s3Record.s3.object.key;
