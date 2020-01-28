@@ -108,20 +108,23 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
       try {
         jobTemplate = await mcClient.getJobTemplate(params).promise();
+        jobTemplate.JobTemplate.Name = `${jobTemplate.JobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
         delete jobTemplate.JobTemplate.Arn;
         delete jobTemplate.JobTemplate.CreatedAt;
         delete jobTemplate.JobTemplate.LastUpdated;
         delete jobTemplate.JobTemplate.Type;
         delete jobTemplate.JobTemplate.StatusUpdateInterval;
         delete jobTemplate.JobTemplate.Priority;
-        fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`, JSON.stringify(jobTemplate.JobTemplate, null, 4));
+        fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`, JSON.stringify(jobTemplate.JobTemplate, null, 4));
       } catch (e) {
         console.log(chalk.red(e.message));
       }
     }
   } else {
     props.template.name = template.encodingTemplate;
-    fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`);
+    const jobTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
+    jobTemplate.Name = `${jobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
+    fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`, JSON.stringify(jobTemplate, null, 4));
   }
 
   // prompt for cdn

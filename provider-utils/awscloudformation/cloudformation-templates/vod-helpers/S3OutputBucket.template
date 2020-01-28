@@ -21,6 +21,7 @@ Conditions:
 Resources:
   OutputBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Ref pBucketName
       CorsConfiguration:

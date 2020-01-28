@@ -161,11 +161,11 @@ async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
   /*
   Special case for selecting the template. Don't want to polute the props
   var with a massive template. Template name will be stored and will pull
-  info from `${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`
+  info from `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`
   */
   if (src.includes('CreateJobTemplate.template.ejs')) {
     const ejsFormated = fs.readFileSync(src, { encoding: 'utf-8' });
-    const jobTemplate = JSON.parse(fs.readFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-template.json`));
+    const jobTemplate = JSON.parse(fs.readFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`));
     jobTemplate.SettingsJson = jobTemplate.Settings;
     delete jobTemplate.Settings;
     const template = {

@@ -19,6 +19,10 @@ Resources:
         DefaultCacheBehavior:
           ForwardedValues:
               QueryString: false
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
           TargetOriginId: "vodS3Origin"
           ViewerProtocolPolicy: "allow-all"
           TrustedSigners:

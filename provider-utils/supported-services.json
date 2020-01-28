@@ -8,7 +8,7 @@
 		"provider": "awscloudformation"
     },
     "video-on-demand":{
-        "alias":"Video On Demand (alpha)",
+        "alias":"Video On Demand (beta)",
 		"serviceWalkthroughFilename": "vod-push.js",
         "cfnFilename": "vod-workflow.yaml.ejs",
         "stackFolder":"vod-helpers",
