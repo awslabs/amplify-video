@@ -7,26 +7,27 @@
 
 An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
-## Installation Guide
+## Installation
 
-To get started install the Amplify CLI via the getting started guide on the [Amplify-CLI Github repo](https://github.com/aws-amplify/amplify-cli/).
+Amplify Video is [Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
 
-Now, install this Amplify Video plugin through NPM or manually:
+To get started install the Amplify CLI via NPM as shown below or follow the [getting started guide](https://github.com/aws-amplify/amplify-cli/).
 
-### NPM Installation guide
+
+``` 
+npm install -g @aws-amplify/cli
+amplify configure
+```
+
+Next, with the Amplify CLI installed, install this plugin:
 
 ```
 npm i amplify-category-video -g
 ```
 
-### Manually installing
+## Getting Started with Amplify Video
 
-1. Clone this repo onto your local machine
-1. Open the terminal and navigate to the repo you just cloned
-1. Run this command: 
-```
-npm install -g
-```
+To help you get started quickly with Amplify Video check out the [live streaming quickstart](live-quickstart.md)
 
 ## Usage
 
@@ -70,6 +71,15 @@ Command to create and import a preconfigured OBS profile.
 ### amplify video remove
 
 Command to remove a project that you have made. To remove from the cloud you must run `amplify video push` or `amplify push`
+
+## Manually installing
+
+1. Clone this repo onto your local machine
+1. Open the terminal and navigate to the repo you just cloned
+1. Run this command: 
+```
+npm install -g
+```
 
 ## License
 
