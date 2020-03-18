@@ -89,6 +89,7 @@ Resources:
       Parameters:
           pBucketName: !Ref pS3OutputName
           pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity
+<% if (props.contentDeliveryNetwork.signedKey) { %>
   rCloudfrontTokenGenerator:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -111,6 +112,7 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'tokenGen'
+<% } %>
 <% } %>
   rMediaConvertTemplate:
     Type: AWS::CloudFormation::Stack

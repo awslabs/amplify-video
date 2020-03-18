@@ -140,52 +140,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cdnResponse = await inquirer.prompt(cdnEnable);
 
-  props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
-
   if (cdnResponse.enableCDN === true) {
-    const validateFile = (input) => {
-      if (fs.existsSync(input)) {
-        return true;
-      }
-      return 'File does not exist';
-    };
-
-    const tokenGenQuestions = [
-      {
-        type: inputs[7].type,
-        name: inputs[7].key,
-        message: inputs[7].question,
-        validate: validateFile,
-        default: '',
-      },
-      {
-        type: inputs[8].type,
-        name: inputs[8].key,
-        message: inputs[8].question,
-        validate: amplify.inputValidation(inputs[8]),
-        default: '',
-      },
-    ];
-
-    const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
-
-    const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
-    if (!aws) {
-      const provider = getAWSConfig(context, options);
-      aws = await provider.getConfiguredAWSClient(context);
-    }
-    const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
-    const createSecretParams = {
-      Name: `${props.shared.resourceName}-pem`,
-      SecretBinary: pemKey,
-    };
-    const secretCreate = await smClient.createSecret(createSecretParams).promise();
-
-    props.contentDeliveryNetwork.pemID = tokenGenResponse.pemKeyID;
-    props.contentDeliveryNetwork.secretPem = secretCreate.Name;
-    props.contentDeliveryNetwork.secretPemArn = secretCreate.ARN;
-    props.contentDeliveryNetwork.functionName = (projectDetails.localEnvInfo.envName)
-      ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+    const contentDeliveryNetwork = await createCDN(context, props, options, aws);
+    props.contentDeliveryNetwork = contentDeliveryNetwork;
+    props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
   }
 
   const cmsEnable = [
@@ -222,6 +180,70 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   };
 
   return props;
+}
+
+async function createCDN(context, props, options, aws) {
+  const { inputs } = question.video;
+  const { amplify } = context;
+  const projectDetails = amplify.getProjectDetails();
+  const cdnConfigDetails = {};
+  const validateFile = (input) => {
+    if (fs.existsSync(input)) {
+      return true;
+    }
+    return 'File does not exist';
+  };
+  const signedURLQuestion = [{
+    type: inputs[9].type,
+    name: inputs[9].key,
+    message: inputs[9].question,
+    validate: amplify.inputValidation(inputs[9]),
+    default: true,
+  }];
+
+  const signedURLResponse = await inquirer.prompt(signedURLQuestion);
+
+  cdnConfigDetails.signedKey = signedURLResponse.signedKey;
+
+  if (signedURLResponse.signedKey) {
+    const tokenGenQuestions = [
+      {
+        type: inputs[7].type,
+        name: inputs[7].key,
+        message: inputs[7].question,
+        validate: validateFile,
+        default: '',
+      },
+      {
+        type: inputs[8].type,
+        name: inputs[8].key,
+        message: inputs[8].question,
+        validate: amplify.inputValidation(inputs[8]),
+        default: '',
+      },
+    ];
+
+    const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
+
+    const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
+    if (!aws) {
+      const provider = getAWSConfig(context, options);
+      aws = await provider.getConfiguredAWSClient(context);
+    }
+    const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
+    const createSecretParams = {
+      Name: `${props.shared.resourceName}-pem`,
+      SecretBinary: pemKey,
+    };
+    const secretCreate = await smClient.createSecret(createSecretParams).promise();
+
+    cdnConfigDetails.pemID = tokenGenResponse.pemKeyID;
+    cdnConfigDetails.secretPem = secretCreate.Name;
+    cdnConfigDetails.secretPemArn = secretCreate.ARN;
+    cdnConfigDetails.functionName = (projectDetails.localEnvInfo.envName)
+      ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+  }
+  return cdnConfigDetails;
 }
 
 async function createCMS(context, apiName, props) {
