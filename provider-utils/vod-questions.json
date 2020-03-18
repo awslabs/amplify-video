@@ -62,6 +62,12 @@
                 "type":"input",
                 "question": "What is the ID associated with the pem key?",
                 "required": true
+            },
+            {
+                "key":"signedKey",
+                "type":"confirm",
+                "question": "Do you want to protect your content with signed urls?",
+                "required": true
             }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",

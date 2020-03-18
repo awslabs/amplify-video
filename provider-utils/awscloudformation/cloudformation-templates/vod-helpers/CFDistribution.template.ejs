@@ -25,8 +25,10 @@ Resources:
             - OPTIONS
           TargetOriginId: "vodS3Origin"
           ViewerProtocolPolicy: "allow-all"
+          <% if (props.contentDeliveryNetwork.signedKey) { %>
           TrustedSigners:
             - self
+          <% } %>
         Origins: 
           - 
             DomainName: !Sub "${pBucketName}.s3.amazonaws.com"
