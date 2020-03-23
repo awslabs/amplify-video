@@ -93,6 +93,7 @@ Resources:
                   - mediaconvert:DescribeEndpoints
                   - mediaconvert:GetJob
                   - mediaconvert:GetJobTemplate
+                  - mediaconvert:GetQueue
                   - mediaconvert:GetPreset
                   - mediaconvert:ListJobTemplates
                   - mediaconvert:ListJobs

@@ -8,7 +8,8 @@ const jobSettings = require('./settings.json');
 
 exports.handler = async (event) => {
   AWS.config.update({ region: event.awsRegion });
-  if (event.Records[0].eventName === 'ObjectCreated:Put') {
+  console.log(event);
+  if (event.Records[0].eventName.includes('ObjectCreated')) {
     await createJob(event.Records[0].s3);
     const response = {
       statusCode: 200,
