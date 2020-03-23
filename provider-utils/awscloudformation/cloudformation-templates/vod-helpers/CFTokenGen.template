@@ -1,0 +1,79 @@
+Description: Generating tokens for CF
+
+Parameters:
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: s3default
+  pFunctionName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: TokenGen
+  pSecretPemArn:
+    Type: String
+    Description: ProjectName
+    Default: TokenGen
+  pPemID:
+    Type: String
+    Description: Store template and lambda package
+    Default: s3default
+  pSecretPem:
+    Type: String
+    Description: Store template and lambda package
+    Default: vod-helpers
+  pDomainName:
+    Type: String
+    Description: ProjectName
+    Default: DefaultName
+
+Resources:
+  TokenGen:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref pFunctionName
+      Description: Sends a notification when a new object is put into the bucket
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 5
+      Code:
+        S3Bucket: !Ref pS3
+        S3Key: vod-helpers/CloudFrontTokenGen.zip
+      Environment:
+        Variables:
+          PemID: !Ref pPemID
+          SecretPem: !Ref pSecretPem
+          Host: !Ref pDomainName
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: 
+            Service: 
+              - lambda.amazonaws.com
+          Action: 
+            - 'sts:AssumeRole'
+      Path: /
+      Policies:
+      - PolicyName: TokenGenPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Join ["", ["arn:aws:logs:", Ref: "AWS::Region", ":", Ref: "AWS::AccountId", ":log-group:/aws/lambda/*"]]
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  -  !Ref pSecretPemArn

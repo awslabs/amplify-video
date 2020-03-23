@@ -30,13 +30,13 @@
             {
                 "key": "enableCDN",
                 "type": "confirm",
-                "question": "Do you want to use a Content Delivery Network to accelerate video delivery to end users?",
+                "question": "Is this a production enviroment?",
                 "required": true
             },
             {
                 "key":"enableCMS",
                 "type":"confirm",
-                "question":"Do you want Amplify to use your existing GraphQL API to manage your videos?",
+                "question":"Do you want Amplify to create a new GraphQL API to manage your videos?",
                 "required":true
             },
             {
@@ -50,6 +50,24 @@
                 "type":"confirm",
                 "question":"Do you want to edit your newly created model?",
                 "required":true
+            }, 
+            {
+                "key": "pemKeyLocation",
+                "type":"input",
+                "question": "Provide the location to the pem key you want CloudFront you want to sign urls with:",
+                "required": true
+            },
+            {
+                "key": "pemKeyID",
+                "type":"input",
+                "question": "What is the ID associated with the pem key?",
+                "required": true
+            },
+            {
+                "key":"signedKey",
+                "type":"confirm",
+                "question": "Do you want to protect your content with signed urls?",
+                "required": true
             }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",

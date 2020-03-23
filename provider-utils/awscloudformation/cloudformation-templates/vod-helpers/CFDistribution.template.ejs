@@ -19,8 +19,16 @@ Resources:
         DefaultCacheBehavior:
           ForwardedValues:
               QueryString: false
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
           TargetOriginId: "vodS3Origin"
           ViewerProtocolPolicy: "allow-all"
+          <% if (props.contentDeliveryNetwork.signedKey) { %>
+          TrustedSigners:
+            - self
+          <% } %>
         Origins: 
           - 
             DomainName: !Sub "${pBucketName}.s3.amazonaws.com"
@@ -29,3 +37,8 @@ Resources:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${pOriginAccessIdentity}"
         Enabled: 'true'
         PriceClass: PriceClass_All
+
+Outputs:
+  oCFDomain:
+    Value: !GetAtt rCloudFrontDist.DomainName
+    Description: Domain for our videos

@@ -38,10 +38,6 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: <%= props.shared.resourceName %>
-  pTemplateArn:
-    Type: String
-    Description: Arn for MediaConvert Template
-    Default: <%= props.template.arn %>
   pCloudfrontEnabled:
     Type: String
     Description: Boolean to enable/disable cloudfront
@@ -58,6 +54,15 @@ Outputs:
   oVODOutputS3:
     Description: Amplify Video hosts transcoded video content in this bucket
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
+<% if (props.contentDeliveryNetwork.enableDistribution) { %>
+  oVodOutputUrl:
+    Description: Amplify Video CloudFront Url
+    Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+<% } else { %>
+  oVodOutputUrl:
+    Description: Amplify Video CloudFront Url
+    Value: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
+<% } %>
 
 Resources:
   rS3InputBucket:
@@ -83,8 +88,36 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
       Parameters:
           pBucketName: !Ref pS3OutputName
-          pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity 
+          pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity
+<% if (props.contentDeliveryNetwork.signedKey) { %>
+  rCloudfrontTokenGenerator:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFTokenGen.template"
+      Parameters:
+          pPemID: <%= props.contentDeliveryNetwork.pemID %>
+          pSecretPem: <%= props.contentDeliveryNetwork.secretPem %>
+          pSecretPemArn: <%= props.contentDeliveryNetwork.secretPemArn %>
+          pDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+          pS3: !Ref pS3
+          pFunctionName: 
+            !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'tokenGen'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'tokenGen'
 <% } %>
+<% } %>
+  rMediaConvertTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CreateJobTemplate.template"
   rInputLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -96,7 +129,7 @@ Resources:
         pInputS3Arn: !GetAtt rS3InputBucket.Outputs.oInputBucketArn
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
-        pMediaConvertTemplate: !Ref pTemplateArn
+        pMediaConvertTemplate: !GetAtt rMediaConvertTemplate.Outputs.oJobArn
         pFunctionName: 
           !If
             - HasEnvironmentParameter

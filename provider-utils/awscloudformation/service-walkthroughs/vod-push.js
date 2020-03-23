@@ -13,14 +13,14 @@ module.exports = {
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
-  const provider = getAWSConfig(context, options);
-  const aws = await provider.getConfiguredAWSClient(context);
   const projectMeta = context.amplify.getProjectMeta();
   const projectDetails = context.amplify.getProjectDetails();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
+  const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
   let nameDict = {};
+  let aws;
 
   const { inputs } = question.video;
   const nameProject = [
@@ -29,7 +29,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[0].key,
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
-      default: amplify.getProjectDetails().projectConfig.projectName,
+      default: 'myvodstreams',
     }];
 
   if (resourceName) {
@@ -46,46 +46,44 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
-  let jobTemplate = {};
+  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`, { recursive: true });
+  }
+
   props.template = {};
-  while (!('JobTemplate' in jobTemplate)) {
-    const pluginDir = path.join(`${__dirname}/..`);
-    const templates = fs.readdirSync(`${pluginDir}/templates/`);
-    const availableTemplates = [];
-    let mcClient = new aws.MediaConvert();
 
-    templates.forEach((filepath) => {
-      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${filepath}`));
-      availableTemplates.push({
-        name: templateInfo.Description,
-        value: filepath,
-      });
-    });
+  const pluginDir = path.join(`${__dirname}/..`);
+  const templates = fs.readdirSync(`${pluginDir}/templates/`);
+  const availableTemplates = [];
 
+  templates.forEach((filepath) => {
+    const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${filepath}`));
     availableTemplates.push({
-      name: 'Bring your own template',
-      value: 'advanced',
+      name: templateInfo.Description,
+      value: filepath,
     });
-    const templateQuestion = [
-      {
-        type: inputs[1].type,
-        name: inputs[1].key,
-        message: inputs[1].question,
-        choices: availableTemplates,
-      },
-    ];
-    const template = await inquirer.prompt(templateQuestion);
+  });
 
-    try {
-      const endpoints = await mcClient.describeEndpoints().promise();
-      aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
-      // Override so config applies
-      mcClient = new aws.MediaConvert();
-    } catch (e) {
-      console.log(chalk.red(e.message));
-    }
+  availableTemplates.push({
+    name: 'Bring your own template',
+    value: 'advanced',
+  });
+  const templateQuestion = [
+    {
+      type: inputs[1].type,
+      name: inputs[1].key,
+      message: inputs[1].question,
+      choices: availableTemplates,
+    },
+  ];
+  const template = await inquirer.prompt(templateQuestion);
 
-    if (template.encodingTemplate === 'advanced') {
+  if (template.encodingTemplate === 'advanced') {
+    let jobTemplate = {};
+    while (!('JobTemplate' in jobTemplate)) {
+      const provider = getAWSConfig(context, options);
+      aws = await provider.getConfiguredAWSClient(context);
+      let mcClient = new aws.MediaConvert();
       const encodingTemplateName = [
         {
           type: inputs[2].type,
@@ -94,6 +92,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           validate: amplify.inputValidation(inputs[2]),
         },
       ];
+      try {
+        const endpoints = await mcClient.describeEndpoints().promise();
+        aws.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
+        // Override so config applies
+        mcClient = new aws.MediaConvert();
+      } catch (e) {
+        console.log(chalk.red(e.message));
+      }
       const advTemplate = await inquirer.prompt(encodingTemplateName);
       props.template.name = advTemplate.encodingTemplate;
       const params = {
@@ -102,37 +108,43 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
       try {
         jobTemplate = await mcClient.getJobTemplate(params).promise();
-      } catch (e) {
-        console.log(chalk.red(e.message));
-      }
-    } else {
-      const templateInfo = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
-      props.template.name = template.encodingTemplate;
-
-      try {
-        jobTemplate = await mcClient.createJobTemplate(templateInfo).promise();
+        jobTemplate.JobTemplate.Name = `${jobTemplate.JobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
+        delete jobTemplate.JobTemplate.Arn;
+        delete jobTemplate.JobTemplate.CreatedAt;
+        delete jobTemplate.JobTemplate.LastUpdated;
+        delete jobTemplate.JobTemplate.Type;
+        delete jobTemplate.JobTemplate.StatusUpdateInterval;
+        delete jobTemplate.JobTemplate.Priority;
+        fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`, JSON.stringify(jobTemplate.JobTemplate, null, 4));
       } catch (e) {
         console.log(chalk.red(e.message));
       }
     }
+  } else {
+    props.template.name = template.encodingTemplate;
+    const jobTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
+    jobTemplate.Name = `${jobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
+    fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`, JSON.stringify(jobTemplate, null, 4));
   }
-
-  props.template.arn = jobTemplate.JobTemplate.Arn;
 
   // prompt for cdn
   props.contentDeliveryNetwork = {};
-  // const cdnEnable = [
-  //   {
-  //     type: inputs[3].type,
-  //     name: inputs[3].key,
-  //     message: inputs[3].question,
-  //     validate: amplify.inputValidation(inputs[3]),
-  //     default: defaults.contentDeliveryNetwork[inputs[3].key],
-  //   }];
-  //
-  // const cdnResponse = await inquirer.prompt(cdnEnable);
+  const cdnEnable = [
+    {
+      type: inputs[3].type,
+      name: inputs[3].key,
+      message: inputs[3].question,
+      validate: amplify.inputValidation(inputs[3]),
+      default: defaults.contentDeliveryNetwork[inputs[3].key],
+    }];
 
-  props.contentDeliveryNetwork.enableDistribution = false;
+  const cdnResponse = await inquirer.prompt(cdnEnable);
+
+  if (cdnResponse.enableCDN === true) {
+    const contentDeliveryNetwork = await createCDN(context, props, options, aws);
+    props.contentDeliveryNetwork = contentDeliveryNetwork;
+    props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
+  }
 
   const cmsEnable = [
     {
@@ -165,12 +177,73 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     authRoleName: {
       Ref: 'AuthRoleName',
     },
-    unauthRoleName: {
-      Ref: 'UnauthRoleName',
-    },
   };
 
   return props;
+}
+
+async function createCDN(context, props, options, aws) {
+  const { inputs } = question.video;
+  const { amplify } = context;
+  const projectDetails = amplify.getProjectDetails();
+  const cdnConfigDetails = {};
+  const validateFile = (input) => {
+    if (fs.existsSync(input)) {
+      return true;
+    }
+    return 'File does not exist';
+  };
+  const signedURLQuestion = [{
+    type: inputs[9].type,
+    name: inputs[9].key,
+    message: inputs[9].question,
+    validate: amplify.inputValidation(inputs[9]),
+    default: true,
+  }];
+
+  const signedURLResponse = await inquirer.prompt(signedURLQuestion);
+
+  cdnConfigDetails.signedKey = signedURLResponse.signedKey;
+
+  if (signedURLResponse.signedKey) {
+    const tokenGenQuestions = [
+      {
+        type: inputs[7].type,
+        name: inputs[7].key,
+        message: inputs[7].question,
+        validate: validateFile,
+        default: '',
+      },
+      {
+        type: inputs[8].type,
+        name: inputs[8].key,
+        message: inputs[8].question,
+        validate: amplify.inputValidation(inputs[8]),
+        default: '',
+      },
+    ];
+
+    const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
+
+    const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
+    if (!aws) {
+      const provider = getAWSConfig(context, options);
+      aws = await provider.getConfiguredAWSClient(context);
+    }
+    const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
+    const createSecretParams = {
+      Name: `${props.shared.resourceName}-pem`,
+      SecretBinary: pemKey,
+    };
+    const secretCreate = await smClient.createSecret(createSecretParams).promise();
+
+    cdnConfigDetails.pemID = tokenGenResponse.pemKeyID;
+    cdnConfigDetails.secretPem = secretCreate.Name;
+    cdnConfigDetails.secretPemArn = secretCreate.ARN;
+    cdnConfigDetails.functionName = (projectDetails.localEnvInfo.envName)
+      ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+  }
+  return cdnConfigDetails;
 }
 
 async function createCMS(context, apiName, props) {
@@ -214,6 +287,7 @@ async function createCMS(context, apiName, props) {
   }
 
   authGroupHack(context, props.shared.bucketInput);
+  createDependency(context, props, apiName);
 }
 
 async function writeNewModel(resourceDir, props) {
@@ -222,6 +296,18 @@ async function writeNewModel(resourceDir, props) {
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
   await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+}
+
+async function createDependency(context, props, apiName) {
+  if (props.contentDeliveryNetwork.pemID && props.contentDeliveryNetwork.secretPemArn) {
+    context.amplify.updateamplifyMetaAfterResourceUpdate('api', apiName, 'dependsOn', [
+      {
+        category: 'video',
+        resourceName: props.shared.resourceName,
+        attributes: [],
+      },
+    ]);
+  }
 }
 
 async function compileSchema(context, resourceDir, parameters, authConfig) {
