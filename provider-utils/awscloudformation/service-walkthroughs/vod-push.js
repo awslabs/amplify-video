@@ -35,6 +35,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   if (resourceName) {
     nameDict.resourceName = resourceName;
     props.shared = nameDict;
+    try {
+      const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+      Object.assign(defaults, oldValues);
+    } catch (err) {
+      // Do nothing
+    }
+    props.shared.bucketInput = defaults.shared.bucketInput;
+    props.shared.bucketOutput = defaults.shared.bucketOutput;
   } else {
     nameDict = await inquirer.prompt(nameProject);
     props.shared = nameDict;
