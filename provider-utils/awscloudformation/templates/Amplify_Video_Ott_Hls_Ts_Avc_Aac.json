@@ -60,10 +60,11 @@
             "StreamInfResolution": "INCLUDE"
           }
         }
-      ],
-      "AdAvailOffset": 0
-    },
-    "AccelerationSettings": {
-      "Mode": "DISABLED"
-    }
+      }
+    ],
+    "AdAvailOffset": 0
+  },
+  "AccelerationSettings": {
+    "Mode": "DISABLED"
   }
+}
