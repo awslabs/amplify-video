@@ -143,8 +143,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   if (cdnResponse.enableCDN === true) {
     const contentDeliveryNetwork = await createCDN(context, props, options, aws);
     props.contentDeliveryNetwork = contentDeliveryNetwork;
-    props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
   }
+
+  props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
 
   const cmsEnable = [
     {
