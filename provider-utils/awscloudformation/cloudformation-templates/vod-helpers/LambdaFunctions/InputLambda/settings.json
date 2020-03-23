@@ -44,7 +44,7 @@
             "FilterStrength": 0,
             "DeblockFilter": "DISABLED",
             "DenoiseFilter": "DISABLED",
-            "TimecodeSource": "EMBEDDED",
+            "TimecodeSource": "ZEROBASED",
             "FileInput": "s3key"
             }
         ]
