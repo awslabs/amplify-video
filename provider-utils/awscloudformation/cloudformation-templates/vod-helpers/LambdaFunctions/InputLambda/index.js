@@ -39,7 +39,7 @@ async function createJob(eventObject) {
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/output`;
+  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/output/`;
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
   const queue = mcClient.getQueue(queueParams).promise();
