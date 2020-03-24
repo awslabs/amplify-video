@@ -12,6 +12,7 @@ async function addResource(context, service, options) {
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename);
   await stageVideo(context, options, result, cfnFilename, stackFolder, 'add');
+  console.log(chalk`{green Successfully configured ${result.shared.resourceName}}`);
 }
 
 async function updateResource(context, service, options, resourceName) {
@@ -22,6 +23,7 @@ async function updateResource(context, service, options, resourceName) {
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename, resourceName);
   await stageVideo(context, options, result, cfnFilename, stackFolder, 'update');
+  console.log(chalk`{green Successfully updated ${result.shared.resourceName}}`);
 }
 
 async function livestreamStartStop(context, service, options, resourceName, start) {
