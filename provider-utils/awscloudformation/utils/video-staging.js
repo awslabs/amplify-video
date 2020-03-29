@@ -252,14 +252,14 @@ async function pushRootTemplate(context, options, props, cfnFilename, type) {
 }
 
 async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder) {
-  pushRootTemplate(context, options, props, cfnFilename, 'update');
-  syncHelperCF(context, props, stackFolder);
+  await pushRootTemplate(context, options, props, cfnFilename, 'update');
+  await syncHelperCF(context, props, stackFolder);
 }
 
 async function resetupFiles(context, options, resourceName, stackFolder) {
   const targetDir = context.amplify.pathManager.getBackendDirPath();
   const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
-  syncHelperCF(context, props, stackFolder);
+  await syncHelperCF(context, props, stackFolder);
 }
 
 module.exports = {
