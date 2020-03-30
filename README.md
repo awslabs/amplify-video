@@ -7,6 +7,8 @@
 
 An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
+Read more about Amplify Video on the [AWS Media Blog](https://aws.amazon.com/blogs/media/introducing_aws_amplify_video/)
+
 ## Installation
 
 Amplify Video is [Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
