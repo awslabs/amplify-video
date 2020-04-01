@@ -38,7 +38,7 @@ async function createJob(eventObject) {
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  // Set the output to have the filename (without extension) as the folder
+  // Set the output to have the filename (without extension) as a folder
   jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
