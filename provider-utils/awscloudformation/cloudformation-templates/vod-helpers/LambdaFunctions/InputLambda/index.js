@@ -33,16 +33,16 @@ async function createJob(eventObject) {
   }
 
   const AddedKey = eventObject.object.key;
-  //Get the name of the file from the event without the extension
-  const FileName = AddedKey.split('.').slice(0, -1).join('.')
+  // Get the name of the file from the event without the extension
+  const FileName = AddedKey.split('.').slice(0, -1).join('.');
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  //Set the output to have the filename (without extension) as the folder
+  // Set the output to have the filename (without extension) as the folder
   jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
-  const queueARN = process.env.QUEUE_ARN
+  const queueARN = process.env.QUEUE_ARN;
   const jobParams = {
     JobTemplate: process.env.ARN_TEMPLATE,
     Queue: queueARN,
