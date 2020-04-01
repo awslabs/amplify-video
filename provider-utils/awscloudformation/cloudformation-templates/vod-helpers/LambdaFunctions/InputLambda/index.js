@@ -13,7 +13,7 @@ exports.handler = async (event) => {
     await createJob(event.Records[0].s3);
     const response = {
       statusCode: 200,
-      body: JSON.stringify('Transcoding your file: ' + event.Records[0].s3.object.key),
+      body: JSON.stringify(`Transcoding your file: ${event.Records[0].s3.object.key}`),
     };
     return response;
   }
