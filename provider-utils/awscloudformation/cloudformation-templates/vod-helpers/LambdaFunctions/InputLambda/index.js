@@ -13,7 +13,7 @@ exports.handler = async (event) => {
     await createJob(event.Records[0].s3);
     const response = {
       statusCode: 200,
-      body: JSON.stringify('Transcoding Your Files!'),
+      body: JSON.stringify('Transcoding your file: ' + event.Records[0].s3.object.key),
     };
     return response;
   }
@@ -31,21 +31,21 @@ async function createJob(eventObject) {
     console.log(e);
     return;
   }
-  const queueParams = {
-    Name: 'Default', /* required */
-  };
 
   const AddedKey = eventObject.object.key;
+  //Get the name of the file from the event without the extension
+  const FileName = AddedKey.split('.').slice(0, -1).join('.')
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/output/`;
+  //Set the output to have the filename (without extension) as the folder
+  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
-  const queue = mcClient.getQueue(queueParams).promise();
+  const queueARN = process.env.QUEUE_ARN
   const jobParams = {
     JobTemplate: process.env.ARN_TEMPLATE,
-    Queue: queue.Arn,
+    Queue: queueARN,
     UserMetadata: {},
     Role: process.env.MC_ROLE,
     Settings: jobSettings,
