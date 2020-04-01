@@ -33,7 +33,7 @@ async function createJob(eventObject) {
   }
 
   const AddedKey = eventObject.object.key;
-  // Get the name of the file from the event without the extension
+  // Get the name of the file passed in the event without the extension
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
