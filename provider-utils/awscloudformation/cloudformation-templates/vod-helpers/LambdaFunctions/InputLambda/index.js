@@ -43,14 +43,16 @@ async function createJob(eventObject) {
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
   let queueARN = '';
-  if (process.env.QUEUE_ARN){
+  if (process.env.QUEUE_ARN) {
     queueARN = process.env.QUEUE_ARN;
   } else {
-    const q = await mcClient.getQueue(queueParams, function(err, data) {
-      if (err) 
+    const q = await mcClient.getQueue(queueParams, function (err, data) {
+      if (err) {
         console.log(err, err.stack); // an error occurred
-      else     
+      }
+      else {    
         console.log(data);
+      }
       }).promise();
     queueARN = q["Queue"]["Arn"];
   }
