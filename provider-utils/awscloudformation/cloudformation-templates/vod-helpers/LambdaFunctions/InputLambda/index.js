@@ -42,7 +42,19 @@ async function createJob(eventObject) {
   jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
   jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
 
-  const queueARN = process.env.QUEUE_ARN;
+  let queueARN = '';
+  if (process.env.QUEUE_ARN){
+    queueARN = process.env.QUEUE_ARN;
+  } else {
+    const q = await mcClient.getQueue(queueParams, function(err, data) {
+      if (err) 
+        console.log(err, err.stack); // an error occurred
+      else     
+        console.log(data);
+      }).promise();
+    queueARN = q["Queue"]["Arn"];
+  }
+
   const jobParams = {
     JobTemplate: process.env.ARN_TEMPLATE,
     Queue: queueARN,
