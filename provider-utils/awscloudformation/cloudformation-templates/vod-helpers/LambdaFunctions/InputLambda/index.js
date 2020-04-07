@@ -49,12 +49,11 @@ async function createJob(eventObject) {
     const q = await mcClient.getQueue(queueParams, function (err, data) {
       if (err) {
         console.log(err, err.stack); // an error occurred
-      }
-      else {    
+      } else {
         console.log(data);
       }
-      }).promise();
-    queueARN = q["Queue"]["Arn"];
+    }).promise();
+    queueARN = q['Queue']['Arn'];
   }
 
   const jobParams = {
