@@ -32,6 +32,9 @@ async function createJob(eventObject) {
     return;
   }
 
+  const queueParams = {
+    Name: 'Default', /* required */
+  };
   const AddedKey = eventObject.object.key;
   // Get the name of the file passed in the event without the extension
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
