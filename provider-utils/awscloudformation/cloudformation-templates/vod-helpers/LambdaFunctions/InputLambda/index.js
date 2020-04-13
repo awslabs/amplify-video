@@ -38,6 +38,8 @@ async function createJob(eventObject) {
   const AddedKey = eventObject.object.key;
   // Get the name of the file passed in the event without the extension
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
+  // Get the extension of the file passed in the event
+  const FileExtension = AddedKey.split('.').pop();
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
@@ -55,9 +57,23 @@ async function createJob(eventObject) {
     }).promise();
     queueARN = q.Queue.Arn;
   }
+  console.log(`Using queue:  ${queueARN}`);
+
+  let templateARN = '';
+  const templateARNEnvironmentVariable = `${FileExtension}_ARN_TEMPLATE`;
+  console.log(`Reading template ARN from:  ${templateARNEnvironmentVariable}`);
+  // Look for an environment variable named with the file extension
+  if (process.env[templateARNEnvironmentVariable]) {
+    // If found, use the template ARN stored in that variable
+    templateARN = process.env[templateARNEnvironmentVariable];
+  } else {
+    // If not found, use the template ARN from the default variable
+    templateARN = process.env.ARN_TEMPLATE;
+  }
+  console.log(`Using template:  ${templateARN}`);
 
   const jobParams = {
-    JobTemplate: process.env.ARN_TEMPLATE,
+    JobTemplate: templateARN,
     Queue: queueARN,
     UserMetadata: {},
     Role: process.env.MC_ROLE,
