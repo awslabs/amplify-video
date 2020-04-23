@@ -259,6 +259,12 @@ async function createCMS(context, apiName, props) {
   const { inputs } = question.video;
   const cmsEdit = [
     {
+      type: inputs[10].type,
+      name: inputs[10].key,
+      message: inputs[10].question,
+      default: true,
+    },
+    {
       type: inputs[6].type,
       name: inputs[6].key,
       message: inputs[6].question,
@@ -304,7 +310,11 @@ async function writeNewModel(resourceDir, props) {
 
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
-  await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+  if (props.cms.overrideSchema) {
+    await fs.writeFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+  } else {
+    await fs.appendFileSync(`${resourceDir}/schema.graphql`, appendSchema);
+  }
 }
 
 async function createDependency(context, props, apiName) {

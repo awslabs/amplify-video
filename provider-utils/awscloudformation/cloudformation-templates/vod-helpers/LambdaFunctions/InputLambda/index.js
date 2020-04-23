@@ -22,14 +22,16 @@ exports.handler = async (event) => {
 // Function to submit job to Elemental MediaConvert
 async function createJob(eventObject) {
   let mcClient = new AWS.MediaConvert();
-  try {
-    const endpoints = await mcClient.describeEndpoints().promise();
-    AWS.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
-    // Override so config applies
-    mcClient = new AWS.MediaConvert();
-  } catch (e) {
-    console.log(e);
-    return;
+  if (!AWS.config.mediaconvert) {
+    try {
+      const endpoints = await mcClient.describeEndpoints().promise();
+      AWS.config.mediaconvert = { endpoint: endpoints.Endpoints[0].Url };
+      // Override so config applies
+      mcClient = new AWS.MediaConvert();
+    } catch (e) {
+      console.log(e);
+      return;
+    }
   }
 
   const queueParams = {
