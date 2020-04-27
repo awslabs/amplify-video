@@ -32,7 +32,7 @@ async function getPemKey(pemId) {
 
 async function signPath(id) {
   /* use wildcard if no specific file is specified */
-  const videoPath = `output/${id}*`;
+  const videoPath = `${id}/*`;
   const host = process.env.Host;
   const tobeSigned = url.format({
     protocol: 'https:', slashes: true, host, pathname: videoPath,

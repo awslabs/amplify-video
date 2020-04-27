@@ -7,6 +7,8 @@
 
 An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
+Read more about Amplify Video on the [AWS Media Blog](https://aws.amazon.com/blogs/media/introducing_aws_amplify_video/)
+
 ## Installation
 
 Amplify Video is [Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
@@ -35,10 +37,11 @@ To use this plugin you just need to configure a project using `amplify init`.
 
 Note: If you aren't developing a mobile/web app then it doesn't matter what language you choose.
 
-
 ### amplify video add
 
-Command to configure the params for setting up a livestream. Run `amplify video push` or `amplify push` to create the resources in the cloud.
+Command to configure the params for setting up a Video resource. The resource can be either for Live Streaming or Video-on-Demand. 
+
+Run `amplify video push` or `amplify push` to create the resources in the cloud.
 
 ### amplify video update
 
@@ -66,20 +69,17 @@ Command to return the CloudFormation outputs.
 
 ### amplify video setup-obs
 
-Command to create and import a preconfigured OBS profile.
+Create and import a pre-configured profile into [OBS](https://obsproject.com/) for Live Streaming into your Video resource.
 
 ### amplify video remove
 
-Command to remove a project that you have made. To remove from the cloud you must run `amplify video push` or `amplify push`
+Command to remove a project that you have made. 
 
-## Manually installing
+To remove from the cloud you must run `amplify video push` or `amplify push`
 
-1. Clone this repo onto your local machine
-1. Open the terminal and navigate to the repo you just cloned
-1. Run this command: 
-```
-npm install -g
-```
+## Contributions
+
+Interested in helping us with this project? Please see the [contribution guide](CONTRIBUTING.md).
 
 ## License
 

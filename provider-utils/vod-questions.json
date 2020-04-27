@@ -68,6 +68,12 @@
                 "type":"confirm",
                 "question": "Do you want to protect your content with signed urls?",
                 "required": true
+            },
+            {
+              "key":"overrideSchema",
+              "type":"confirm",
+              "question":"Do you want to override your GraphQL schema?",
+              "required": true
             }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
