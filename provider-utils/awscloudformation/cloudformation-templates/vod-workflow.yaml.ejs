@@ -118,6 +118,9 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CreateJobTemplate.template"
+      Parameters:
+        pProjectName: !Ref pProjectName
+        env: !Ref env
   rInputLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
     Properties:

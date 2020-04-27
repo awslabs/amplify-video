@@ -15,6 +15,7 @@
         "version"
     ],
     "eventHandlers":[
-        "PrePush"
+        "PrePush",
+        "PreInit"
     ]
 }

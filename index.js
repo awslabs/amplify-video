@@ -71,10 +71,34 @@ async function executeAmplifyCommand(context) {
 
 async function handleAmplifyEvent(context, args) {
   if (args.event === 'PrePush') {
-    handlePrePush(context);
+    await handlePrePush(context);
+  } else if (args.event === 'PreInit') {
+    await handlePreInit(context);
   } else {
     // console.log(args.event);
   }
+}
+
+async function handlePreInit(context) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const amplifyProjectDetails = amplify.getProjectDetails();
+  if (Object.keys(amplifyProjectDetails.teamProviderInfo).length > 0) {
+    console.log('we have a good project');
+  }
+
+  if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
+    return;
+  }
+
+
+  Object.keys(amplifyMeta[category]).forEach((resourceName) => {
+    const options = amplifyMeta.video[resourceName];
+    const serviceMetadata = context.amplify.readJsonFile(`${__dirname}/provider-utils/supported-services.json`)[options.serviceType];
+    const { stackFolder } = serviceMetadata;
+    copyFilesToS3(context, options, resourceName, stackFolder);
+  });
+
 }
 
 async function handlePrePush(context) {
