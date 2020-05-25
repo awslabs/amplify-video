@@ -1,28 +1,44 @@
 const fs = require('fs');
 const chalk = require('chalk');
-const { stageVideo, resetupFiles } = require('./utils/video-staging');
+const { resetupFiles } = require('./utils/video-staging');
+const { buildTemplates } = require('./utils/video-staging-new');
 
 let serviceMetadata;
 
 async function addResource(context, service, options) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { cfnFilename, stackFolder } = serviceMetadata;
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename);
-  await stageVideo(context, options, result, cfnFilename, stackFolder, 'add');
+  context.amplify.updateamplifyMetaAfterResourceAdd(
+    'video',
+    result.shared.resourceName,
+    options,
+  );
+  if (result.parameters !== undefined) {
+    await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
+  }
+
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await buildTemplates(context);
   console.log(chalk`{green Successfully configured ${result.shared.resourceName}}`);
 }
 
 async function updateResource(context, service, options, resourceName) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { cfnFilename, stackFolder } = serviceMetadata;
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename, resourceName);
-  await stageVideo(context, options, result, cfnFilename, stackFolder, 'update');
+  if (result.parameters !== undefined) {
+    await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
+  }
+
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await buildTemplates(context, result);
   console.log(chalk`{green Successfully updated ${result.shared.resourceName}}`);
 }
 

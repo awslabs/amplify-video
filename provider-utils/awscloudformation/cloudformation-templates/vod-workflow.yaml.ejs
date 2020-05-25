@@ -1,4 +1,4 @@
-Description: <%= props.shared.resourceName %>
+Description: "AmplifyVOD - Amplify Video on Demand template. Do not make changes to the root template. This gets overwritten every push."
 
 Parameters:
   env:
@@ -17,17 +17,17 @@ Parameters:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucket %>"
+    Default: "<%= props.env.bucket %>"
   pS3InputName:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucketInput %>"
+    Default: "<%= props.env.bucketInput %>"
   pS3OutputName:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucketOutput %>"
+    Default: "<%= props.env.bucketOutput %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package

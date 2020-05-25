@@ -3,6 +3,7 @@
     "type": "category",
     "commands": [
         "add",
+        "build",
         "get-info",
         "help",
         "push",
@@ -15,7 +16,6 @@
         "version"
     ],
     "eventHandlers":[
-        "PrePush",
-        "PreInit"
+        "PrePush"
     ]
 }

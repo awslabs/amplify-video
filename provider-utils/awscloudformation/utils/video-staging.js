@@ -165,11 +165,8 @@ async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
   */
   if (src.includes('CreateJobTemplate.template.ejs')) {
     const ejsFormated = fs.readFileSync(src, { encoding: 'utf-8' });
-    // const projectDetails = context.amplify.getProjectDetails();
     const jobTemplate = JSON.parse(fs.readFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`));
     jobTemplate.SettingsJson = jobTemplate.Settings;
-    // jobTemplate.Name =
-    // `${jobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
     jobTemplate.Name = {
       'Fn::If': [
         'HasEnvironmentParameter',
