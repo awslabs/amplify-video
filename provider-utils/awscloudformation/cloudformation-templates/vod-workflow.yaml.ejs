@@ -1,4 +1,4 @@
-Description: <%= props.shared.resourceName %>
+Description: "AmplifyVOD - Amplify Video on Demand template. Do not make changes to the root template. This gets overwritten every push."
 
 Parameters:
   env:
@@ -13,21 +13,25 @@ Parameters:
     Type: String
     Description: Arn for authRoleArn
     Default: NONE
+  s3UUID:
+    Type: String
+    Description: Unique UUID for env
+    Default: xxxxx-xxxxx
   pS3:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucket %>"
+    Default: "<%= props.env.bucket %>"
   pS3InputName:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucketInput %>"
+    Default: "<%= props.env.bucketInput %>"
   pS3OutputName:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucketOutput %>"
+    Default: "<%= props.env.bucketOutput %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -118,6 +122,9 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CreateJobTemplate.template"
+      Parameters:
+        pProjectName: !Ref pProjectName
+        env: !Ref env
   rInputLambdaTriggerFunction:
     Type: AWS::CloudFormation::Stack
     Properties:

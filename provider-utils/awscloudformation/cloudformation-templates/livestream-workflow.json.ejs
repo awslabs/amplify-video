@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "<%= props.shared.resourceName %>",
+  "Description": "AmplifyLivestream - Amplify Livestream template. Do not make changes to the root template. This gets overwritten every push.",
 
   "Metadata": {
     "AWS::CloudFormation::Interface": {
@@ -451,7 +451,7 @@
       "Type": "String",
       "Description": "store template and lambda package",
       "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
-      "Default": "<%= props.shared.bucket %>"
+      "Default": "<%= props.env.bucket %>"
     },
 
     "pSourceFolder": {

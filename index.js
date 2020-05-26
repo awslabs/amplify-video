@@ -1,8 +1,7 @@
 const category = 'video';
 const path = require('path');
-const ora = require('ora');
+const { pushTemplates } = require('./provider-utils/awscloudformation/utils/video-staging');
 
-const { copyFilesToS3 } = require('./provider-utils/awscloudformation/utils/video-staging');
 
 async function add(context, providerName, service) {
   const options = {
@@ -71,30 +70,19 @@ async function executeAmplifyCommand(context) {
 
 async function handleAmplifyEvent(context, args) {
   if (args.event === 'PrePush') {
-    handlePrePush(context);
-  } else {
-    // console.log(args.event);
+    await handlePrePush(context);
   }
 }
 
 async function handlePrePush(context) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
-  const spinner = ora('Copying video resources. This may take a few minutes...');
 
   if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
     return;
   }
 
-  spinner.start();
-
-  Object.keys(amplifyMeta[category]).forEach((resourceName) => {
-    const options = amplifyMeta.video[resourceName];
-    const serviceMetadata = context.amplify.readJsonFile(`${__dirname}/provider-utils/supported-services.json`)[options.serviceType];
-    const { stackFolder } = serviceMetadata;
-    copyFilesToS3(context, options, resourceName, stackFolder);
-  });
-  spinner.succeed('All resources copied.');
+  await pushTemplates(context);
 }
 
 module.exports = {
