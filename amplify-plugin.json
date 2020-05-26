@@ -8,7 +8,6 @@
         "help",
         "push",
         "remove",
-        "setup",
         "setup-obs",
         "start",
         "stop",
