@@ -1,163 +1,192 @@
 const fs = require('fs-extra');
+const childProcess = require('child_process');
 const archiver = require('archiver');
 const path = require('path');
 const mime = require('mime-types');
 const chalk = require('chalk');
-const sha1 = require('sha1');
-const inquirer = require('inquirer');
+const ora = require('ora');
 const ejs = require('ejs');
 const YAML = require('yaml');
 const { getAWSConfig } = require('./get-aws');
+const spinner = ora('Copying video resources. This may take a few minutes...');
 
-async function copyFilesToS3(context, options, resourceName, stackFolder) {
+
+async function buildTemplates(context, props) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const { serviceType } = amplifyMeta.video[props.shared.resourceName];
+  context.print.success('Building template files');
+  build(context, props.shared.resourceName, serviceType, props);
+}
+
+async function pushTemplates(context) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const pushProjects = [];
+  spinner.start();
+  if ('video' in amplifyMeta) {
+    Object.keys(amplifyMeta.video).forEach((resourceName) => {
+      const { serviceType } = amplifyMeta.video[resourceName];
+      build(context, resourceName, serviceType);
+      const options = amplifyMeta.video[resourceName];
+      pushProjects.push(
+        copyFilesToS3(context, options, resourceName, serviceType),
+      );
+      pushProjects.push(
+        copyParentTemplate(context, resourceName, serviceType),
+      );
+    });
+  }
+  
+  await Promise.all(pushProjects);
+  spinner.succeed('All resources copied.');
+}
+
+function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
-  const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
-  const provider = getAWSConfig(context, options);
-  const aws = await provider.getConfiguredAWSClient(context);
-
-  const s3Client = new aws.S3();
-  const distributionDirPath = `${targetDir}/video/${resourceName}/${stackFolder}/`;
-  const fileuploads = fs.readdirSync(distributionDirPath);
-
-  fileuploads.forEach((filePath) => {
-    if (filePath === 'LambdaFunctions') {
-      const relativeFilePath = `${distributionDirPath}/${filePath}`;
-      const foldersToZip = fs.readdirSync(relativeFilePath);
-      foldersToZip.forEach(async (lambdaName) => {
-        if (lambdaName === '.DS_Store') {
-          return;
-        }
-        const newFilePath = `${lambdaName}.zip`;
-        const zipName = `${targetDir}/video/${resourceName}/${stackFolder}/${lambdaName}.zip`;
-        if (fs.existsSync(zipName)) {
-          fs.unlinkSync(zipName);
-        }
-        const output = fs.createWriteStream(zipName);
-        const archive = archiver('zip');
-        archive.on('warning', (err) => {
-          if (err.code === 'ENOENT') {
-            context.print.warning(err);
-          } else {
-            context.print.error(err);
-          }
-        });
-        archive.on('error', (err) => {
-          context.print.error(err);
-          throw err;
-        });
-        archive.pipe(output);
-        archive.directory(`${targetDir}/video/${resourceName}/${stackFolder}/${filePath}/${lambdaName}`, false);
-        await archive.finalize();
-        await uploadFile(s3Client, targetBucket, distributionDirPath, newFilePath, stackFolder);
-      });
-    } else {
-      uploadFile(s3Client, targetBucket, distributionDirPath, filePath, stackFolder);
-    }
-  });
+  if (!props) {
+    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+  }
+  if (projectType === 'video-on-demand') {
+    props = getVODEnvVars(context, props, resourceName);
+  } else if (projectType === 'livestream') {
+    props = getLivestreamEnvVars(context, props);
+  }
+  syncHelperCF(context, props, projectType);
+  buildCustomLambda(context, props, projectType);
 }
 
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, stackFolder) {
-  let relativeFilePath = path.relative(distributionDirPath, filePath);
+function getVODEnvVars(context, props, resourceName) {
+  const { amplify } = context;
+  const currentEnvInfo = amplify.getEnvInfo().envName;
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const amplifyMeta = amplify.getProjectMeta();
+  const projectBucket = amplifyMeta.providers.awscloudformation.DeploymentBucketName;
+  let amplifyProjectDetails = amplify.getProjectDetails();
 
-  relativeFilePath = relativeFilePath.replace(/\\/g, '/');
+  if (!('video' in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories)
+  || !(resourceName in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories.video)
+  || !('S3Bucket' in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories.video[resourceName])) {
+    let uuid;
+    if (props.shared.bucketInput) {
+      // Migrate to env setup
+      uuid = props.shared.bucketInput.split('-').pop();
+    } else {
+      uuid = Math.random().toString(36).substring(2, 8)
+           + Math.random().toString(36).substring(2, 8);
+    }
+    amplify.saveEnvResourceParameters(context, 'video', resourceName, { s3UUID: uuid });
+    amplifyProjectDetails = amplify.getProjectDetails();
+  }
 
-  const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
-  const contentType = mime.lookup(relativeFilePath);
-  const uploadParams = {
-    Bucket: hostingBucketName,
-    Key: `${stackFolder}/${filePath}`,
-    Body: fileStream,
-    ContentType: contentType || 'text/plain',
+  // Migration from old props to new props.
+  // (Removing bucket and bucket input/output to be stored in env)
+  if (props.shared.bucket) {
+    delete props.shared.bucket;
+    delete props.shared.bucketInput;
+    delete props.shared.bucketOutput;
+    fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
+  }
+  const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+    .categories.video[resourceName];
+
+  // Merge props with env variables
+  props.env = {
+    bucket: projectBucket,
+    bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
+    bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
   };
 
-  s3Client.upload(uploadParams, (err) => {
-    if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
-    }
-  });
+  return props;
 }
 
-async function stageVideo(context, options, props, cfnFilename, stackFolder, type) {
-  await pushRootTemplate(context, options, props, cfnFilename, type);
-  await syncHelperCF(context, props, stackFolder);
+function getLivestreamEnvVars(context, props) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const projectBucket = amplifyMeta.providers.awscloudformation.DeploymentBucketName;
+  props.env = {
+    bucket: projectBucket,
+  };
+  return props;
 }
 
-function getFiles(dir, init, files_) {
-  files_ = files_ || [];
-  const files = fs.readdirSync(dir);
-  for (let i = 0; i < files.length; i++) {
-    if (files[i] !== '.DS_Store') {
-      const name = `${dir}/${files[i]}`;
-      if (fs.statSync(name).isDirectory()) {
-        getFiles(name, init || dir, files_);
-      } else if (init) {
-        files_.push(name.replace(`${init}/`, ''));
-      } else {
-        files_.push(files[i]);
-      }
-    }
-  }
-  return files_;
-}
-
-async function syncHelperCF(context, props, stackFolder) {
+async function copyParentTemplate(context, resourceName, serviceType) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
-  let overwriteAll = true;
+  const { cfnFilename } = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[serviceType];
+  const newCfnName = cfnFilename.split('.')[0];
+  let props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
 
-  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`)) {
-    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`);
-  } else {
-    overwriteAll = await context.prompt.confirm('Would you like to overwrite all files?');
+  if (serviceType === 'video-on-demand') {
+    props = getVODEnvVars(context, props, resourceName);
+  } else if (serviceType === 'livestream') {
+    props = getLivestreamEnvVars(context, props);
   }
 
-  let filterForEJS;
+  const copyJobs = [
+    {
+      dir: pluginDir,
+      template: `cloudformation-templates/${cfnFilename}`,
+      target: `${targetDir}/video/${props.shared.resourceName}/build/${props.shared.resourceName}-${newCfnName}.template`,
+    },
+  ];
 
-  if (overwriteAll) {
-    filterForEJS = (src, dest) => {
-      if (src.includes('.ejs')) {
-        handleEJS(context, props, src, dest, targetDir, true);
-        return false;
-      }
-      return true;
-    };
-  } else {
-    const listOfFiles = getFiles(`${pluginDir}/cloudformation-templates/${stackFolder}`);
-    const chooseFiles = [
-      {
-        type: 'checkbox',
-        name: 'fileList',
-        message: 'Choose what file you want to overwrite:',
-        choices: listOfFiles,
-        default: listOfFiles,
-      },
-    ];
-    const answer = await inquirer.prompt(chooseFiles);
-    const locations = answer.fileList.map(file => `${pluginDir}/cloudformation-templates/${stackFolder}/${file}`);
-    filterForEJS = (src, dest) => {
-      if (fs.statSync(src).isDirectory()) {
-        return true;
-      }
-
-      if (!locations.includes(src)) {
-        return false;
-      }
-
-      if (src.includes('.ejs')) {
-        handleEJS(context, props, src, dest, targetDir, false);
-        return false;
-      }
-
-      context.print.warning(`Overwrote: ${src}`);
-      return true;
-    };
-  }
-  fs.copySync(`${pluginDir}/cloudformation-templates/${stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/${stackFolder}/`, { filter: filterForEJS });
+  await context.amplify.copyBatch(context, copyJobs, props, true);
 }
 
-async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
+function buildCustomLambda(context, props, projectType) {
+  const { amplify } = context;
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const pluginDir = path.join(`${__dirname}/..`);
+  const serviceMetadata = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[projectType];
+  const customDir = `${targetDir}/video/${props.shared.resourceName}/custom/${serviceMetadata.stackFolder}/LambdaFunctions`;
+
+  if (fs.existsSync(customDir)) {
+    const lambdas = fs.readdirSync(customDir);
+    lambdas.forEach((lambda) => {
+      if (fs.existsSync(`${customDir}/${lambda}/packages.json`)) {
+        handleNodeInstall(`${customDir}/${lambda}`);
+      }
+    });
+  }
+}
+
+function syncHelperCF(context, props, projectType) {
+  const { amplify } = context;
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const pluginDir = path.join(`${__dirname}/..`);
+  const serviceMetadata = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[projectType];
+
+  if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`)) {
+    fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`, { recursive: true });
+  }
+
+  const filterForEJS = (src, dest) => {
+    if (src.includes('.ejs')) {
+      handleEJS(props, src, dest, targetDir, true);
+      return false;
+    }
+    if (src.includes('node_modules/') || src.includes('package-lock.json')) {
+      return false;
+    }
+    if (src.includes('package.json')) {
+      const packageSrc = path.join(src, '../');
+      const packageDest = path.join(dest, '../');
+      fs.copySync(src, dest);
+      fs.copySync(`${packageSrc}/package-lock.json`, `${packageDest}/package-lock.json`);
+      handleNodeInstall(packageDest);
+      return false;
+    }
+    return true;
+  };
+
+  fs.copySync(`${pluginDir}/cloudformation-templates/${serviceMetadata.stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`, { filter: filterForEJS });
+}
+
+
+function handleEJS(props, src, dest, targetDir) {
   /*
   Special case for selecting the template. Don't want to polute the props
   var with a massive template. Template name will be stored and will pull
@@ -239,9 +268,6 @@ async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
     const ejsOutput = ejs.render(ejsFormated, { templateProps });
     const newDest = dest.replace('.ejs', '');
     fs.writeFileSync(newDest, ejsOutput);
-    if (!overwriteAll) {
-      context.print.warning(`Overwrote: ${newDest}`);
-    }
     return false;
   }
 
@@ -249,70 +275,120 @@ async function handleEJS(context, props, src, dest, targetDir, overwriteAll) {
   const ejsOutput = ejs.render(ejsFormated, { props });
   const newDest = dest.replace('.ejs', '');
   fs.writeFileSync(newDest, ejsOutput);
-  if (!overwriteAll) {
-    context.print.warning(`Overwrote: ${newDest}`);
-  }
   return false;
 }
 
-async function pushRootTemplate(context, options, props, cfnFilename, type) {
+function handleNodeInstall(packageDest) {
+  const isWindows = /^win/.test(process.platform);
+  const npm = isWindows ? 'npm.cmd' : 'npm';
+  const args = ['install'];
+
+  const childProcessResult = childProcess.spawnSync(npm, args, {
+    cwd: packageDest,
+    stdio: 'pipe',
+    encoding: 'utf-8',
+  });
+  if (childProcessResult.status !== 0) {
+    throw new Error(childProcessResult.output.join());
+  }
+}
+
+async function copyFilesToS3(context, options, resourceName, projectType) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
-  const pluginDir = path.join(`${__dirname}/..`);
-  const newCfnName = cfnFilename.split('.')[0];
+  const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
+  const provider = getAWSConfig(context, options);
+  const aws = await provider.getConfiguredAWSClient(context);
+  const pluginDir = path.join(`${__dirname}/../..`);
+  const { stackFolder } = JSON.parse(fs.readFileSync(`${pluginDir}/supported-services.json`))[projectType];
 
-  const copyJobs = [
-    {
-      dir: pluginDir,
-      template: `cloudformation-templates/${cfnFilename}`,
-      target: `${targetDir}/video/${props.shared.resourceName}/${props.shared.resourceName}-${newCfnName}.template`,
-    },
-  ];
+  const s3Client = new aws.S3();
+  const buildDirPath = `${targetDir}/video/${resourceName}/build/${stackFolder}`;
+  const customDirPath = `${targetDir}/video/${resourceName}/custom/${stackFolder}`;
+  const fileuploads = fs.readdirSync(buildDirPath);
+  const promiseFilesToUpload = [];
 
-  options.sha = sha1(JSON.stringify(props));
-
-  if (type === 'add') {
-    context.amplify.updateamplifyMetaAfterResourceAdd(
-      'video',
-      props.shared.resourceName,
-      options,
-    );
-  } else if (type === 'update') {
-    if (options.sha === context.amplify.getProjectMeta().video[props.shared.resourceName].sha) {
-      console.log('Same setting detected. Not updating project.');
-      return;
+  fileuploads.forEach((filePath) => {
+    if (filePath === 'LambdaFunctions') {
+      const relativeFilePath = `${buildDirPath}/${filePath}`;
+      const foldersToZip = fs.readdirSync(relativeFilePath);
+      foldersToZip.forEach((lambdaName) => {
+        if (lambdaName === '.DS_Store') {
+          return;
+        }
+        if (fs.existsSync(`${customDirPath}/${lambdaName}`)) {
+          promiseFilesToUpload.push(
+            zipLambdaFunctionsAndPush(context, lambdaName, `${customDirPath}/${filePath}/${lambdaName}`,
+              customDirPath, s3Client, targetBucket, stackFolder),
+          );
+        } else {
+          promiseFilesToUpload.push(
+            zipLambdaFunctionsAndPush(context, lambdaName, `${buildDirPath}/${filePath}/${lambdaName}`,
+              buildDirPath, s3Client, targetBucket, stackFolder),
+          );
+        }
+      });
+    } else if (fs.existsSync(`${customDirPath}/${filePath}`)) {
+      promiseFilesToUpload.push(
+        uploadFile(s3Client, targetBucket, customDirPath, filePath, stackFolder),
+      );
+    } else {
+      promiseFilesToUpload.push(
+        uploadFile(s3Client, targetBucket, buildDirPath, filePath, stackFolder),
+      );
     }
-    context.amplify.updateamplifyMetaAfterResourceUpdate(
-      'video',
-      props.shared.resourceName,
-      'sha',
-      options.sha,
-    );
-  }
-
-  await context.amplify.copyBatch(context, copyJobs, props);
-
-  if (props.parameters !== undefined) {
-    await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/parameters.json`, JSON.stringify(props.parameters, null, 4));
-  }
-
-  await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
+  });
+  await Promise.all(promiseFilesToUpload);
 }
 
-async function updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder) {
-  pushRootTemplate(context, options, props, cfnFilename, 'update');
-  syncHelperCF(context, props, stackFolder);
+async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
+  s3Client, targetBucket, stackFolder) {
+  const newFilePath = `${lambdaName}.zip`;
+  const zipName = `${zipDir}/${lambdaName}.zip`;
+  if (fs.existsSync(zipName)) {
+    fs.unlinkSync(zipName);
+  }
+  const output = fs.createWriteStream(zipName);
+  const archive = archiver('zip');
+  archive.on('warning', (err) => {
+    if (err.code === 'ENOENT') {
+      context.print.warning(err);
+    } else {
+      context.print.error(err);
+    }
+  });
+  archive.on('error', (err) => {
+    context.print.error(err);
+    throw err;
+  });
+  archive.pipe(output);
+  archive.directory(lambdaDir, false);
+  await archive.finalize();
+  await uploadFile(s3Client, targetBucket, zipDir, newFilePath, stackFolder);
 }
 
-async function resetupFiles(context, options, resourceName, stackFolder) {
-  const targetDir = context.amplify.pathManager.getBackendDirPath();
-  const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
-  syncHelperCF(context, props, stackFolder);
+async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, stackFolder) {
+  let relativeFilePath = path.relative(distributionDirPath, filePath);
+
+  relativeFilePath = relativeFilePath.replace(/\\/g, '/');
+
+  const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
+  const contentType = mime.lookup(relativeFilePath);
+  const uploadParams = {
+    Bucket: hostingBucketName,
+    Key: `${stackFolder}/${filePath}`,
+    Body: fileStream,
+    ContentType: contentType || 'text/plain',
+  };
+
+  s3Client.upload(uploadParams, (err) => {
+    if (err) {
+      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
+    }
+  });
 }
 
 module.exports = {
-  stageVideo,
-  updateWithProps,
-  resetupFiles,
-  copyFilesToS3,
+  buildTemplates,
+  pushTemplates,
 };

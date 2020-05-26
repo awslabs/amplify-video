@@ -29,7 +29,7 @@ module.exports = {
 
     const options = amplifyMeta.video[shared.resourceName];
 
-    const { buildTemplates } = require(`../../provider-utils/${options.providerPlugin}/utils/video-staging-new`);
+    const { buildTemplates } = require(`../../provider-utils/${options.providerPlugin}/utils/video-staging`);
     if (!buildTemplates) {
       context.print.error('No builder is configured for this provider');
       return;

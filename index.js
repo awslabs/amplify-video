@@ -1,7 +1,7 @@
 const category = 'video';
 const path = require('path');
-const ora = require('ora');
-const { pushTemplates } = require('./provider-utils/awscloudformation/utils/video-staging-new');
+const { pushTemplates } = require('./provider-utils/awscloudformation/utils/video-staging');
+
 
 async function add(context, providerName, service) {
   const options = {
@@ -77,17 +77,12 @@ async function handleAmplifyEvent(context, args) {
 async function handlePrePush(context) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
-  const spinner = ora('Copying video resources. This may take a few minutes...');
 
   if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
     return;
   }
 
-  spinner.start();
-
   await pushTemplates(context);
-
-  spinner.succeed('All resources copied.');
 }
 
 module.exports = {

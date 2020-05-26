@@ -184,7 +184,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   // main question control flow
   const answers = {};
-  answers.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
   answers.resourceName = resource.name;
 
