@@ -9,7 +9,6 @@ module.exports = {
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
-  const projectMeta = context.amplify.getProjectMeta();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();

@@ -8,6 +8,7 @@ const ora = require('ora');
 const ejs = require('ejs');
 const YAML = require('yaml');
 const { getAWSConfig } = require('./get-aws');
+
 const spinner = ora('Copying video resources. This may take a few minutes...');
 
 
@@ -37,7 +38,7 @@ async function pushTemplates(context) {
       );
     });
   }
-  
+
   await Promise.all(pushProjects);
   spinner.succeed('All resources copied.');
 }
