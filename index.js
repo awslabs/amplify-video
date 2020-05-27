@@ -26,6 +26,16 @@ async function onAmplifyCategoryOutputChange(context) {
   await infoController.getInfoVideoAll(context);
 }
 
+async function initEnv(context) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+
+  if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
+    return;
+  }
+
+  await pushTemplates(context);
+}
 
 async function migrate(context) {
   const { projectPath, amplifyMeta } = context.migrationInfo;
@@ -92,4 +102,5 @@ module.exports = {
   onAmplifyCategoryOutputChange,
   executeAmplifyCommand,
   handleAmplifyEvent,
+  initEnv,
 };
