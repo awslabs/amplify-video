@@ -66,9 +66,9 @@ function getVODEnvVars(context, props, resourceName) {
   const projectBucket = amplifyMeta.providers.awscloudformation.DeploymentBucketName;
   let amplifyProjectDetails = amplify.getProjectDetails();
 
-  if (!('video' in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories)
-  || !(resourceName in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories.video)
-  || !('S3Bucket' in amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories.video[resourceName])) {
+  if (!((((amplifyProjectDetails.teamProviderInfo[currentEnvInfo].categories || {})
+    .video || {})
+    [resourceName] || {}).s3UUID)) {
     let uuid;
     if (props.shared.bucketInput) {
       // Migrate to env setup
