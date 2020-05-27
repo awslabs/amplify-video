@@ -166,14 +166,15 @@ function syncHelperCF(context, props, projectType) {
   }
 
   const filterForEJS = (src, dest) => {
-    if (src.includes('.ejs')) {
+    const cleanSrc = src.replace(pluginDir,'');
+    if (cleanSrc.includes('.ejs')) {
       handleEJS(props, src, dest, targetDir, true);
       return false;
     }
-    if (src.includes('node_modules/') || src.includes('package-lock.json')) {
+    if (cleanSrc.includes('node_modules/') || cleanSrc.includes('package-lock.json')) {
       return false;
     }
-    if (src.includes('package.json')) {
+    if (cleanSrc.includes('package.json')) {
       const packageSrc = path.join(src, '../');
       const packageDest = path.join(dest, '../');
       fs.copySync(src, dest);
