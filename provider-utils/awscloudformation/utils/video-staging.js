@@ -166,7 +166,7 @@ function syncHelperCF(context, props, projectType) {
   }
 
   const filterForEJS = (src, dest) => {
-    const cleanSrc = src.replace(pluginDir,'');
+    const cleanSrc = src.replace(pluginDir, '');
     if (cleanSrc.includes('.ejs')) {
       handleEJS(props, src, dest, targetDir, true);
       return false;
