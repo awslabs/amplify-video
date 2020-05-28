@@ -3,11 +3,11 @@
     "type": "category",
     "commands": [
         "add",
+        "build",
         "get-info",
         "help",
         "push",
         "remove",
-        "setup",
         "setup-obs",
         "start",
         "stop",

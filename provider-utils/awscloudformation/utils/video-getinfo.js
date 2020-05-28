@@ -74,7 +74,7 @@ async function generateAWSExportsVideo(context) {
         target: filePath,
       },
     ];
-    await context.amplify.copyBatch(context, copyJobs, props);
+    await context.amplify.copyBatch(context, copyJobs, props, true);
   } else {
     fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
   }
