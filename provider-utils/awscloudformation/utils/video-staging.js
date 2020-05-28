@@ -386,7 +386,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
 
   s3Client.upload(uploadParams, (err) => {
     if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to run amplify video setup'));
+      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to running amplify push'));
     }
   });
 }
