@@ -130,8 +130,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
   } else {
     props.template.name = template.encodingTemplate;
-    const jobTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`));
-    fs.outputFileSync(`${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`, JSON.stringify(jobTemplate, null, 4));
+    fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }
 
   // prompt for cdn
