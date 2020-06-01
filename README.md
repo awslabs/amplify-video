@@ -11,7 +11,7 @@ Read more about Amplify Video on the [AWS Media Blog](https://aws.amazon.com/blo
 
 ## Installation
 
-Amplify Video is [Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
+Amplify Video is a [Category Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
 
 To get started install the Amplify CLI via NPM as shown below or follow the [getting started guide](https://github.com/aws-amplify/amplify-cli/).
 
@@ -21,61 +21,30 @@ npm install -g @aws-amplify/cli
 amplify configure
 ```
 
-Next, with the Amplify CLI installed, install this plugin:
+With the Amplify CLI installed, install this plugin:
 
 ```
 npm i amplify-category-video -g
 ```
 
+Add a video resource to your Amplify project
+
+```
+amplify video add
+```
+
 ## Getting Started with Amplify Video
 
-To help you get started quickly with Amplify Video check out the [live streaming quickstart](live-quickstart.md)
+* [Documentation](https://github.com/awslabs/amplify-video/wiki)
+* [Commands](https://github.com/awslabs/amplify-video/wiki/CLI-Reference)
+* [Video-on-Demand Quickstart](https://github.com/awslabs/amplify-video/wiki/Video-on-Demand)
+* [Live Streaming Quickstart](https://github.com/awslabs/amplify-video/wiki/Live-Streaming)
 
-## Usage
+## Tutorials
 
-To use this plugin you just need to configure a project using `amplify init`.
-
-Note: If you aren't developing a mobile/web app then it doesn't matter what language you choose.
-
-### amplify video add
-
-Command to configure the params for setting up a Video resource. The resource can be either for Live Streaming or Video-on-Demand. 
-
-Run `amplify video push` or `amplify push` to create the resources in the cloud.
-
-### amplify video update
-
-Command to update your params for your video setup.
-
-### amplify video start
-
-Command to start your video stream.
-
-### amplify video stop
-
-Command to stop your video stream.
-
-### amplify video setup
-
-Command to repush the CloudFormation dependancies to the S3.
-
-### amplify video push
-
-Command to push a specific video project.
-
-### amplify video get-info
-
-Command to return the CloudFormation outputs.
-
-### amplify video setup-obs
-
-Create and import a pre-configured profile into [OBS](https://obsproject.com/) for Live Streaming into your Video resource.
-
-### amplify video remove
-
-Command to remove a project that you have made. 
-
-To remove from the cloud you must run `amplify video push` or `amplify push`
+* [UnicornFlix](https://github.com/awslabs/unicornflix)
+* [UnicornTrivia](https://github.com/awslabs/aws-amplify-unicorntrivia-workshop)
+* [CodingCatDev Video Tutorial](https://www.youtube.com/watch?v=vM_YoZbLQQ0)
 
 ## Contributions
 
