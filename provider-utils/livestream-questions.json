@@ -215,15 +215,15 @@
                 "type":"list",
                 "options": [
                     {
-                        "name": "Price Class 100",
+                        "name": "Use Only U.S., Canada and Europe",
                         "value": "PriceClass_100"
                     },
                     {
-                        "name": "Price Class 200",
+                        "name": "Use U.S., Canada, Europe, Asia, Middle East and Africa",
                         "value": "PriceClass_200"
                     },
                     {
-                        "name": "Price Class All",
+                        "name": "Use All Edge Locations (Best Performance)",
                         "value": "PriceClass_All"
                     }
                 ],
