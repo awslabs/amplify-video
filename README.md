@@ -37,8 +37,8 @@ amplify video add
 
 * [Documentation](https://github.com/awslabs/amplify-video/wiki)
 * [Commands](https://github.com/awslabs/amplify-video/wiki/CLI-Reference)
-* [Video-on-Demand Quickstart](https://github.com/awslabs/amplify-video/wiki/Video-on-Demand)
-* [Live Streaming Quickstart](https://github.com/awslabs/amplify-video/wiki/Live-Streaming)
+* [Getting Started with VOD](https://github.com/awslabs/amplify-video/wiki/Getting-Started-with-VOD)
+* [Getting Started with Live](https://github.com/awslabs/amplify-video/wiki/Getting-Started-with-Live)
 
 ## Tutorials
 
