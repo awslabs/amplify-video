@@ -26,4 +26,5 @@ type videoObject @model
 )
 {
   id:ID!
+  <% if (contentDeliveryNetwork.signedKey) { %>token: String @function(name: "<%= contentDeliveryNetwork.functionName %>")<% } %>
 }

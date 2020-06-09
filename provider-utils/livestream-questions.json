@@ -67,6 +67,10 @@
                     {
                         "name": "UDP_PUSH",
                         "value": "UDP_PUSH"
+                    },
+                    {
+                        "name": "MP4_FILE",
+                        "value": "MP4_FILE"
                     }
                 ],
                 "required": true
@@ -211,15 +215,15 @@
                 "type":"list",
                 "options": [
                     {
-                        "name": "Price Class 100",
+                        "name": "Use Only U.S., Canada and Europe",
                         "value": "PriceClass_100"
                     },
                     {
-                        "name": "Price Class 200",
+                        "name": "Use U.S., Canada, Europe, Asia, Middle East and Africa",
                         "value": "PriceClass_200"
                     },
                     {
-                        "name": "Price Class All",
+                        "name": "Use All Edge Locations (Best Performance)",
                         "value": "PriceClass_All"
                     }
                 ],
@@ -270,7 +274,17 @@
               "type": "confirm",
               "question": "Do you want to modify any advanced video encoding parameters?",
               "required": true
-          }
+            },
+            {
+                "key": "mp4URL",
+                "question": "Provide URL to the MP4 file: ",
+                "validation": {
+                    "operator": "regex",
+                    "value": "^[a-z0-9_:\\\/]+$",
+                    "onErrorMsg": "Error the provided URL is not valid"
+                },
+                "required": true
+            }
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

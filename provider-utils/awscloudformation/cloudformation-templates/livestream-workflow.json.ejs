@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "<%= props.shared.resourceName %>",
+  "Description": "AmplifyLivestream - Amplify Livestream template. Do not make changes to the root template. This gets overwritten every push.",
 
   "Metadata": {
     "AWS::CloudFormation::Interface": {
@@ -30,7 +30,8 @@
             "pEncodingProfile",
             "pGopSizeInSec",
             "pGopPerSegment",
-            "pStartChannel"
+            "pStartChannel",
+            "pMp4URL"
           ]
         },
         {
@@ -93,6 +94,10 @@
 
         "pIngestType": {
           "default": "Ingest Type"
+        },
+        
+        "pMp4URL": {
+          "default": "URL to MP4 File"
         },
 
         "pEncodingProfile": {
@@ -253,6 +258,10 @@
 
           "pIngestType": {
             "Ref": "pIngestType"
+          },
+
+          "pMp4URL": {
+            "Ref": "pMp4URL"
           },
 
           "pEncodingProfile": {
@@ -442,7 +451,7 @@
       "Type": "String",
       "Description": "store template and lambda package",
       "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9-_]*",
-      "Default": "<%= props.shared.bucket %>"
+      "Default": "<%= props.env.bucket %>"
     },
 
     "pSourceFolder": {
@@ -466,8 +475,14 @@
     "pIngestType": {
       "Type": "String",
       "Description": "medialive ingest type",
-      "AllowedValues": [ "RTP_PUSH", "UDP_PUSH", "RTMP_PUSH" ],
+      "AllowedValues": [ "RTP_PUSH", "UDP_PUSH", "RTMP_PUSH", "MP4_FILE" ],
       "Default": "<%= props.mediaLive.ingestType %>"
+    },
+
+    "pMp4URL": {
+      "Type": "String",
+      "Description": "URL to MP4 File",
+      "Default": "<%= props.mediaLive.mp4URL %>"
     },
 
     "pEncodingProfile": {

@@ -42,9 +42,26 @@ async function generateAWSExportsVideo(context) {
   // TODO write a way to handle multiple projects. Only handles one vod project for right now!
   Object.values(amplifyMeta.video).forEach((project) => {
     if ('output' in project) {
-      if ('oVODInputS3' in project.output) {
-        props.awsInputVideo = project.output.oVODInputS3;
-        props.awsOutputVideo = project.output.oVODOutputS3;
+      const { output } = project;
+      if ('oVodOutputUrl' in output) {
+        props.awsInputVideo = output.oVODInputS3;
+        props.awsOutputVideo = output.oVodOutputUrl;
+      } else if ('oMediaLivePrimaryIngestUrl' in output) {
+        if (output.oPrimaryHlsEgress) {
+          props.awsOutputLiveHLS = output.oPrimaryHlsEgress;
+        }
+        if (output.oPrimaryDashEgress) {
+          props.awsOutputLiveDash = output.oPrimaryDashEgress;
+        }
+        if (output.oPrimaryMssEgress) {
+          props.awsOutputLiveMss = output.oPrimaryMssEgress;
+        }
+        if (output.oPrimaryCmafEgress) {
+          props.awsOutputLiveCmaf = output.oPrimaryCmafEgress;
+        }
+        if (output.oMediaStoreContainerName) {
+          props.awsOutputLiveLL = output.oPrimaryMediaStoreEgressUrl;
+        }
       }
     }
   });
@@ -57,7 +74,7 @@ async function generateAWSExportsVideo(context) {
         target: filePath,
       },
     ];
-    await context.amplify.copyBatch(context, copyJobs, props);
+    await context.amplify.copyBatch(context, copyJobs, props, true);
   } else {
     fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
   }
@@ -113,6 +130,11 @@ async function prettifyOutputLive(output) {
 async function prettifyOutputVod(context, output) {
   context.print.blue('Input Storage bucket:');
   context.print.blue(`${output.oVODInputS3}\n`);
-  context.print.blue('Output Storage bucket:');
-  context.print.blue(`${output.oVODOutputS3}\n`);
+  if (output.oVodOutputUrl) {
+    context.print.blue('Output URL for content:');
+    context.print.blue(`${output.oVodOutputUrl}\n`);
+  } else {
+    context.print.blue('Output Storage bucket:');
+    context.print.blue(`${output.oVODOutputS3}\n`);
+  }
 }

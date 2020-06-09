@@ -21,6 +21,7 @@ Conditions:
 Resources:
   OutputBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Ref pBucketName
       CorsConfiguration:
@@ -82,3 +83,6 @@ Outputs:
     Condition: CreateCloudfront
     Value: !Ref OriginAccessIdentity
     Description: Origin Access Identity for Cloudfront
+  oOutputUrl:
+    Value: !GetAtt OutputBucket.RegionalDomainName
+    Description: URL for the bucket

@@ -45,9 +45,9 @@ Resources:
     Properties:
       FunctionName: !Ref pFunctionName
       Description: Sends a notification when a new object is put into the bucket
-      Handler: lambda_function.lambda_handler
+      Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python2.7
+      Runtime: nodejs12.x
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
@@ -56,7 +56,7 @@ Resources:
         Variables:
           ARN_TEMPLATE: !Ref pMediaConvertTemplate
           MC_ROLE: !GetAtt MediaConvertRole.Arn
-          S3_OUTPUT_NAME: !Ref pOutputS3
+          OUTPUT_BUCKET: !Ref pOutputS3
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -93,6 +93,7 @@ Resources:
                   - mediaconvert:DescribeEndpoints
                   - mediaconvert:GetJob
                   - mediaconvert:GetJobTemplate
+                  - mediaconvert:GetQueue
                   - mediaconvert:GetPreset
                   - mediaconvert:ListJobTemplates
                   - mediaconvert:ListJobs

@@ -9,16 +9,15 @@ module.exports = {
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
-  const projectMeta = context.amplify.getProjectMeta();
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();
   let advancedAnswers = {};
+  let mediaLiveAnswers = {};
   let mediaPackageAnswers;
   let cloudFrontAnswers = {};
   const props = {};
   let defaults = {};
-
   defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   defaults.resourceName = 'mylivestream';
   try {
@@ -107,6 +106,15 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     },
   ];
 
+  const mp4Questions = [
+    {
+      type: inputs[17].type,
+      name: inputs[17].key,
+      message: inputs[17].question,
+      default: defaults.advanced[inputs[17].key],
+    },
+  ];
+
   const mediaPackageQuestions = [
     {
       type: inputs[8].type,
@@ -175,7 +183,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   // main question control flow
   const answers = {};
-  answers.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
   answers.resourceName = resource.name;
 
@@ -190,7 +197,11 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     advancedAnswers.advancedChoice = true;
   }
 
-  const mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
+  mediaLiveAnswers = await inquirer.prompt(mediaLiveQuestions);
+  if (mediaLiveAnswers.ingestType === 'MP4_FILE') {
+    const mp4Answers = await inquirer.prompt(mp4Questions);
+    mediaLiveAnswers.mp4URL = mp4Answers.mp4URL;
+  }
   const mediaStorageAnswers = await inquirer.prompt(mediaStorage);
   if (mediaStorageAnswers.storageType === 'mPackageStore' || mediaStorageAnswers.storageType === 'mPackage') {
     mediaPackageAnswers = await inquirer.prompt(mediaPackageQuestions);

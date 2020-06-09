@@ -1,32 +1,50 @@
 const fs = require('fs');
 const chalk = require('chalk');
-const { stageVideo, resetupFiles } = require('./utils/video-staging');
+const { buildTemplates } = require('./utils/video-staging');
 
 let serviceMetadata;
 
 async function addResource(context, service, options) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { cfnFilename, stackFolder } = serviceMetadata;
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename);
-  await stageVideo(context, options, result, cfnFilename, stackFolder, 'add');
+  context.amplify.updateamplifyMetaAfterResourceAdd(
+    'video',
+    result.shared.resourceName,
+    options,
+  );
+  if (!fs.existsSync(`${targetDir}/video/${result.shared.resourceName}/`)) {
+    fs.mkdirSync(`${targetDir}/video/${result.shared.resourceName}/`, { recursive: true });
+  }
+  if (result.parameters !== undefined) {
+    await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
+  }
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await buildTemplates(context, result);
+  console.log(chalk`{green Successfully configured ${result.shared.resourceName}}`);
 }
 
 async function updateResource(context, service, options, resourceName) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { cfnFilename, stackFolder } = serviceMetadata;
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
   const result = await serviceQuestions(context, options, defaultValuesFilename, resourceName);
-  await stageVideo(context, options, result, cfnFilename, stackFolder, 'update');
+  if (result.parameters !== undefined) {
+    await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
+  }
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await buildTemplates(context, result);
+  console.log(chalk`{green Successfully updated ${result.shared.resourceName}}`);
 }
 
 async function livestreamStartStop(context, service, options, resourceName, start) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { cfnFilename, stackFolder } = serviceMetadata;
+
   const { amplify } = context;
   const amplifyMeta = context.amplify.getProjectMeta();
   if (amplifyMeta.video[resourceName].output) {
@@ -35,11 +53,8 @@ async function livestreamStartStop(context, service, options, resourceName, star
       const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
       if ((props.mediaLive.autoStart === 'YES' && start) || (props.mediaLive.autoStart === 'NO' && !start)) {
         props.mediaLive.autoStart = !start ? 'YES' : 'NO';
-        props.shared.resourceName = resourceName;
-        const serviceWalkthroughSrc = `${__dirname}/utils/video-staging.js`;
-        const { updateWithProps } = require(serviceWalkthroughSrc);
-        await updateWithProps(context, options, props, resourceName, cfnFilename, stackFolder);
-        await amplify.constructExeInfo(context);
+        await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
+        await buildTemplates(context, props);
         await amplify.pushResources(context, 'video', resourceName).catch((err) => {
           context.print.info(err.stack);
           context.print.error('There was an error pushing the video resource');
@@ -55,16 +70,8 @@ async function livestreamStartStop(context, service, options, resourceName, star
   }
 }
 
-async function setupCloudFormation(context, service, options, resourceName) {
-  serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-  const { stackFolder } = serviceMetadata;
-  await resetupFiles(context, options, resourceName, stackFolder);
-}
-
-
 module.exports = {
   addResource,
   updateResource,
-  setupCloudFormation,
   livestreamStartStop,
 };
