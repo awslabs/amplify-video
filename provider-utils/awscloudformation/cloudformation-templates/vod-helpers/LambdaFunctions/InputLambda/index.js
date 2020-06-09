@@ -45,7 +45,7 @@ async function createJob(eventObject) {
 
   // Set the output to have the filename (without extension) as a folder
   jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-  jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${AddedKey}`;
+  jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
 
   let queueARN = '';
   if (process.env.QUEUE_ARN) {
