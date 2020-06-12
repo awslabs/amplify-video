@@ -24,7 +24,6 @@ async function addResource(context, service, options) {
   }
   await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
   await buildTemplates(context, result);
-  console.log(chalk`{green Successfully configured ${result.shared.resourceName}}`);
 }
 
 async function updateResource(context, service, options, resourceName) {
