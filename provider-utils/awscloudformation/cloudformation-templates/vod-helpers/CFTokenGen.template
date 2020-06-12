@@ -27,6 +27,10 @@ Parameters:
     Type: String
     Description: ProjectName
     Default: DefaultName
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
 
 Resources:
   TokenGen:
@@ -40,7 +44,9 @@ Resources:
       Timeout: 5
       Code:
         S3Bucket: !Ref pS3
-        S3Key: vod-helpers/CloudFrontTokenGen.zip
+        S3Key: !Sub
+          - vod-helpers/CloudFrontTokenGen-${hash}.zip
+          - { hash: !Ref pFunctionHash }
       Environment:
         Variables:
           PemID: !Ref pPemID

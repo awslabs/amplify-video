@@ -25,6 +25,10 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: BucketWatcher
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
 
 Resources:
   BucketWatcher:
@@ -38,7 +42,9 @@ Resources:
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
-        S3Key: vod-helpers/OutputLambda.zip
+        S3Key: !Sub
+          - vod-helpers/OutputLambda-${hash}.zip
+          - { hash: !Ref pFunctionHash }
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
