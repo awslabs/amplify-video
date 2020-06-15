@@ -38,6 +38,10 @@ Parameters:
     Type: String
     Description: MediaConvert Template Arn
     Default: arn-default
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
 
 Resources:
   BucketWatcher:
@@ -51,7 +55,9 @@ Resources:
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
-        S3Key: vod-helpers/InputLambda.zip
+        S3Key: !Sub
+          - vod-helpers/InputLambda-${hash}.zip
+          - { hash: !Ref pFunctionHash }
       Environment:
         Variables:
           ARN_TEMPLATE: !Ref pMediaConvertTemplate
