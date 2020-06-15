@@ -84,7 +84,7 @@ function getVODEnvVars(context, props, resourceName) {
       uuid = props.shared.bucketInput.split('-').pop();
     } else {
       uuid = Math.random().toString(36).substring(2, 8)
-        + Math.random().toString(36).substring(2, 8);
+           + Math.random().toString(36).substring(2, 8);
     }
     amplify.saveEnvResourceParameters(context, 'video', resourceName, { s3UUID: uuid });
     amplifyProjectDetails = amplify.getProjectDetails();
@@ -131,7 +131,7 @@ async function generateLambdaHashes(context, props, projectType) {
   const buildHashes = [];
   const customHashes = [];
   const lambdas = fs.readdirSync(buildDir);
-  const hashes = {};
+  const hashes = { };
   lambdas.forEach((lambda) => {
     if (lambda === '.DS_Store') {
       return;
