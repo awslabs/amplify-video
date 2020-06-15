@@ -4,7 +4,7 @@ module.exports = {
   name: featureName,
   run: async (context) => {
     if (/^win/.test(process.platform)) {
-      console.log('test');
+      context.print.debug('test');
       try {
         const { run } = require(`./${featureName}/${context.parameters.first}`);
         return run(context);

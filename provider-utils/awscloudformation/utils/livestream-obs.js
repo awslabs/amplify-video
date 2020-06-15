@@ -11,14 +11,14 @@ async function setupOBS(context, resourceName) {
   const amplifyMeta = amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {
     if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
-      await createConfig(amplifyMeta.video[resourceName].output, resourceName);
+      await createConfig(context, amplifyMeta.video[resourceName].output, resourceName);
     }
   } else {
-    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
+    context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
-async function createConfig(output, projectName) {
+async function createConfig(context, output, projectName) {
   // check for obs installation!
   let profileDir = '';
   if (process.platform === 'darwin') {
@@ -31,7 +31,7 @@ async function createConfig(output, projectName) {
 
   if (!fs.existsSync(profileDir)) {
     // Ask if they want to continue later
-    console.log('OBS profile not folder not found. Switching to project folder.');
+    context.print.info('OBS profile not folder not found. Switching to project folder.');
     profileDir = `${process.env.PWD}/OBS/`;
     fs.mkdirSync(profileDir);
   }
@@ -45,8 +45,8 @@ async function createConfig(output, projectName) {
   generateINI(projectName, profileDir);
   generateService(profileDir, output.oMediaLivePrimaryIngestUrl);
 
-  console.log('Configuration complete.');
-  console.log(`Open OBS and select ${projectName} profile to use the generated profile for OBS`);
+  context.print.success('\nConfiguration complete.');
+  context.print.blue(chalk`Open OBS and select {bold ${projectName}} profile to use the generated profile for OBS`);
 }
 
 async function generateINI(projectName, directory) {

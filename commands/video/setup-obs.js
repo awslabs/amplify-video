@@ -18,7 +18,7 @@ module.exports = {
       {
         type: 'list',
         name: 'resourceName',
-        message: 'Choose what project you want to get info for?',
+        message: 'Choose what project you want to set up OBS for?',
         choices: Object.keys(amplifyMeta[category]),
         default: Object.keys(amplifyMeta[category])[0],
       },

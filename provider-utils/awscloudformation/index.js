@@ -24,7 +24,7 @@ async function addResource(context, service, options) {
   }
   await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
   await buildTemplates(context, result);
-  console.log(chalk`{green Successfully configured ${result.shared.resourceName}}`);
+  context.print.success(`Successfully configured ${result.shared.resourceName}`);
 }
 
 async function updateResource(context, service, options, resourceName) {
@@ -39,7 +39,7 @@ async function updateResource(context, service, options, resourceName) {
   }
   await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
   await buildTemplates(context, result);
-  console.log(chalk`{green Successfully updated ${result.shared.resourceName}}`);
+  context.print.success(`Successfully updated ${result.shared.resourceName}`);
 }
 
 async function livestreamStartStop(context, service, options, resourceName, start) {
@@ -60,13 +60,13 @@ async function livestreamStartStop(context, service, options, resourceName, star
           context.print.error('There was an error pushing the video resource');
         });
       } else {
-        console.log(chalk`{bold ${resourceName} is already ${start ? 'running' : 'stopped'}.}`);
+        context.print.warning(chalk`{bold ${resourceName} is already ${start ? 'running' : 'stopped'}.}`);
       }
     } catch (err) {
-      console.log(err);
+      context.print.error(err);
     }
   } else {
-    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
+    context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
