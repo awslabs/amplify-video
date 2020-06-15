@@ -72,7 +72,7 @@ Resources:
   rS3InputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.yaml"
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
         pBucketName: !Ref pS3InputName
@@ -80,7 +80,7 @@ Resources:
   rS3OutputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.yaml"
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3OutputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
         pBucketName: !Ref pS3OutputName
