@@ -378,11 +378,11 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
       });
     } else if (fs.existsSync(`${customDirPath}/${filePath}`)) {
       promiseFilesToUpload.push(
-        uploadFile(s3Client, targetBucket, customDirPath, filePath, stackFolder),
+        uploadFile(context, s3Client, targetBucket, customDirPath, filePath, stackFolder),
       );
     } else {
       promiseFilesToUpload.push(
-        uploadFile(s3Client, targetBucket, buildDirPath, filePath, stackFolder),
+        uploadFile(context, s3Client, targetBucket, buildDirPath, filePath, stackFolder),
       );
     }
   });
@@ -418,10 +418,10 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
   archive.pipe(output);
   archive.directory(lambdaDir, false);
   await archive.finalize();
-  await uploadFile(s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
+  await uploadFile(context, s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
 }
 
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath,
+async function uploadFile(context, s3Client, hostingBucketName, distributionDirPath, filePath,
   stackFolder, nameOverride) {
   let relativeFilePath = path.relative(distributionDirPath, filePath);
 
@@ -438,7 +438,7 @@ async function uploadFile(s3Client, hostingBucketName, distributionDirPath, file
   };
   s3Client.upload(uploadParams, (err) => {
     if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to running amplify push'));
+      context.print.error(chalk.bold('Failed uploading object to S3. Check your connection and try to running amplify push'));
     }
   });
 }
