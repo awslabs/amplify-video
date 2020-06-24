@@ -35,7 +35,7 @@ module.exports = {
     }
 
     /* eslint-disable */
-    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, false);
+    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, true);
     /* eslint-enable */
   },
 };
