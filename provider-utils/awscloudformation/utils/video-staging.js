@@ -162,13 +162,13 @@ async function copyParentTemplate(context, serviceType, props) {
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
   const { cfnFilename } = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[serviceType];
-  const newCfnName = cfnFilename.split('.')[0];
+  const newCfnName = cfnFilename.replace('.ejs', '');
 
   const copyJobs = [
     {
       dir: pluginDir,
       template: `cloudformation-templates/${cfnFilename}`,
-      target: `${targetDir}/video/${props.shared.resourceName}/build/${props.shared.resourceName}-${newCfnName}.template`,
+      target: `${targetDir}/video/${props.shared.resourceName}/build/${props.shared.resourceName}-${newCfnName}`,
     },
   ];
 
