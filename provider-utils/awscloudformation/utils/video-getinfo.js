@@ -12,7 +12,7 @@ async function getInfoVideoAll(context) {
     Object.values(amplifyMeta.video).forEach((project) => {
       if ('output' in project) {
         if ('oMediaLivePrimaryIngestUrl' in project.output) {
-          prettifyOutputLive(project.output);
+          prettifyOutputLive(context, project.output);
         } else if ('oVODInputS3' in project.output) {
           prettifyOutputVod(context, project.output);
         }
@@ -85,45 +85,45 @@ async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {
     if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
-      await prettifyOutputLive(amplifyMeta.video[resourceName].output);
+      await prettifyOutputLive(context, amplifyMeta.video[resourceName].output);
     } else {
       await prettifyOutputVod(context, amplifyMeta.video[resourceName].output);
     }
     await generateAWSExportsVideo(context);
   } else {
-    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
+    context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
-async function prettifyOutputLive(output) {
-  console.log(chalk.bold('\nMediaLive'));
-  console.log(chalk`MediaLive Primary Ingest Url: {blue.underline ${output.oMediaLivePrimaryIngestUrl}}`);
+async function prettifyOutputLive(context, output) {
+  context.print.info(chalk.bold('\nMediaLive'));
+  context.print.blue(chalk`MediaLive Primary Ingest Url: {underline ${output.oMediaLivePrimaryIngestUrl}}`);
   const primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
-  console.log(chalk`MediaLive Primary Stream Key: ${primaryKey[3]}\n`);
-  console.log(chalk`MediaLive Backup Ingest Url: {blue.underline ${output.oMediaLiveBackupIngestUrl}}`);
+  context.print.blue(`MediaLive Primary Stream Key: ${primaryKey[3]}\n`);
+  context.print.blue(chalk`MediaLive Backup Ingest Url: {underline ${output.oMediaLiveBackupIngestUrl}}`);
   const backupKey = output.oMediaLiveBackupIngestUrl.split('/');
-  console.log(chalk`MediaLive Backup Stream Key: ${backupKey[3]}`);
+  context.print.blue(`MediaLive Backup Stream Key: ${backupKey[3]}`);
 
   if (output.oPrimaryHlsEgress || output.oPrimaryCmafEgress
     || output.oPrimaryDashEgress || output.oPrimaryMssEgress) {
-    console.log(chalk.bold('\nMediaPackage'));
+    context.print.info(chalk.bold('\nMediaPackage'));
   }
   if (output.oPrimaryHlsEgress) {
-    console.log(chalk`MediaPackage HLS Egress Url: {blue.underline ${output.oPrimaryHlsEgress}}`);
+    context.print.blue(chalk`MediaPackage HLS Egress Url: {underline ${output.oPrimaryHlsEgress}}`);
   }
   if (output.oPrimaryDashEgress) {
-    console.log(chalk`MediaPackage Dash Egress Url: {blue.underline ${output.oPrimaryDashEgress}}`);
+    context.print.blue(chalk`MediaPackage Dash Egress Url: {underline ${output.oPrimaryDashEgress}}`);
   }
   if (output.oPrimaryMssEgress) {
-    console.log(chalk`MediaPackage MSS Egress Url: {blue.underline ${output.oPrimaryMssEgress}}`);
+    context.print.blue(chalk`MediaPackage MSS Egress Url: {underline ${output.oPrimaryMssEgress}}`);
   }
   if (output.oPrimaryCmafEgress) {
-    console.log(chalk`MediaPackage CMAF Egress Url: {blue.underline ${output.oPrimaryCmafEgress}}`);
+    context.print.blue(chalk`MediaPackage CMAF Egress Url: {underline ${output.oPrimaryCmafEgress}}`);
   }
 
   if (output.oMediaStoreContainerName) {
-    console.log(chalk.bold('\nMediaStore'));
-    console.log(chalk`MediaStore Output Url: {blue.underline ${output.oPrimaryMediaStoreEgressUrl}}`);
+    context.print.info(chalk.bold('\nMediaStore'));
+    context.print.blue(chalk`MediaStore Output Url: {underline ${output.oPrimaryMediaStoreEgressUrl}}`);
   }
 }
 
