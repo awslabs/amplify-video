@@ -29,9 +29,9 @@ async function generateAWSExportsVideo(context) {
   let filePath = '';
 
   if (projectConfig.frontend === 'ios') {
-    filePath = './aws-video-exports.json';
+    filePath = './videoconfiguration.json';
   } else if (projectConfig.frontend === 'android') {
-    filePath = `./${projectConfig.android.config.ResDir}/aws-video-exports.json`;
+    filePath = `./${projectConfig.android.config.ResDir}/raw/videoconfiguration.json`;
   } else if (projectConfig.frontend === 'javascript') {
     filePath = `./${projectConfig.javascript.config.SourceDir}/aws-video-exports.js`;
   } else {
@@ -94,11 +94,11 @@ async function constructVideoConfigMobile(metadata, props) {
 
         const resourceConfig = props[categoryName].plugins[pluginName][resourceName];
 
-        resourceConfig.type = resource.serviceType;
         if (resource.serviceType === 'livestream') {
+          resourceConfig.type = 'LIVE';
           resourceConfig.ingress = {
-            primaryUrl: resource.output.oMediaLivePrimaryIngestUrl,
-            backupUrl: resource.output.oMediaLiveBackupIngestUrl,
+            primary: resource.output.oMediaLivePrimaryIngestUrl,
+            backup: resource.output.oMediaLiveBackupIngestUrl,
           };
           resourceConfig.egress = {
             hls: resource.output.oPrimaryHlsEgress,
@@ -108,6 +108,7 @@ async function constructVideoConfigMobile(metadata, props) {
             mediastore: resource.output.oPrimaryMediaStoreEgressUrl,
           };
         } else if (resource.serviceType === 'video-on-demand') {
+          resourceConfig.type = 'ON_DEMAND';
           resourceConfig.input = resource.output.oVODInputS3;
           resourceConfig.output = resource.output.oVodOutputUrl;
         }
