@@ -364,7 +364,7 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
         if (lambdaName === '.DS_Store') {
           return;
         }
-        if (fs.existsSync(`${customDirPath}/${lambdaName}`)) {
+        if (fs.existsSync(`${customDirPath}/${filePath}/${lambdaName}`)) {
           promiseFilesToUpload.push(
             zipLambdaFunctionsAndPush(context, lambdaName, `${customDirPath}/${filePath}/${lambdaName}`,
               customDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
@@ -376,11 +376,11 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
           );
         }
       });
-    } else if (fs.existsSync(`${customDirPath}/${filePath}`)) {
+    } else if (fs.existsSync(`${customDirPath}/${filePath}`) && !filePath.includes('.zip')) {
       promiseFilesToUpload.push(
         uploadFile(context, s3Client, targetBucket, customDirPath, filePath, stackFolder),
       );
-    } else {
+    } else if (!filePath.includes('.zip')) {
       promiseFilesToUpload.push(
         uploadFile(context, s3Client, targetBucket, buildDirPath, filePath, stackFolder),
       );
