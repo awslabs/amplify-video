@@ -100,6 +100,12 @@ async function constructVideoConfigMobile(metadata, props) {
             primary: resource.output.oMediaLivePrimaryIngestUrl,
             backup: resource.output.oMediaLiveBackupIngestUrl,
           };
+          const primaryKey = resource.output.oMediaLivePrimaryIngestUrl.split('/');
+          const backupKey = resource.output.oMediaLiveBackupIngestUrl.split('/');
+          resourceConfig.keys = {
+            primary: primaryKey[3],
+            backup: backupKey[3],
+          }
           resourceConfig.egress = {
             hls: resource.output.oPrimaryHlsEgress,
             dash: resource.output.oPrimaryDashEgress,
