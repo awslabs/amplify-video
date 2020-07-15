@@ -1,6 +1,7 @@
 const fs = require('fs');
 const chalk = require('chalk');
 const { buildTemplates } = require('./utils/video-staging');
+const { liveStartStop } = require('./utils/livestream-startstop');
 
 let serviceMetadata;
 
@@ -42,28 +43,12 @@ async function updateResource(context, service, options, resourceName) {
 }
 
 async function livestreamStartStop(context, service, options, resourceName, start) {
-  serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
-
   const { amplify } = context;
-  const amplifyMeta = context.amplify.getProjectMeta();
+  const amplifyMeta = amplify.getProjectMeta();
+
   if (amplifyMeta.video[resourceName].output) {
-    const targetDir = amplify.pathManager.getBackendDirPath();
-    try {
-      const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
-      if ((props.mediaLive.autoStart === 'YES' && start) || (props.mediaLive.autoStart === 'NO' && !start)) {
-        props.mediaLive.autoStart = !start ? 'YES' : 'NO';
-        await fs.writeFileSync(`${targetDir}/video/${props.shared.resourceName}/props.json`, JSON.stringify(props, null, 4));
-        await buildTemplates(context, props);
-        await amplify.pushResources(context, 'video', resourceName).catch((err) => {
-          context.print.info(err.stack);
-          context.print.error('There was an error pushing the video resource');
-        });
-      } else {
-        context.print.warning(chalk`{bold ${resourceName} is already ${start ? 'running' : 'stopped'}.}`);
-      }
-    } catch (err) {
-      context.print.error(err);
-    }
+    const resourceId = amplifyMeta.video[resourceName].output.oMediaLiveChannelId;
+    await liveStartStop(context, options, resourceId, start);
   } else {
     context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
