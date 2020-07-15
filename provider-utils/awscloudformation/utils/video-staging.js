@@ -3,7 +3,6 @@ const childProcess = require('child_process');
 const archiver = require('archiver');
 const path = require('path');
 const mime = require('mime-types');
-const chalk = require('chalk');
 const ora = require('ora');
 const ejs = require('ejs');
 const YAML = require('yaml');

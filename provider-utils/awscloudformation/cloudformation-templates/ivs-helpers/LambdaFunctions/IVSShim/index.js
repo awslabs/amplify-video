@@ -22,13 +22,13 @@ exports.handler = async (event, context) => {
   let responseData = {};
   switch (event.RequestType) {
     case 'Create':
-      responseData = await createStarfruit(config);
+      responseData = await createIVS(config);
       break;
     case 'Delete':
-      responseData = await deleteStarfruit(event, config);
+      responseData = await deleteIVS(event, config);
       break;
     case 'Update':
-      responseData = await updateStarfruit(event, config);
+      responseData = await updateIVS(event, config);
       break;
     default:
       console.log(`${event.RequestType} is not supported. No changes are applied`);
@@ -37,7 +37,7 @@ exports.handler = async (event, context) => {
   console.log('CFN STATUS:: ', response, responseData);
 };
 
-async function createStarfruit(config) {
+async function createIVS(config) {
   if (config.API === 'VideoChannel') {
     const flattenResults = {};
     const results = await signAndRequest('POST', '/CreateChannel', config);
@@ -50,12 +50,12 @@ async function createStarfruit(config) {
   return { error: "API doesn't exists" };
 }
 
-async function updateStarfruit(config) {
+async function updateIVS(config) {
   console.log(config);
   return {};
 }
 
-async function deleteStarfruit(event, config) {
+async function deleteIVS(event, config) {
   if (config.API === 'VideoChannel') {
     const deleteRequest = {
       arn: event.PhysicalResourceId,
@@ -110,10 +110,10 @@ async function signAndRequest(method, uriRaw, config) {
     body: config,
     json: true,
   };
-  const testreturn = await rp(options);
-  console.log(testreturn);
+  const urlReturn = await rp(options);
+  console.log(urlReturn);
 
-  return testreturn;
+  return urlReturn;
 }
 
 async function sendResponse(event, context, responseStatus, responseData) {
@@ -143,11 +143,11 @@ async function sendResponse(event, context, responseStatus, responseData) {
       'content-length': responseBody.length,
     },
   };
-  const testreturn = await rp(options);
-  console.log('return: 2', testreturn);
+  const urlReturn = await rp(options);
+  console.log('urlReturn: ', urlReturn);
 
   console.log('options: ', options);
 
   console.log('SENDING RESPONSE...\n');
-  return testreturn;
+  return urlReturn;
 }
