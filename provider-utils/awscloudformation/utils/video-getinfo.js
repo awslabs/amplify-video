@@ -11,6 +11,13 @@ async function getInfoVideoAll(context) {
   if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
     Object.values(amplifyMeta.video).forEach((project) => {
       if ('output' in project) {
+        if (project.serviceType === 'video-on-demand') {
+          prettifyOutputVod(context, project.output);
+        } else if (project.serviceType === 'livestream') {
+          prettifyOutputLive(context, project.output);
+        } else if (project.serviceType === 'ivs') {
+          prettifyOutputIVS(context, project.output);
+        }
         if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(context, project.output);
         } else if ('oVODInputS3' in project.output) {
@@ -84,10 +91,12 @@ async function generateAWSExportsVideo(context) {
 async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {
-    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
-      await prettifyOutputLive(context, amplifyMeta.video[resourceName].output);
-    } else {
+    if (amplifyMeta.video[resourceName].serviceType === 'video-on-demand') {
       await prettifyOutputVod(context, amplifyMeta.video[resourceName].output);
+    } else if (amplifyMeta.video[resourceName].serviceType === 'livestream') {
+      await prettifyOutputLive(context, amplifyMeta.video[resourceName].output);
+    } else if (amplifyMeta.video[resourceName].serviceType === 'ivs') {
+      await prettifyOutputIVS(context, amplifyMeta.video[resourceName].output);
     }
     await generateAWSExportsVideo(context);
   } else {
@@ -95,7 +104,18 @@ async function getVideoInfo(context, resourceName) {
   }
 }
 
+async function prettifyOutputIVS(context, output) {
+  context.print.info(chalk.bold('\nInteractive Video Service:'));
+  context.print.blue('\nInput url:');
+  context.print.blue(chalk`{underline rtmps://${output.oVideoInputURL}}\n`);
+  context.print.blue('\nStream Keys:');
+  context.print.blue(`${output.oVideoInputKey}\n`);
+  context.print.blue('\nOutput url:');
+  context.print.blue(chalk`{underline ${output.oVideoOutput}}\n`);
+}
+
 async function prettifyOutputLive(context, output) {
+  context.print.info(chalk.bold('\nLivestream Info:'));
   context.print.info(chalk.bold('\nMediaLive'));
   context.print.blue(chalk`MediaLive Primary Ingest Url: {underline ${output.oMediaLivePrimaryIngestUrl}}`);
   const primaryKey = output.oMediaLivePrimaryIngestUrl.split('/');
@@ -128,11 +148,12 @@ async function prettifyOutputLive(context, output) {
 }
 
 async function prettifyOutputVod(context, output) {
-  context.print.blue('Input Storage bucket:');
+  context.print.info(chalk.bold('\nVideo on Demand:'));
+  context.print.blue('\nInput Storage bucket:');
   context.print.blue(`${output.oVODInputS3}\n`);
   if (output.oVodOutputUrl) {
     context.print.blue('Output URL for content:');
-    context.print.blue(`${output.oVodOutputUrl}\n`);
+    context.print.blue(chalk`{underline https://${output.oVodOutputUrl}\n}`);
   } else {
     context.print.blue('Output Storage bucket:');
     context.print.blue(`${output.oVODOutputS3}\n`);

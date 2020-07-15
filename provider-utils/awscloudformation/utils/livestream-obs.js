@@ -10,15 +10,13 @@ async function setupOBS(context, resourceName) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {
-    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
-      await createConfig(context, amplifyMeta.video[resourceName].output, resourceName);
-    }
+    await createConfig(context, amplifyMeta.video[resourceName], resourceName);
   } else {
     context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
-async function createConfig(context, output, projectName) {
+async function createConfig(context, projectConfig, projectName) {
   // check for obs installation!
   let profileDir = '';
   if (process.platform === 'darwin') {
@@ -43,24 +41,40 @@ async function createConfig(context, output, projectName) {
   }
 
   generateINI(projectName, profileDir);
-  generateService(profileDir, output.oMediaLivePrimaryIngestUrl);
+  if (projectConfig.serviceType === 'livestream') {
+    generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
+  } else if (projectConfig.serviceType === 'ivs') {
+    generateServiceIVS(profileDir, projectConfig.output);
+  }
 
   context.print.success('\nConfiguration complete.');
   context.print.blue(chalk`Open OBS and select {bold ${projectName}} profile to use the generated profile for OBS`);
 }
 
-async function generateINI(projectName, directory) {
+function generateINI(projectName, directory) {
   const iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/basic.ini`, 'utf-8'));
   iniBasic.General.Name = projectName;
   fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
 }
 
-async function generateService(directory, primaryURL) {
+function generateServiceIVS(directory, projectOutput) {
+  const setup = {
+    settings: {
+      key: projectOutput.oVideoInputKey,
+      server: projectOutput.oVideoInputURL,
+    },
+    type: 'rtmp_custom',
+  };
+  const json = JSON.stringify(setup);
+  fs.writeFileSync(`${directory}service.json`, json);
+}
+
+function generateServiceLive(directory, primaryURL) {
   const primaryKey = primaryURL.split('/');
   const setup = {
     settings: {
       key: primaryKey[3],
-      server: primaryURL,
+      server: `rtmps://${primaryURL}`,
     },
     type: 'rtmp_custom',
   };
