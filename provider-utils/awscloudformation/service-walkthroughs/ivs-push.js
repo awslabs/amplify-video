@@ -24,7 +24,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
       default: 'mylivestream',
-    }];
+    },
+  ];
 
   if (resourceName) {
     nameDict.resourceName = resourceName;
@@ -34,6 +35,25 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.shared = nameDict;
   }
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
+  const createChannel = [
+    {
+      type: inputs[1].type,
+      name: inputs[1].key,
+      message: inputs[1].question,
+      choices: inputs[1].options,
+      default: 'STANDARD',
+    },
+    {
+      type: inputs[2].type,
+      name: inputs[2].key,
+      message: inputs[2].question,
+      choices: inputs[2].options,
+      default: 'LOW',
+    },
+  ];
+
+  const channelQuestions = await inquirer.prompt(createChannel);
+  props.channel = channelQuestions;
 
   return props;
 }
