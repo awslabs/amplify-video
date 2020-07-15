@@ -41,16 +41,13 @@ exports.handler = async (event, context) => {
 };
 
 async function createIVS(config) {
-  if (config.API === 'VideoChannel') {
-    const flattenResults = {};
-    const results = await signAndRequest('POST', '/CreateChannel', config);
-    flattenResults.arn = results.channel.arn;
-    flattenResults.playbackUrl = results.channel.playbackUrl;
-    flattenResults.streamKeyValue = results.streamKey.value;
-    flattenResults.ingestURL = results.channel.ingestEndpoint;
-    return flattenResults;
-  }
-  return { error: "API doesn't exists" };
+  const flattenResults = {};
+  const results = await signAndRequest('POST', '/CreateChannel', config);
+  flattenResults.arn = results.channel.arn;
+  flattenResults.playbackUrl = results.channel.playbackUrl;
+  flattenResults.streamKeyValue = results.streamKey.value;
+  flattenResults.ingestURL = results.channel.ingestEndpoint;
+  return flattenResults;
 }
 
 async function updateIVS(config) {
@@ -59,19 +56,17 @@ async function updateIVS(config) {
 }
 
 async function deleteIVS(event, config) {
-  if (config.API === 'VideoChannel') {
-    const deleteRequest = {
-      arn: event.PhysicalResourceId,
-    };
-    const results = await signAndRequest('POST', '/DeleteChannel', deleteRequest);
-    if (results) {
-      results.arn = event.PhysicalResourceId;
-      results.message = 'Delete was successful';
-      return results;
-    }
-    deleteRequest.message = 'Delete was successful';
-    return deleteRequest;
+  const deleteRequest = {
+    arn: event.PhysicalResourceId,
+  };
+  const results = await signAndRequest('POST', '/DeleteChannel', deleteRequest);
+  if (results) {
+    results.arn = event.PhysicalResourceId;
+    results.message = 'Delete was successful';
+    return results;
   }
+  deleteRequest.message = 'Delete was successful';
+  return deleteRequest;
 }
 
 async function signAndRequest(method, uriRaw, config) {
@@ -95,7 +90,6 @@ async function signAndRequest(method, uriRaw, config) {
   canonicalQuerystring += `&X-Amz-Security-Token=${token}`;
   canonicalQuerystring += '&X-Amz-SignedHeaders=host';
   delete config.ServiceToken;
-  delete config.API;
 
   const canonicalHeaders = `host:${host}\n`;
   const payloadHash = SigV4Utils.sha256(JSON.stringify(config));

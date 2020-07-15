@@ -10,7 +10,39 @@
                   "onErrorMsg": "Resource name should be alphanumeric"
               },
               "required": true
-          }
+          },
+          {
+            "key": "channelQuality",
+            "question": "Choose the quality of stream:",
+            "type":"list",
+            "options": [
+                {
+                    "name": "HD Stream",
+                    "value": "STANDARD"
+                },
+                {
+                    "name": "SD Stream",
+                    "value": "BASIC"
+                }
+            ],
+            "required": true
+        },
+        {
+          "key": "channelLatency",
+          "question": "Choose the latency type:",
+          "type":"list",
+          "options": [
+              {
+                  "name": "Ultra-low latency - Near real-time",
+                  "value": "LOW"
+              },
+              {
+                  "name": "Standard Latency",
+                  "value": "NORMAL"
+              }
+          ],
+          "required": true
+        }
       ],
       "provider": "awscloudformation"
   }

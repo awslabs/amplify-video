@@ -10,6 +10,14 @@ Parameters:
     Type: String
     Description: Name of function
     Default: arn-default
+  pLatencyMode:
+    Type: String
+    Description: Latency Mode for IVS-Channel
+    Default: <%= props.channel.channelLatency %>
+  pQuality:
+    Type: String
+    Description: Quality of channel
+    Default: <%= props.channel.channelQuality %>
 Outputs:
   oVideoChannelArn:
     Value: !GetAtt rIVSChannel.arn
@@ -26,4 +34,5 @@ Resources:
     Properties:
       ServiceToken: !Ref pFunctionArn
       name: !Ref pProjectName
-      API: VideoChannel
+      type: !Ref pQuality
+      latencyMode: !Ref pLatencyMode
