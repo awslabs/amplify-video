@@ -1,3 +1,6 @@
+/* eslint-disable strict */
+/* eslint-disable global-require */
+/* eslint-disable no-console */
 const crypto = require('crypto');
 const rp = require('request-promise-native');
 
