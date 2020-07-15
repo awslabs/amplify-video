@@ -335,9 +335,9 @@ async function handleNodeInstall(packageDest) {
     stdio: 'pipe',
     encoding: 'utf-8',
   });
-  if (childProcessResult.status !== 0) {
-    throw new Error(childProcessResult.output.join());
-  }
+  childProcessResult.on('error', (error) => {
+    console.log(error);
+  });
   return childProcessResult;
 }
 
@@ -411,6 +411,9 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
       context.print.error(err);
     }
   });
+  archive.on('end', async () => {
+    await uploadFile(context, s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
+  });
   archive.on('error', (err) => {
     context.print.error(err);
     throw err;
@@ -418,7 +421,6 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
   archive.pipe(output);
   archive.directory(lambdaDir, false);
   await archive.finalize();
-  await uploadFile(context, s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
 }
 
 async function uploadFile(context, s3Client, hostingBucketName, distributionDirPath, filePath,
@@ -436,11 +438,11 @@ async function uploadFile(context, s3Client, hostingBucketName, distributionDirP
     Body: fileStream,
     ContentType: contentType || 'text/plain',
   };
-  s3Client.upload(uploadParams, (err) => {
-    if (err) {
-      context.print.error(chalk.bold('Failed uploading object to S3. Check your connection and try to running amplify push'));
-    }
-  });
+  try {
+    await s3Client.upload(uploadParams).promise();
+  } catch (error) {
+    context.print.error(`Failed pushing to S3 with error: ${error}`);
+  }
 }
 
 module.exports = {
