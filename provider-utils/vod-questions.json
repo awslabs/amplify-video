@@ -22,8 +22,8 @@
               "question": "Provide a specific MediaConvert template name (must be available in project region):",
               "validation": {
                   "operator": "regex",
-                  "value": "^[a-zA-Z0-9_]+$",
-                  "onErrorMsg": "Resource name should be alphanumeric"
+                  "value": "^[^$&,:;?<>`\"#%{}\\\/|^~]{1,80}$",
+                  "onErrorMsg": "Resource name should be alphanumeric and not contain $&,:;?<>`\"#%{}/|^~"
               },
               "required": true
             },
