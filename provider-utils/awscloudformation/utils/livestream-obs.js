@@ -39,7 +39,7 @@ async function createConfig(context, projectConfig, projectName) {
   if (!fs.existsSync(profileDir)) {
     fs.mkdirSync(profileDir);
   }
-  
+
   if (projectConfig.serviceType === 'livestream') {
     generateINILive(projectName, profileDir);
     generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
