@@ -40,10 +40,13 @@ async function createConfig(context, projectConfig, projectName) {
     fs.mkdirSync(profileDir);
   }
 
-  generateINI(projectName, profileDir);
   if (projectConfig.serviceType === 'livestream') {
+    generateINILive(projectName, profileDir);
     generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
   } else if (projectConfig.serviceType === 'ivs') {
+    const targetDir = context.amplify.pathManager.getBackendDirPath();
+    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/props.json`));
+    generateINIIVS(projectName, profileDir, props);
     generateServiceIVS(profileDir, projectConfig.output);
   }
 
@@ -51,17 +54,29 @@ async function createConfig(context, projectConfig, projectName) {
   context.print.blue(chalk`Open OBS and select {bold ${projectName}} profile to use the generated profile for OBS`);
 }
 
-function generateINI(projectName, directory) {
+function generateINIIVS(projectName, directory, props) {
+  let iniBasic;
+  if (props.channel.channelQuality === 'STANDARD') {
+    iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/hd-ivs.ini`, 'utf-8'));
+  } else {
+    iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/sd-ivs.ini`, 'utf-8'));
+  }
+  iniBasic.General.Name = projectName;
+  fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
+}
+
+function generateINILive(projectName, directory) {
   const iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/basic.ini`, 'utf-8'));
   iniBasic.General.Name = projectName;
   fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
 }
 
 function generateServiceIVS(directory, projectOutput) {
+  // TODO: Write advanced setting setup for keyframes for lower latency!
   const setup = {
     settings: {
       key: projectOutput.oVideoInputKey,
-      server: projectOutput.oVideoInputURL,
+      server: `rtmps://${projectOutput.oVideoInputURL}`,
     },
     type: 'rtmp_custom',
   };
