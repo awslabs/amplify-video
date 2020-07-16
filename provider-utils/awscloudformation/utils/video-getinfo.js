@@ -56,24 +56,28 @@ async function generateAWSExportsVideo(context) {
 }
 
 async function constructVideoConfigJS(metadata, props) {
-  // TODO write a way to handle multiple projects. Only handles one vod project for right now!
-  Object.values(metadata.video).forEach((resource) => {
-    if (resource.output) {
-      const { output } = resource;
-      if (resource.serviceType === 'video-on-demand') {
-        props.aws_video_input_bucket = output.oVODInputS3;
-        props.aws_video_output_url = output.oVodOutputUrl;
-      } else if (resource.serviceType === 'livestream') {
-        Object.assign(props, {
-          aws_video_primaryIngress: output.oMediaLivePrimaryIngestUrl,
-          aws_video_backupIngress: output.oMediaLiveBackupIngestUrl,
-          aws_video_hlsEgress: output.oPrimaryHlsEgress,
-          aws_video_dashEgress: output.oPrimaryDashEgress,
-          aws_video_mssEgress: output.oPrimaryMssEgress,
-          aws_video_cmafEfress: output.oPrimaryCmafEgress,
-          aws_video_mediastoreEgress: output.oPrimaryMediaStoreEgressUrl,
-        });
-      }
+  const categoryName = 'video';
+  Object.keys(metadata.video).forEach((resourceName) => {
+    const resource = metadata[categoryName][resourceName];
+    const { serviceType, output } = resource;
+    if (output) {
+      props[serviceType] = props[serviceType] || {};
+      props[serviceType][resourceName] = props[serviceType][resourceName] || {};
+      props[serviceType][resourceName] = {
+        // VoD properties (when applicable)
+        aws_video_inputS3Bucket: output.oVODInputS3,
+        aws_video_outputUrl: output.oVodOutputUrl ? `https://${output.oVodOutputUrl}` : undefined,
+        aws_video_outputS3Bucket: output.oVODOutputS3,
+
+        // Livestream properties (when applicable)
+        aws_video_primaryIngress: output.oMediaLivePrimaryIngestUrl,
+        aws_video_backupIngress: output.oMediaLiveBackupIngestUrl,
+        aws_video_hlsEgress: output.oPrimaryHlsEgress,
+        aws_video_dashEgress: output.oPrimaryDashEgress,
+        aws_video_mssEgress: output.oPrimaryMssEgress,
+        aws_video_cmafEfress: output.oPrimaryCmafEgress,
+        aws_video_mediastoreEgress: output.oPrimaryMediaStoreEgressUrl,
+      };
     }
   });
 }
@@ -100,12 +104,12 @@ async function constructVideoConfigMobile(metadata, props) {
             primary: resource.output.oMediaLivePrimaryIngestUrl,
             backup: resource.output.oMediaLiveBackupIngestUrl,
           };
-          const primaryKey = resource.output.oMediaLivePrimaryIngestUrl.split('/');
-          const backupKey = resource.output.oMediaLiveBackupIngestUrl.split('/');
+          const primaryKey = resource.output.oMediaLivePrimaryIngestUrl.split('/')[3];
+          const backupKey = resource.output.oMediaLiveBackupIngestUrl.split('/')[3];
           resourceConfig.keys = {
-            primary: primaryKey[3],
-            backup: backupKey[3],
-          }
+            primary: primaryKey,
+            backup: backupKey,
+          };
           resourceConfig.egress = {
             hls: resource.output.oPrimaryHlsEgress,
             dash: resource.output.oPrimaryDashEgress,
@@ -171,13 +175,10 @@ async function prettifyOutputLive(context, output) {
 }
 
 async function prettifyOutputVod(context, output) {
-  context.print.blue('Input Storage bucket:');
-  context.print.blue(`${output.oVODInputS3}\n`);
+  context.print.blue(chalk`\nInput Storage bucket: ${output.oVODInputS3}\n`);
   if (output.oVodOutputUrl) {
-    context.print.blue('Output URL for content:');
-    context.print.blue(`${output.oVodOutputUrl}\n`);
+    context.print.blue(chalk`Output URL for content: {underline https://${output.oVodOutputUrl}}`);
   } else {
-    context.print.blue('Output Storage bucket:');
-    context.print.blue(`${output.oVODOutputS3}\n`);
+    context.print.blue(chalk`Output Storage bucket: ${output.oVODOutputS3}`);
   }
 }
