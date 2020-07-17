@@ -29,7 +29,7 @@ Resources:
       Handler: index.handler
       Role: !GetAtt rIVSRole.Arn
       Runtime: nodejs12.x
-      Timeout: 30
+      Timeout: 60
       Code:
         S3Bucket: !Ref pS3
         S3Key: !Sub
