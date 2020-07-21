@@ -46,44 +46,48 @@ async function generateAWSExportsVideo(context) {
     filePath = './aws-video-exports.json';
   }
 
-  // TODO write a way to handle multiple projects. Only handles one vod project for right now!
-  Object.values(amplifyMeta.video).forEach((project) => {
-    if ('output' in project) {
-      const { output } = project;
-      if ('oVodOutputUrl' in output) {
-        props.awsInputVideo = output.oVODInputS3;
-        props.awsOutputVideo = output.oVodOutputUrl;
-      } else if ('oMediaLivePrimaryIngestUrl' in output) {
-        if (output.oPrimaryHlsEgress) {
-          props.awsOutputLiveHLS = output.oPrimaryHlsEgress;
-        }
-        if (output.oPrimaryDashEgress) {
-          props.awsOutputLiveDash = output.oPrimaryDashEgress;
-        }
-        if (output.oPrimaryMssEgress) {
-          props.awsOutputLiveMss = output.oPrimaryMssEgress;
-        }
-        if (output.oPrimaryCmafEgress) {
-          props.awsOutputLiveCmaf = output.oPrimaryCmafEgress;
-        }
-        if (output.oMediaStoreContainerName) {
-          props.awsOutputLiveLL = output.oPrimaryMediaStoreEgressUrl;
+  if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
+    
+    Object.values(amplifyMeta.video).forEach((project) => {
+      if ('output' in project) {
+        const { output } = project;
+        if (project.serviceType === 'video-on-demand') {
+          props.awsInputVideo = output.oVODInputS3;
+          props.awsOutputVideo = output.oVodOutputUrl;
+        } else if (project.serviceType === 'livestream') {
+          if (output.oPrimaryHlsEgress) {
+            props.awsOutputLiveHLS = output.oPrimaryHlsEgress;
+          }
+          if (output.oPrimaryDashEgress) {
+            props.awsOutputLiveDash = output.oPrimaryDashEgress;
+          }
+          if (output.oPrimaryMssEgress) {
+            props.awsOutputLiveMss = output.oPrimaryMssEgress;
+          }
+          if (output.oPrimaryCmafEgress) {
+            props.awsOutputLiveCmaf = output.oPrimaryCmafEgress;
+          }
+          if (output.oMediaStoreContainerName) {
+            props.awsOutputLiveLL = output.oPrimaryMediaStoreEgressUrl;
+          }
+        } else if (project.serviceType === 'ivs') {
+          props.awsOutputIVS = output.oVideoOutput;
         }
       }
-    }
-  });
+    });
 
-  if (projectConfig.frontend === 'javascript') {
-    const copyJobs = [
-      {
-        dir: __dirname,
-        template: 'exports-templates/aws-video-exports.js.ejs',
-        target: filePath,
-      },
-    ];
-    await context.amplify.copyBatch(context, copyJobs, props, true);
-  } else {
-    fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
+    if (projectConfig.frontend === 'javascript') {
+      const copyJobs = [
+        {
+          dir: __dirname,
+          template: 'exports-templates/aws-video-exports.js.ejs',
+          target: filePath,
+        },
+      ];
+      await context.amplify.copyBatch(context, copyJobs, props, true);
+    } else {
+      fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
+    }
   }
 }
 
@@ -112,6 +116,8 @@ async function prettifyOutputIVS(context, output) {
   context.print.blue(`${output.oVideoInputKey}\n`);
   context.print.blue('\nOutput url:');
   context.print.blue(chalk`{underline ${output.oVideoOutput}}\n`);
+  context.print.blue('\Channel ARN:');
+  context.print.blue(`${output.oVideoChannelArn}\n`);
 }
 
 async function prettifyOutputLive(context, output) {
