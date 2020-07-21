@@ -47,7 +47,6 @@ async function generateAWSExportsVideo(context) {
   }
 
   if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
-    
     Object.values(amplifyMeta.video).forEach((project) => {
       if ('output' in project) {
         const { output } = project;
@@ -112,11 +111,11 @@ async function prettifyOutputIVS(context, output) {
   context.print.info(chalk.bold('\nInteractive Video Service:'));
   context.print.blue('\nInput url:');
   context.print.blue(chalk`{underline rtmps://${output.oVideoInputURL}}\n`);
-  context.print.blue('\nStream Keys:');
+  context.print.blue('Stream Keys:');
   context.print.blue(`${output.oVideoInputKey}\n`);
-  context.print.blue('\nOutput url:');
+  context.print.blue('Output url:');
   context.print.blue(chalk`{underline ${output.oVideoOutput}}\n`);
-  context.print.blue('\Channel ARN:');
+  context.print.blue('Channel ARN:');
   context.print.blue(`${output.oVideoChannelArn}\n`);
 }
 
