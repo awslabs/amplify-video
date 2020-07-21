@@ -29,13 +29,24 @@ Parameters:
     Description: Quality of channel
     Default: <%= props.channel.channelQuality %>
 
+Conditions:
+  HasEnvironmentParameter:
+    !Not [!Equals [!Ref env, NONE]]
+
 Resources:
   rIVSChannel:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IVS-Channel.template"
       Parameters:
-        pProjectName: !Ref pProjectName
+        pProjectName:
+          !If
+          - HasEnvironmentParameter
+          - !Join
+            - '-'
+            - - !Ref pProjectName
+              - !Ref env
+          - !Ref pProjectName
         pFunctionArn: !GetAtt rIVSShimLambda.Outputs.oIVSLambda
         pLatencyMode: !Ref pLatencyMode
         pQuality: !Ref pQuality
@@ -45,7 +56,18 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IVS-Custom.template"
       Parameters:
         pS3: !Ref pS3
-        pFunctionName: !Ref pProjectName
+        pFunctionName:
+          !If
+          - HasEnvironmentParameter
+          - !Join
+            - '-'
+            - - !Ref pProjectName
+              - !Ref env
+              - 'ivsShim'
+          - !Join
+            - '-'
+            - - !Ref pProjectName
+              - 'ivsShim'
         pFunctionHash: <%= props.hashes.IVSShim %>
 
 Outputs:
