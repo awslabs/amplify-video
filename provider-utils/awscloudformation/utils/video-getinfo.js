@@ -25,13 +25,12 @@ async function getInfoVideoAll(context) {
 async function generateAWSExportsVideo(context) {
   const projectConfig = context.amplify.getProjectConfig();
   const amplifyMeta = context.amplify.getProjectMeta();
-  const props = {};
   let filePath = '';
 
   if (projectConfig.frontend === 'ios') {
-    filePath = './videoconfiguration.json';
+    filePath = './amplifyvideoconfiguration.json';
   } else if (projectConfig.frontend === 'android') {
-    filePath = `./${projectConfig.android.config.ResDir}/raw/videoconfiguration.json`;
+    filePath = `./${projectConfig.android.config.ResDir}/raw/amplifyvideoconfiguration.json`;
   } else if (projectConfig.frontend === 'javascript') {
     filePath = `./${projectConfig.javascript.config.SourceDir}/aws-video-exports.js`;
   } else {
@@ -40,7 +39,7 @@ async function generateAWSExportsVideo(context) {
   }
 
   if (projectConfig.frontend === 'javascript') {
-    await constructVideoConfigJS(amplifyMeta, props);
+    const props = constructVideoConfigJS(amplifyMeta);
     const copyJobs = [
       {
         dir: __dirname,
@@ -50,81 +49,82 @@ async function generateAWSExportsVideo(context) {
     ];
     await context.amplify.copyBatch(context, copyJobs, props, true);
   } else {
-    await constructVideoConfigMobile(amplifyMeta, props);
+    const props = constructVideoConfigMobile(amplifyMeta);
     fs.writeFileSync(filePath, JSON.stringify(props, null, 4));
   }
 }
 
-async function constructVideoConfigJS(metadata, props) {
+function constructVideoConfigJS(metadata) {
   const categoryName = 'video';
-  Object.keys(metadata.video).forEach((resourceName) => {
-    const resource = metadata[categoryName][resourceName];
-    const { serviceType, output } = resource;
-    if (output) {
-      props[serviceType] = props[serviceType] || {};
-      props[serviceType][resourceName] = props[serviceType][resourceName] || {};
-      props[serviceType][resourceName] = {
-        // VoD properties (when applicable)
-        aws_video_inputS3Bucket: output.oVODInputS3,
-        aws_video_outputUrl: output.oVodOutputUrl ? `https://${output.oVodOutputUrl}` : undefined,
-        aws_video_outputS3Bucket: output.oVODOutputS3,
-
-        // Livestream properties (when applicable)
-        aws_video_primaryIngress: output.oMediaLivePrimaryIngestUrl,
-        aws_video_backupIngress: output.oMediaLiveBackupIngestUrl,
-        aws_video_hlsEgress: output.oPrimaryHlsEgress,
-        aws_video_dashEgress: output.oPrimaryDashEgress,
-        aws_video_mssEgress: output.oPrimaryMssEgress,
-        aws_video_cmafEfress: output.oPrimaryCmafEgress,
-        aws_video_mediastoreEgress: output.oPrimaryMediaStoreEgressUrl,
-      };
-    }
-  });
-}
-
-async function constructVideoConfigMobile(metadata, props) {
-  const categoryName = 'video';
-  const pluginName = 'awsVideoPlugin';
+  const props = {
+    // To be populated with video resources
+  };
   if (metadata[categoryName]) {
     Object.keys(metadata[categoryName]).forEach((resourceName) => {
       const resource = metadata[categoryName][resourceName];
-      if (resource.output) {
-        /* eslint-disable */
-        props[categoryName] = props[categoryName] || {};
-        props[categoryName].plugins = props[categoryName].plugins || {};
-        props[categoryName].plugins[pluginName] = props[categoryName].plugins[pluginName] || {};
-        props[categoryName].plugins[pluginName][resourceName] = props[categoryName].plugins[pluginName][resourceName] || {};
-        /* eslint-enable */
-
-        const resourceConfig = props[categoryName].plugins[pluginName][resourceName];
-
+      const { output } = resource;
+      if (output) {
         if (resource.serviceType === 'livestream') {
-          resourceConfig.type = 'LIVE';
-          resourceConfig.ingress = {
-            primary: resource.output.oMediaLivePrimaryIngestUrl,
-            backup: resource.output.oMediaLiveBackupIngestUrl,
-          };
-          const primaryKey = resource.output.oMediaLivePrimaryIngestUrl.split('/')[3];
-          const backupKey = resource.output.oMediaLiveBackupIngestUrl.split('/')[3];
-          resourceConfig.keys = {
-            primary: primaryKey,
-            backup: backupKey,
-          };
-          resourceConfig.egress = {
-            hls: resource.output.oPrimaryHlsEgress,
-            dash: resource.output.oPrimaryDashEgress,
-            mss: resource.output.oPrimaryMssEgress,
-            cmaf: resource.output.oPrimaryCmafEgress,
-            mediastore: resource.output.oPrimaryMediaStoreEgressUrl,
+          props[resourceName] = {
+            aws_video_hlsEgress: output.oPrimaryHlsEgress,
+            aws_video_dashEgress: output.oPrimaryDashEgress,
+            aws_video_mssEgress: output.oPrimaryMssEgress,
+            aws_video_cmafEfress: output.oPrimaryCmafEgress,
+            aws_video_mediastoreEgress: output.oPrimaryMediaStoreEgressUrl,
           };
         } else if (resource.serviceType === 'video-on-demand') {
-          resourceConfig.type = 'ON_DEMAND';
-          resourceConfig.input = resource.output.oVODInputS3;
-          resourceConfig.output = resource.output.oVodOutputUrl;
+          props[resourceName] = {
+            aws_video_inputS3Bucket: output.oVODInputS3,
+            aws_video_outputS3Bucket: output.oVODOutputS3,
+            aws_video_outputUrl: output.oVodOutputUrl ? `https://${output.oVodOutputUrl}` : undefined,
+          };
         }
       }
     });
   }
+  return props;
+}
+
+function constructVideoConfigMobile(metadata) {
+  const categoryName = 'video';
+  const pluginName = 'awsVideoPlugin';
+  const props = {
+    [categoryName]: {
+      plugins: {
+        [pluginName]: {
+          // To be populated with video resources
+        },
+      },
+    },
+  };
+  if (metadata[categoryName]) {
+    Object.keys(metadata[categoryName]).forEach((resourceName) => {
+      const resource = metadata[categoryName][resourceName];
+      const { output } = resource;
+      if (output) {
+        if (resource.serviceType === 'livestream') {
+          props[categoryName].plugins[pluginName][resourceName] = {
+            type: 'LIVE',
+            egress: {
+              hls: output.oPrimaryHlsEgress,
+              dash: output.oPrimaryDashEgress,
+              mss: output.oPrimaryMssEgress,
+              cmaf: output.oPrimaryCmafEgress,
+              mediastore: output.oPrimaryMediaStoreEgressUrl,
+            },
+          };
+        } else if (resource.serviceType === 'video-on-demand') {
+          props[categoryName].plugins[pluginName][resourceName] = {
+            type: 'ON_DEMAND',
+            input: output.oVODInputS3,
+            output: output.oVODOutputS3,
+            outputUrl: output.oVodOutputUrl ? `https://${output.oVodOutputUrl}` : undefined,
+          };
+        }
+      }
+    });
+  }
+  return props;
 }
 
 
