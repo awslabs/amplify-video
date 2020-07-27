@@ -1,0 +1,59 @@
+Description: <%= props.shared.resourceName %>
+
+Parameters:
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: "<%= props.shared.bucket %>"
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: ivs-helpers
+  pProjectName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: <%= props.shared.resourceName %>
+  pLatencyMode:
+    Type: String
+    Description: Latency Mode for IVS-Channel
+    Default: <%= props.channel.channelLatency %>
+  pQuality:
+    Type: String
+    Description: Quality of channel
+    Default: <%= props.channel.channelQuality %>
+
+Resources:
+  rIVSChannel:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IVS-Channel.template"
+      Parameters:
+        pProjectName: !Ref pProjectName
+        pFunctionArn: !GetAtt rIVSShimLambda.Outputs.oIVSLambda
+        pLatencyMode: !Ref pLatencyMode
+        pQuality: !Ref pQuality
+  rIVSShimLambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IVS-Custom.template"
+      Parameters:
+        pS3: !Ref pS3
+        pFunctionName: !Ref pProjectName
+        pFunctionHash: <%= props.hashes.IVSShim %>
+
+Outputs:
+  oVideoOutput:
+    Value: !GetAtt rIVSChannel.Outputs.oVideoOutput
+  oVideoInputURL:
+    Value: !GetAtt rIVSChannel.Outputs.oVideoInputURL
+  oVideoInputKey:
+    Value: !GetAtt rIVSChannel.Outputs.oVideoInputKey
+  oVideoChannelArn:
+    Value: !GetAtt rIVSChannel.Outputs.oVideoChannelArn

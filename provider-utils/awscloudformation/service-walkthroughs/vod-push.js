@@ -115,7 +115,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
       try {
         jobTemplate = await mcClient.getJobTemplate(params).promise();
-        jobTemplate.JobTemplate.Name = `${jobTemplate.JobTemplate.Name}-${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}`;
+        // Regex: Replaces System- if found at the beginning of the name with ''
+        jobTemplate.JobTemplate.Name = jobTemplate.JobTemplate.Name.replace(/^(System-)/, '');
         delete jobTemplate.JobTemplate.Arn;
         delete jobTemplate.JobTemplate.CreatedAt;
         delete jobTemplate.JobTemplate.LastUpdated;

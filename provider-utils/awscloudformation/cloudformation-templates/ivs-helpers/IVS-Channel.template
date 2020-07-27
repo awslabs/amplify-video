@@ -1,0 +1,38 @@
+Description: S3 Workflow
+
+Parameters:
+  pProjectName:
+    Type: String
+    Description: ProjectName
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: DefaultName
+  pFunctionArn:
+    Type: String
+    Description: Name of function
+    Default: arn-default
+  pLatencyMode:
+    Type: String
+    Description: Latency Mode for IVS-Channel
+    Default: <%= props.channel.channelLatency %>
+  pQuality:
+    Type: String
+    Description: Quality of channel
+    Default: <%= props.channel.channelQuality %>
+Outputs:
+  oVideoChannelArn:
+    Value: !GetAtt rIVSChannel.arn
+  oVideoOutput:
+    Value: !GetAtt rIVSChannel.playbackUrl
+  oVideoInputURL:
+    Value: !GetAtt rIVSChannel.ingestURL
+  oVideoInputKey:
+    Value: !GetAtt rIVSChannel.streamKeyValue
+
+Resources:
+  rIVSChannel:
+    Type: "Custom::StarfruitChannel"
+    Properties:
+      ServiceToken: !Ref pFunctionArn
+      name: !Ref pProjectName
+      type: !Ref pQuality
+      latencyMode: !Ref pLatencyMode
