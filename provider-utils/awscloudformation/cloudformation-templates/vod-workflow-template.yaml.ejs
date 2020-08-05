@@ -58,15 +58,15 @@ Outputs:
   oVODOutputS3:
     Description: Amplify Video hosts transcoded video content in this bucket
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
-<% if (props.contentDeliveryNetwork.enableDistribution) { %>
+<% if (props.contentDeliveryNetwork.enableDistribution) { -%>
   oVodOutputUrl:
     Description: Amplify Video CloudFront Url
     Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
-<% } else { %>
+<% } else { -%>
   oVodOutputUrl:
     Description: Amplify Video CloudFront Url
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
-<% } %>
+<% } -%>
 
 Resources:
   rS3InputBucket:
@@ -75,8 +75,10 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
+        <% if (props.permissions && props.permissions.permissionSchema === "any") { %>
+        pPolicyName: !Sub "${AWS::StackName}-s3UploadPermissions"
+        <% } %>
         pBucketName: !Ref pS3InputName
-                
   rS3OutputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:

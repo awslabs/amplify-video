@@ -255,6 +255,15 @@ async function createCDN(context, props, options, aws) {
 
 async function createCMS(context, apiName, props) {
   const { inputs } = question.video;
+  const permissions = [
+    {
+      type: inputs[11].type,
+      name: inputs[11].key,
+      message: inputs[11].question,
+      choices: inputs[11].options,
+      default: 'any',
+    },
+  ];
   const cmsEdit = [
     {
       type: inputs[10].type,
@@ -279,33 +288,54 @@ async function createCMS(context, apiName, props) {
       }
     });
   }
+  const permissionsResponse = await inquirer.prompt(permissions);
+  props.permissions = permissionsResponse;
 
-  const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/parameters.json`));
-  const cmsEditResponse = await inquirer.prompt(cmsEdit);
-  const editSchemaChoice = cmsEditResponse.editAPI;
+  if (fs.existsSync(`${resourceDir}/schema.graphql`)) {
+    const currentSchema = fs.readFileSync(`${resourceDir}/schema.graphql`);
+    if (!currentSchema.includes('videoObject') && !currentSchema.includes('vodAsset')) {
+      const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/parameters.json`));
+      const cmsEditResponse = await inquirer.prompt(cmsEdit);
+      const editSchemaChoice = cmsEditResponse.editAPI;
 
-  props.cms = cmsEditResponse;
+      props.cms = cmsEditResponse;
 
-  await writeNewModel(resourceDir, props);
+      await writeNewModel(resourceDir, props);
 
-  if (editSchemaChoice) {
-    await context.amplify.openEditor(context, `${resourceDir}/schema.graphql`).then(async () => {
-      let notCompiled = true;
-      while (notCompiled) {
-        notCompiled = await compileSchema(context, resourceDir, parameters, authConfig);
+      if (editSchemaChoice) {
+        await context.amplify.openEditor(context, `${resourceDir}/schema.graphql`).then(async () => {
+          let notCompiled = true;
+          while (notCompiled) {
+            notCompiled = await compileSchema(context, resourceDir, parameters, authConfig);
+          }
+        });
+      } else {
+        await compileSchema(context, resourceDir, parameters, authConfig);
       }
-    });
-  } else {
-    await compileSchema(context, resourceDir, parameters, authConfig);
+    } else if (currentSchema.includes('videoObject')
+                && currentSchema.includes('vodAsset')
+                && ((currentSchema.includes('{allow: owner, ownerField: "owner", operations: [create, update, delete, read] },')
+                  && props.permissions.permissionSchema === 'admin')
+                  || (currentSchema.includes('{allow: groups, groups:["Admin"], operations: [create, update, delete, read]},')
+                  && props.permissions.permissionSchema === 'any'))) {
+      const fullPath = path.join(resourceDir, 'schema.graphql');
+      context.print.warning(`Permissions have changed. Please verify your schema is correct! To edit it please open: ${fullPath}`);
+      const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../schemas/schema.graphql.ejs`, { encoding: 'utf-8' });
+      const appendSchema = ejs.render(appendSchemaTemplate, props);
+      context.print.warning(`New schema is :\n${appendSchema}`);
+    } else {
+      const fullPath = path.join(resourceDir, 'schema.graphql');
+      context.print.warning(`Schema already configure. To edit it please open: ${fullPath}`);
+    }
   }
-
-  authGroupHack(context, props.shared.bucketInput);
+  if (props.permissions.permissionSchema === 'admin') {
+    authGroupHack(context, props.shared.bucketInput);
+  }
   createDependency(context, props, apiName);
 }
 
 async function writeNewModel(resourceDir, props) {
   const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../schemas/schema.graphql.ejs`, { encoding: 'utf-8' });
-
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
   if (props.cms.overrideSchema) {
@@ -397,8 +427,13 @@ async function authGroupHack(context, bucketName) {
           if (!('customPolicies' in userGroup)) {
             userGroup.customPolicies = [];
           }
+
           const policy = generateIAMAdminPolicy(resourceName, bucketName);
-          userGroup.customPolicies.push(policy);
+          if (!userGroup.customPolicies.some(
+            existingPolicy => existingPolicy.PolicyName === policy.PolicyName,
+          )) {
+            userGroup.customPolicies.push(policy);
+          }
           return;
         }
         if (userPoolGroup.length === index + 1) {
@@ -406,15 +441,27 @@ async function authGroupHack(context, bucketName) {
         }
       });
     }
-    await createUserPoolGroups(context, resourceName, userPoolGroup);
+    updateUserPoolGroups(context, userPoolGroup);
   } else {
     const admin = generateIAMAdmin(resourceName, bucketName);
     const userPoolGroupList = [admin];
-    await createUserPoolGroups(context, resourceName, userPoolGroupList);
+    updateUserPoolGroups(context, userPoolGroupList);
+    context.amplify.updateamplifyMetaAfterResourceAdd('auth', 'userPoolGroups', {
+      service: 'Cognito-UserPool-Groups',
+      providerPlugin: 'awscloudformation',
+      dependsOn: [
+        {
+          category: 'auth',
+          resourceName,
+          attributes: ['UserPoolId', 'AppClientIDWeb', 'AppClientID', 'IdentityPoolId'],
+        },
+      ],
+    });
   }
 }
 
-async function createUserPoolGroups(context, resourceName, userPoolGroupList) {
+
+function updateUserPoolGroups(context, userPoolGroupList) {
   if (userPoolGroupList && userPoolGroupList.length > 0) {
     const userPoolGroupFile = path.join(
       context.amplify.pathManager.getBackendDirPath(),
@@ -438,17 +485,5 @@ async function createUserPoolGroups(context, resourceName, userPoolGroupList) {
 
     fs.outputFileSync(userPoolGroupParams, JSON.stringify(groupParams, null, 4));
     fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupList, null, 4));
-
-    context.amplify.updateamplifyMetaAfterResourceAdd('auth', 'userPoolGroups', {
-      service: 'Cognito-UserPool-Groups',
-      providerPlugin: 'awscloudformation',
-      dependsOn: [
-        {
-          category: 'auth',
-          resourceName,
-          attributes: ['UserPoolId', 'AppClientIDWeb', 'AppClientID', 'IdentityPoolId'],
-        },
-      ],
-    });
   }
 }

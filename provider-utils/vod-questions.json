@@ -74,7 +74,22 @@
               "type":"confirm",
               "question":"Do you want to override your GraphQL schema?",
               "required": true
-            }
+            },
+            {
+              "key":"permissionSchema",
+              "question": "Define your permission schema",
+              "type":"list",
+              "options": [
+                  {
+                      "name": "Admins can only upload videos",
+                      "value": "admin"
+                  },
+                  {
+                      "name": "Any authenticated user can upload videos",
+                      "value": "any"
+                  }
+              ]
+            } 
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

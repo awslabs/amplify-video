@@ -6,6 +6,12 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
+<% if (props.permissions && props.permissions.permissionSchema === "any") { %>
+  pPolicyName:
+    Type: String
+    Description: Policy name for allowing uploads from all auth users
+    Default: S3UploadPolicy\
+<% } -%>
   authRoleName:
     Type: String
     Description: Name of authRole
@@ -24,6 +30,22 @@ Resources:
            AllowedOrigins: ['*']
            ExposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'ETag']
            MaxAge: '3000'
+<% if (props.permissions && props.permissions.permissionSchema === "any") { %>
+  UploadPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Ref pPolicyName
+      Roles: 
+        - !Ref authRoleName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !GetAtt InputBucket.Arn
+<% } -%>
 
 Outputs:
   oInputBucketArn:
