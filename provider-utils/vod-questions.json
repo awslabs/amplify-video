@@ -78,11 +78,12 @@
             {
               "key":"permissionSchema",
               "question": "Define your permission schema",
-              "type":"list",
+              "type":"checkbox",
               "options": [
                   {
                       "name": "Admins can only upload videos",
-                      "value": "admin"
+                      "value": "admin",
+                      "checked":true
                   },
                   {
                       "name": "Any authenticated user can upload videos",

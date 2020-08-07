@@ -105,7 +105,7 @@ Resources:
           pSecretPem: <%= props.contentDeliveryNetwork.secretPem %>
           pSecretPemArn: <%= props.contentDeliveryNetwork.secretPemArn %>
           pDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
-          pFunctionHash: <%= props.hashes.CloudFrontTokenGen %>
+          pFunctionHash: "<%= props.hashes.CloudFrontTokenGen %>"
           pS3: !Ref pS3
           pFunctionName: 
             !If
@@ -140,7 +140,7 @@ Resources:
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pMediaConvertTemplate: !GetAtt rMediaConvertTemplate.Outputs.oJobArn
-        pFunctionHash: <%= props.hashes.InputLambda %>
+        pFunctionHash: "<%= props.hashes.InputLambda %>"
         pFunctionName: 
           !If
             - HasEnvironmentParameter
@@ -162,7 +162,7 @@ Resources:
         pSourceFolder: !Ref pSourceFolder
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
-        pFunctionHash: <%= props.hashes.OutputLambda %>
+        pFunctionHash: "<%= props.hashes.OutputLambda %>"
         pFunctionName: 
           !If
             - HasEnvironmentParameter
@@ -189,7 +189,7 @@ Resources:
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pInputTriggerLambda: !GetAtt rInputLambdaTriggerFunction.Outputs.oLambdaFunction
         pOutputTriggerLambda: !GetAtt rOutputLambdaTriggerFunction.Outputs.oLambdaFunction
-        pFunctionHash: <%= props.hashes.SetupTriggerLambda %>
+        pFunctionHash: "<%= props.hashes.SetupTriggerLambda %>"
         pFunctionName:
           !If
             - HasEnvironmentParameter
