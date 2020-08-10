@@ -75,7 +75,7 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
-        <% if (props.permissions && props.permissions.permissionSchema === "any") { %>
+        <% if (props.permissions && props.permissions.permissionSchema.includes('any')) { %>
         pPolicyName: !Sub "${AWS::StackName}-s3UploadPermissions"
         <% } %>
         pBucketName: !Ref pS3InputName
@@ -141,6 +141,7 @@ Resources:
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pMediaConvertTemplate: !GetAtt rMediaConvertTemplate.Outputs.oJobArn
         pFunctionHash: "<%= props.hashes.InputLambda %>"
+        env: !Ref env
         pFunctionName: 
           !If
             - HasEnvironmentParameter
@@ -163,6 +164,7 @@ Resources:
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pFunctionHash: "<%= props.hashes.OutputLambda %>"
+        env: !Ref env
         pFunctionName: 
           !If
             - HasEnvironmentParameter

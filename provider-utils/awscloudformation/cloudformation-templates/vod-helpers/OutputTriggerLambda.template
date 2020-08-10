@@ -29,6 +29,10 @@ Parameters:
     Type: String
     Description: FunctionHash
     Default: default
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -40,6 +44,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs10.x
       Timeout: 30
+      Environment:
+        Variables:
+          ENV: !Ref env
       Code:
         S3Bucket: !Ref pS3
         S3Key: !Sub
