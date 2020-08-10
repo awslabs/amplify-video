@@ -42,6 +42,10 @@ Parameters:
     Type: String
     Description: FunctionHash
     Default: default
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -63,6 +67,7 @@ Resources:
           ARN_TEMPLATE: !Ref pMediaConvertTemplate
           MC_ROLE: !GetAtt MediaConvertRole.Arn
           OUTPUT_BUCKET: !Ref pOutputS3
+          ENV: !Ref env
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
