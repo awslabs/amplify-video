@@ -13,6 +13,16 @@ Parameters:
     Type: String
     Description: Arn for authRoleArn
     Default: NONE
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
+<% } -%>
   s3UUID:
     Type: String
     Description: Unique UUID for env
@@ -141,6 +151,10 @@ Resources:
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pMediaConvertTemplate: !GetAtt rMediaConvertTemplate.Outputs.oJobArn
         pFunctionHash: "<%= props.hashes.InputLambda %>"
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+        GraphQLAPIId: !Ref GraphQLAPIId
+        GraphQLEndpoint: !Ref GraphQLEndpoint
+<% } -%>
         env: !Ref env
         pFunctionName: 
           !If
@@ -165,6 +179,10 @@ Resources:
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pFunctionHash: "<%= props.hashes.OutputLambda %>"
         env: !Ref env
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+        GraphQLAPIId: !Ref GraphQLAPIId
+        GraphQLEndpoint: !Ref GraphQLEndpoint
+<% } -%>
         pFunctionName: 
           !If
             - HasEnvironmentParameter

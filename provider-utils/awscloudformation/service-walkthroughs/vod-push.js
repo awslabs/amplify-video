@@ -178,13 +178,24 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
 
     await createCMS(context, apiName, props);
+    props.parameters = {
+      authRoleName: {
+        Ref: 'AuthRoleName',
+      },
+      GraphQLAPIId: {
+        'Fn::GetAtt': [
+          `api${apiName}`,
+          'Outputs.GraphQLAPIIdOutput',
+        ],
+      },
+      GraphQLEndpoint: {
+        'Fn::GetAtt': [
+          `api${apiName}`,
+          'Outputs.GraphQLAPIEndpointOutput',
+        ],
+      },
+    };
   }
-
-  props.parameters = {
-    authRoleName: {
-      Ref: 'AuthRoleName',
-    },
-  };
 
   return props;
 }

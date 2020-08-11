@@ -33,6 +33,14 @@ Parameters:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
     Default: NONE
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -47,6 +55,8 @@ Resources:
       Environment:
         Variables:
           ENV: !Ref env
+          GRAPHQLID: !Ref GraphQLAPIId
+          GRAPHQLEP: !Ref GraphQLEndpoint
       Code:
         S3Bucket: !Ref pS3
         S3Key: !Sub

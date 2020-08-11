@@ -46,6 +46,14 @@ Parameters:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
     Default: NONE
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -68,6 +76,8 @@ Resources:
           MC_ROLE: !GetAtt MediaConvertRole.Arn
           OUTPUT_BUCKET: !Ref pOutputS3
           ENV: !Ref env
+          GRAPHQLID: !Ref GraphQLAPIId
+          GRAPHQLEP: !Ref GraphQLEndpoint
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
