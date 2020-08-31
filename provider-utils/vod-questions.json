@@ -36,7 +36,7 @@
             {
                 "key":"enableCMS",
                 "type":"confirm",
-                "question":"Do you want Amplify to create a new GraphQL API to manage your videos?",
+                "question":"Do you want Amplify to create a new GraphQL API to manage your videos? (Beta)",
                 "required":true
             },
             {
@@ -74,7 +74,23 @@
               "type":"confirm",
               "question":"Do you want to override your GraphQL schema?",
               "required": true
-            }
+            },
+            {
+              "key":"permissionSchema",
+              "question": "Define your permission schema",
+              "type":"checkbox",
+              "options": [
+                  {
+                      "name": "Admins can only upload videos",
+                      "value": "admin",
+                      "checked":true
+                  },
+                  {
+                      "name": "Any authenticated user can upload videos",
+                      "value": "any"
+                  }
+              ]
+            } 
         ],
         "cfnFilename": "elemental-cloudformation-template.json.ejs",
         "provider": "awscloudformation"

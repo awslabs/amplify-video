@@ -3,47 +3,52 @@ const childProcess = require('child_process');
 const archiver = require('archiver');
 const path = require('path');
 const mime = require('mime-types');
-const chalk = require('chalk');
 const ora = require('ora');
 const ejs = require('ejs');
 const YAML = require('yaml');
 const { getAWSConfig } = require('./get-aws');
 
-const spinner = ora('Copying video resources. This may take a few minutes...');
-
-
 async function buildTemplates(context, props) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
   const { serviceType } = amplifyMeta.video[props.shared.resourceName];
-  context.print.success('Building template files');
-  build(context, props.shared.resourceName, serviceType, props);
+  const spinner = ora('Building video resources...');
+  spinner.start();
+  return build(context, props.shared.resourceName, serviceType, props).then(() => {
+    spinner.succeed('All resources built.');
+  });
 }
 
 async function pushTemplates(context) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
+  const buildProjects = [];
   const pushProjects = [];
+  const spinner = ora('Copying video resources. This may take a few minutes...');
   spinner.start();
   if ('video' in amplifyMeta) {
     Object.keys(amplifyMeta.video).forEach((resourceName) => {
       const { serviceType } = amplifyMeta.video[resourceName];
-      build(context, resourceName, serviceType);
-      const options = amplifyMeta.video[resourceName];
-      pushProjects.push(
-        copyFilesToS3(context, options, resourceName, serviceType),
-      );
-      pushProjects.push(
-        copyParentTemplate(context, resourceName, serviceType),
+      buildProjects.push(
+        build(context, resourceName, serviceType).then((props) => {
+          const options = amplifyMeta.video[resourceName];
+          pushProjects.push(
+            copyFilesToS3(context, options, resourceName, serviceType, props),
+          );
+          pushProjects.push(
+            copyParentTemplate(context, serviceType, props),
+          );
+        }),
       );
     });
   }
-
-  await Promise.all(pushProjects);
-  spinner.succeed('All resources copied.');
+  await Promise.all(buildProjects);
+  await Promise.all(pushProjects).then(() => {
+    spinner.succeed('All resources copied.');
+  });
 }
 
-function build(context, resourceName, projectType, props) {
+async function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   if (!props) {
@@ -54,8 +59,10 @@ function build(context, resourceName, projectType, props) {
   } else if (projectType === 'livestream') {
     props = getLivestreamEnvVars(context, props);
   }
-  syncHelperCF(context, props, projectType);
-  buildCustomLambda(context, props, projectType);
+  await syncHelperCF(context, props, projectType);
+  props.hashes = await generateLambdaHashes(context, props, projectType);
+  await buildCustomLambda(context, props, projectType);
+  return props;
 }
 
 function getVODEnvVars(context, props, resourceName) {
@@ -113,53 +120,86 @@ function getLivestreamEnvVars(context, props) {
   return props;
 }
 
-async function copyParentTemplate(context, resourceName, serviceType) {
+async function generateLambdaHashes(context, props, projectType) {
+  const { amplify } = context;
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const pluginDir = path.join(`${__dirname}/..`);
+  const serviceMetadata = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[projectType];
+  const customDir = `${targetDir}/video/${props.shared.resourceName}/custom/${serviceMetadata.stackFolder}/LambdaFunctions`;
+  const buildDir = `${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/LambdaFunctions`;
+  const buildHashes = [];
+  const customHashes = [];
+  const lambdas = fs.readdirSync(buildDir);
+  const hashes = { };
+  lambdas.forEach((lambda) => {
+    if (lambda === '.DS_Store') {
+      return;
+    }
+    buildHashes.push(
+      amplify.hashDir(path.join(buildDir, lambda), ['node_modules']).then((result) => {
+        hashes[lambda] = result;
+      }),
+    );
+  });
+  await Promise.all(buildHashes);
+  if (fs.existsSync(customDir)) {
+    const customLambdas = fs.readdirSync(customDir);
+    customLambdas.forEach((lambda) => {
+      customHashes.push(
+        amplify.hashDir(path.join(customDir, lambda), ['node_modules']).then((result) => {
+          hashes[lambda] = result;
+        }),
+      );
+    });
+    await Promise.all(customHashes);
+  }
+  return hashes;
+}
+
+async function copyParentTemplate(context, serviceType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
   const { cfnFilename } = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[serviceType];
-  const newCfnName = cfnFilename.split('.')[0];
-  let props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
-
-  if (serviceType === 'video-on-demand') {
-    props = getVODEnvVars(context, props, resourceName);
-  } else if (serviceType === 'livestream') {
-    props = getLivestreamEnvVars(context, props);
-  }
+  const newCfnName = cfnFilename.replace('.ejs', '');
 
   const copyJobs = [
     {
       dir: pluginDir,
       template: `cloudformation-templates/${cfnFilename}`,
-      target: `${targetDir}/video/${props.shared.resourceName}/build/${props.shared.resourceName}-${newCfnName}.template`,
+      target: `${targetDir}/video/${props.shared.resourceName}/build/${props.shared.resourceName}-${newCfnName}`,
     },
   ];
 
   await context.amplify.copyBatch(context, copyJobs, props, true);
 }
 
-function buildCustomLambda(context, props, projectType) {
+async function buildCustomLambda(context, props, projectType) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
   const serviceMetadata = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[projectType];
   const customDir = `${targetDir}/video/${props.shared.resourceName}/custom/${serviceMetadata.stackFolder}/LambdaFunctions`;
-
+  const handleNodePromises = [];
   if (fs.existsSync(customDir)) {
     const lambdas = fs.readdirSync(customDir);
     lambdas.forEach((lambda) => {
       if (fs.existsSync(`${customDir}/${lambda}/packages.json`)) {
-        handleNodeInstall(`${customDir}/${lambda}`);
+        handleNodePromises.push(
+          handleNodeInstall(`${customDir}/${lambda}`),
+        );
       }
     });
   }
+  await Promise.all(handleNodePromises);
 }
 
-function syncHelperCF(context, props, projectType) {
+async function syncHelperCF(context, props, projectType) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const pluginDir = path.join(`${__dirname}/..`);
   const serviceMetadata = JSON.parse(fs.readFileSync(`${pluginDir}/../supported-services.json`))[projectType];
+  const nodeInstallsPromise = [];
 
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`, { recursive: true });
@@ -179,13 +219,16 @@ function syncHelperCF(context, props, projectType) {
       const packageDest = path.join(dest, '../');
       fs.copySync(src, dest);
       fs.copySync(`${packageSrc}/package-lock.json`, `${packageDest}/package-lock.json`);
-      handleNodeInstall(packageDest);
+      nodeInstallsPromise.push(
+        handleNodeInstall(packageDest),
+      );
       return false;
     }
     return true;
   };
 
-  fs.copySync(`${pluginDir}/cloudformation-templates/${serviceMetadata.stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`, { filter: filterForEJS });
+  nodeInstallsPromise.push(fs.copy(`${pluginDir}/cloudformation-templates/${serviceMetadata.stackFolder}/`, `${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/`, { filter: filterForEJS }));
+  await Promise.all(nodeInstallsPromise);
 }
 
 
@@ -281,22 +324,23 @@ function handleEJS(props, src, dest, targetDir) {
   return false;
 }
 
-function handleNodeInstall(packageDest) {
+async function handleNodeInstall(packageDest) {
   const isWindows = /^win/.test(process.platform);
   const npm = isWindows ? 'npm.cmd' : 'npm';
   const args = ['install'];
 
-  const childProcessResult = childProcess.spawnSync(npm, args, {
+  const childProcessResult = childProcess.spawn(npm, args, {
     cwd: packageDest,
     stdio: 'pipe',
     encoding: 'utf-8',
   });
-  if (childProcessResult.status !== 0) {
-    throw new Error(childProcessResult.output.join());
-  }
+  childProcessResult.on('error', (error) => {
+    console.log(error);
+  });
+  return childProcessResult;
 }
 
-async function copyFilesToS3(context, options, resourceName, projectType) {
+async function copyFilesToS3(context, options, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
   const targetBucket = amplify.getProjectMeta().providers.awscloudformation.DeploymentBucketName;
@@ -319,25 +363,25 @@ async function copyFilesToS3(context, options, resourceName, projectType) {
         if (lambdaName === '.DS_Store') {
           return;
         }
-        if (fs.existsSync(`${customDirPath}/${lambdaName}`)) {
+        if (fs.existsSync(`${customDirPath}/${filePath}/${lambdaName}`)) {
           promiseFilesToUpload.push(
             zipLambdaFunctionsAndPush(context, lambdaName, `${customDirPath}/${filePath}/${lambdaName}`,
-              customDirPath, s3Client, targetBucket, stackFolder),
+              customDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
           );
         } else {
           promiseFilesToUpload.push(
             zipLambdaFunctionsAndPush(context, lambdaName, `${buildDirPath}/${filePath}/${lambdaName}`,
-              buildDirPath, s3Client, targetBucket, stackFolder),
+              buildDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
           );
         }
       });
-    } else if (fs.existsSync(`${customDirPath}/${filePath}`)) {
+    } else if (fs.existsSync(`${customDirPath}/${filePath}`) && !filePath.includes('.zip')) {
       promiseFilesToUpload.push(
-        uploadFile(s3Client, targetBucket, customDirPath, filePath, stackFolder),
+        uploadFile(context, s3Client, targetBucket, customDirPath, filePath, stackFolder),
       );
-    } else {
+    } else if (!filePath.includes('.zip')) {
       promiseFilesToUpload.push(
-        uploadFile(s3Client, targetBucket, buildDirPath, filePath, stackFolder),
+        uploadFile(context, s3Client, targetBucket, buildDirPath, filePath, stackFolder),
       );
     }
   });
@@ -345,9 +389,15 @@ async function copyFilesToS3(context, options, resourceName, projectType) {
 }
 
 async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
-  s3Client, targetBucket, stackFolder) {
+  s3Client, targetBucket, stackFolder, hash) {
   const newFilePath = `${lambdaName}.zip`;
   const zipName = `${zipDir}/${lambdaName}.zip`;
+  let hashName = `${lambdaName}-${hash}.zip`;
+
+  // Ignore livestream for now.
+  if (lambdaName === 'psdemo-js-live-workflow_v0.4.0') {
+    hashName = newFilePath;
+  }
   if (fs.existsSync(zipName)) {
     fs.unlinkSync(zipName);
   }
@@ -360,6 +410,9 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
       context.print.error(err);
     }
   });
+  archive.on('end', async () => {
+    await uploadFile(context, s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
+  });
   archive.on('error', (err) => {
     context.print.error(err);
     throw err;
@@ -367,28 +420,28 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
   archive.pipe(output);
   archive.directory(lambdaDir, false);
   await archive.finalize();
-  await uploadFile(s3Client, targetBucket, zipDir, newFilePath, stackFolder);
 }
 
-async function uploadFile(s3Client, hostingBucketName, distributionDirPath, filePath, stackFolder) {
+async function uploadFile(context, s3Client, hostingBucketName, distributionDirPath, filePath,
+  stackFolder, nameOverride) {
   let relativeFilePath = path.relative(distributionDirPath, filePath);
 
   relativeFilePath = relativeFilePath.replace(/\\/g, '/');
+  const fileKey = (nameOverride) ? `${stackFolder}/${nameOverride}` : `${stackFolder}/${filePath}`;
 
   const fileStream = fs.createReadStream(`${distributionDirPath}/${filePath}`);
   const contentType = mime.lookup(relativeFilePath);
   const uploadParams = {
     Bucket: hostingBucketName,
-    Key: `${stackFolder}/${filePath}`,
+    Key: fileKey,
     Body: fileStream,
     ContentType: contentType || 'text/plain',
   };
-
-  s3Client.upload(uploadParams, (err) => {
-    if (err) {
-      console.log(chalk.bold('Failed uploading object to S3. Check your connection and try to running amplify push'));
-    }
-  });
+  try {
+    await s3Client.upload(uploadParams).promise();
+  } catch (error) {
+    context.print.error(`Failed pushing to S3 with error: ${error}`);
+  }
 }
 
 module.exports = {

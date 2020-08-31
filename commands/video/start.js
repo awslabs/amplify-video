@@ -13,14 +13,19 @@ module.exports = {
       context.print.error(`You have no ${category} projects.`);
       return;
     }
+    const filteredProjects = Object.keys(amplifyMeta[category]).filter(project => amplifyMeta[category][project].serviceType === 'livestream');
+    if (filteredProjects.length === 0) {
+      context.print.error('You have no livestreaming projects.');
+      return;
+    }
 
     const chooseProject = [
       {
         type: 'list',
         name: 'resourceName',
         message: 'Choose what project you want to start?',
-        choices: Object.keys(amplifyMeta[category]),
-        default: Object.keys(amplifyMeta[category])[0],
+        choices: filteredProjects,
+        default: filteredProjects[0],
       },
     ];
 
@@ -35,7 +40,7 @@ module.exports = {
     }
 
     /* eslint-disable */
-    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, false);
+    return providerController.livestreamStartStop(context, options.serviceType, options, props.resourceName, true);
     /* eslint-enable */
   },
 };

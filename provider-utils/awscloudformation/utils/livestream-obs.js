@@ -10,15 +10,13 @@ async function setupOBS(context, resourceName) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {
-    if ('oMediaLivePrimaryIngestUrl' in amplifyMeta.video[resourceName].output) {
-      await createConfig(amplifyMeta.video[resourceName].output, resourceName);
-    }
+    await createConfig(context, amplifyMeta.video[resourceName], resourceName);
   } else {
-    console.log(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
+    context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
 }
 
-async function createConfig(output, projectName) {
+async function createConfig(context, projectConfig, projectName) {
   // check for obs installation!
   let profileDir = '';
   if (process.platform === 'darwin') {
@@ -31,7 +29,7 @@ async function createConfig(output, projectName) {
 
   if (!fs.existsSync(profileDir)) {
     // Ask if they want to continue later
-    console.log('OBS profile not folder not found. Switching to project folder.');
+    context.print.info('OBS profile not folder not found. Switching to project folder.');
     profileDir = `${process.env.PWD}/OBS/`;
     fs.mkdirSync(profileDir);
   }
@@ -42,25 +40,56 @@ async function createConfig(output, projectName) {
     fs.mkdirSync(profileDir);
   }
 
-  generateINI(projectName, profileDir);
-  generateService(profileDir, output.oMediaLivePrimaryIngestUrl);
+  if (projectConfig.serviceType === 'livestream') {
+    generateINILive(projectName, profileDir);
+    generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
+  } else if (projectConfig.serviceType === 'ivs') {
+    const targetDir = context.amplify.pathManager.getBackendDirPath();
+    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/props.json`));
+    generateINIIVS(projectName, profileDir, props);
+    generateServiceIVS(profileDir, projectConfig.output);
+  }
 
-  console.log('Configuration complete.');
-  console.log(`Open OBS and select ${projectName} profile to use the generated profile for OBS`);
+  context.print.success('\nConfiguration complete.');
+  context.print.blue(chalk`Open OBS and select {bold ${projectName}} profile to use the generated profile for OBS`);
 }
 
-async function generateINI(projectName, directory) {
+function generateINIIVS(projectName, directory, props) {
+  let iniBasic;
+  if (props.channel.channelQuality === 'STANDARD') {
+    iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/hd-ivs.ini`, 'utf-8'));
+  } else {
+    iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/sd-ivs.ini`, 'utf-8'));
+  }
+  iniBasic.General.Name = projectName;
+  fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
+}
+
+function generateINILive(projectName, directory) {
   const iniBasic = ini.parse(fs.readFileSync(`${__dirname}/../obs-templates/basic.ini`, 'utf-8'));
   iniBasic.General.Name = projectName;
   fs.writeFileSync(`${directory}basic.ini`, ini.stringify(iniBasic));
 }
 
-async function generateService(directory, primaryURL) {
+function generateServiceIVS(directory, projectOutput) {
+  // TODO: Write advanced setting setup for keyframes for lower latency!
+  const setup = {
+    settings: {
+      key: projectOutput.oVideoInputKey,
+      server: `rtmps://${projectOutput.oVideoInputURL}`,
+    },
+    type: 'rtmp_custom',
+  };
+  const json = JSON.stringify(setup);
+  fs.writeFileSync(`${directory}service.json`, json);
+}
+
+function generateServiceLive(directory, primaryURL) {
   const primaryKey = primaryURL.split('/');
   const setup = {
     settings: {
       key: primaryKey[3],
-      server: primaryURL,
+      server: `rtmps://${primaryURL}`,
     },
     type: 'rtmp_custom',
   };

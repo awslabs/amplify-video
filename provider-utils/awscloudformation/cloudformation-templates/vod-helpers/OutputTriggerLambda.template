@@ -25,6 +25,22 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: BucketWatcher
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -36,9 +52,16 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs10.x
       Timeout: 30
+      Environment:
+        Variables:
+          ENV: !Ref env
+          GRAPHQLID: !Ref GraphQLAPIId
+          GRAPHQLEP: !Ref GraphQLEndpoint
       Code:
         S3Bucket: !Ref pS3
-        S3Key: vod-helpers/OutputLambda.zip
+        S3Key: !Sub
+          - vod-helpers/OutputLambda-${hash}.zip
+          - { hash: !Ref pFunctionHash }
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
