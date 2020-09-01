@@ -13,15 +13,15 @@
           },
           {
             "key": "channelQuality",
-            "question": "Choose the quality of stream:",
+            "question": "Choose the Channel type or stream quality:",
             "type":"list",
             "options": [
                 {
-                    "name": "HD Stream",
+                    "name": "Standard (HD Stream)",
                     "value": "STANDARD"
                 },
                 {
-                    "name": "SD Stream",
+                    "name": "Basic (SD Stream)",
                     "value": "BASIC"
                 }
             ],
@@ -29,15 +29,15 @@
         },
         {
           "key": "channelLatency",
-          "question": "Choose the latency type:",
+          "question": "Choose the Video latency type:",
           "type":"list",
           "options": [
               {
-                  "name": "Ultra-low latency - Near real-time",
+                  "name": "Ultra-low latency (~5 seconds)",
                   "value": "LOW"
               },
               {
-                  "name": "Standard Latency",
+                  "name": "Standard lzatency (~10 seconds) ",
                   "value": "NORMAL"
               }
           ],

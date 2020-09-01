@@ -1,26 +1,26 @@
 {
   "livestream":{
-     "alias":"Elemental Livestream",
+     "alias":"AWS Elemental Live Stream",
      "serviceWalkthroughFilename":"livestream-push.js",
      "cfnFilename":"livestream-workflow-template.json.ejs",
      "stackFolder":"livestream-helpers",
      "defaultValuesFilename":"livestream-defaults.json",
      "provider":"awscloudformation"
   },
+  "ivs":{
+   "alias":"Amazon Interactive Video Service Live Stream (Beta)",
+   "serviceWalkthroughFilename":"ivs-push.js",
+   "cfnFilename":"ivs-workflow-template.yaml.ejs",
+   "stackFolder":"ivs-helpers",
+   "defaultValuesFilename":"ivs-defaults.json",
+   "provider":"awscloudformation"
+},
   "video-on-demand":{
-     "alias":"Video On Demand",
+     "alias":"AWS Elemental Video On Demand",
      "serviceWalkthroughFilename":"vod-push.js",
      "cfnFilename":"vod-workflow-template.yaml.ejs",
      "stackFolder":"vod-helpers",
      "defaultValuesFilename":"vod-defaults.json",
      "provider":"awscloudformation"
-  },
-  "ivs":{
-    "alias":"Interactive LiveStream (Beta)",
-    "serviceWalkthroughFilename":"ivs-push.js",
-    "cfnFilename":"ivs-workflow-template.yaml.ejs",
-    "stackFolder":"ivs-helpers",
-    "defaultValuesFilename":"ivs-defaults.json",
-    "provider":"awscloudformation"
- }
+  }
 }
