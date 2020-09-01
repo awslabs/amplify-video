@@ -195,6 +195,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
         ],
       },
     };
+  } else {
+    props.parameters = {
+      authRoleName: {
+        Ref: 'AuthRoleName',
+      },
+    };
   }
 
   return props;
