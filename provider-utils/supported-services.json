@@ -16,7 +16,7 @@
    "provider":"awscloudformation"
 },
   "video-on-demand":{
-     "alias":"AWS Elemental Video On Demand",
+     "alias":"Video-On-Demand",
      "serviceWalkthroughFilename":"vod-push.js",
      "cfnFilename":"vod-workflow-template.yaml.ejs",
      "stackFolder":"vod-helpers",

@@ -37,7 +37,7 @@
                   "value": "LOW"
               },
               {
-                  "name": "Standard lzatency (~10 seconds) ",
+                  "name": "Standard latency (~10 seconds) ",
                   "value": "NORMAL"
               }
           ],
