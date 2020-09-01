@@ -24,7 +24,15 @@
                 "StreamInfResolution": "INCLUDE"
                 }
             }
-            }
+            }<% if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>,
+            {
+                "Name": "File Group",
+                "Outputs": [],
+                "OutputGroupSettings": {
+                  "Type": "FILE_GROUP_SETTINGS",
+                  "FileGroupSettings": {}
+                }
+            }<% } %>
         ],
         "AdAvailOffset": 0,
         "Inputs": [

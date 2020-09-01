@@ -29,6 +29,12 @@ Parameters:
     Type: String
     Description: FunctionHash
     Default: default
+  pEnableGraphQL:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
   env:
     Type: String
     Description: The environment name. e.g. Dev, Test, or Production.
@@ -41,6 +47,9 @@ Parameters:
     Type: String
     Description: API Endpoint URL
     Default: NONE
+
+Conditions:
+  EnableGraphQL: !Equals [ !Ref pEnableGraphQL, true ]
 
 Resources:
   BucketWatcher:
@@ -95,6 +104,15 @@ Resources:
                   -  !Sub
                     - ${bucketArn}/*
                     - {bucketArn: !Ref pOutputS3Arn}
+              - Fn::If:
+                - EnableGraphQL
+                - Effect: Allow
+                  Action:
+                    - "appsync:GraphQL"
+                  Resource:
+                    - !Join ["", ["arn:aws:appsync:",  Ref: "AWS::Region", ":", Ref: "AWS::AccountId", ":apis/", Ref: GraphQLAPIId ]]
+                    - !Join ["", ["arn:aws:appsync:",  Ref: "AWS::Region", ":", Ref: "AWS::AccountId", ":apis/", Ref: GraphQLAPIId, "/types/*/fields/*" ]]
+                - Ref: AWS::NoValue
 
 Outputs:
   oLambdaFunction:

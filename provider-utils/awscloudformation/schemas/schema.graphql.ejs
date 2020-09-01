@@ -13,6 +13,9 @@ type vodAsset @model (subscriptions: {level: public})
     {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
 <% } -%>
     {allow: private, operations: [read]}
+<% if (template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+    {allow: private, provider: iam}
+<% } %>
   ]
 )
 {
@@ -22,6 +25,9 @@ type vodAsset @model (subscriptions: {level: public})
 
   #DO NOT EDIT
   video:videoObject @connection
+<% if (template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+  images:Image
+<% } %>
 } 
 
 #DO NOT EDIT
@@ -38,11 +44,43 @@ type videoObject @model
     {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
 <% } -%>
     {allow: private, operations: [read]}
+<% if (template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+    {allow: private, provider: iam}
+<% } %>
   ]
 )
 {
   id:ID!
+  asset:vodAsset @connection
 <% if (contentDeliveryNetwork.signedKey) { %>
   token: String @function(name: "<%= contentDeliveryNetwork.functionName %>")
 <% } -%>
 }
+
+<% if (template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+type Image {
+  bucket:String!
+  prefix:String!
+  imageCount:Int!
+  paddingLength:Int!
+  extension:String!
+}
+
+input UpdateVodAssetImageSequenceInput {
+  id: ID!
+  images: ImageInput
+}
+
+
+input ImageInput {
+  bucket:String!
+  prefix:String!
+  imageCount:Int!
+  paddingLength:Int!
+  extension:String!
+}
+
+type Mutation {
+  updateAssetImageSequence(input: UpdateVodAssetImageSequenceInput!): vodAsset @aws_iam @aws_cognito_user_pools
+}
+<% } %>

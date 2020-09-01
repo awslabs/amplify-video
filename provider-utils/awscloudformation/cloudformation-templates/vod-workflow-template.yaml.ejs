@@ -178,6 +178,9 @@ Resources:
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pFunctionHash: "<%= props.hashes.OutputLambda %>"
+<% if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { -%>
+        pEnableGraphQL: 'true'
+<% } -%>
         env: !Ref env
 <% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
         GraphQLAPIId: !Ref GraphQLAPIId
