@@ -34,7 +34,7 @@ Outputs:
 
 Resources:
   rIVSChannel:
-    Type: "Custom::StarfruitChannel"
+    Type: "Custom::IVSChannel"
     Properties:
       ServiceToken: !Ref pFunctionArn
       name: !Ref pProjectName
