@@ -2,23 +2,27 @@
   "name": "amplify-category-video",
   "version": "3.1.1",
   "description": "Plugin for Amplify to add support for live streaming. Made for Unicorn Trivia Workshop",
-  "main": "index.js",
-  "scripts": {
-    "postinstall": "node scripts/post-install.js",
-    "lint": "eslint .",
-    "lint-fix": "eslint . --fix"
-  },
-  "author": "wizage",
-  "license": "Apache 2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/awslabs/amplify-video.git"
-  },
   "keywords": [
     "amplify",
     "plugin",
     "video"
   ],
+  "homepage": "https://github.com/awslabs/amplify-video#readme",
+  "bugs": {
+    "url": "https://github.com/awslabs/amplify-video/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/amplify-video.git"
+  },
+  "license": "Apache 2.0",
+  "author": "wizage",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/post-install.js",
+    "lint": "eslint . --ext .js,.json",
+    "lint-fix": "eslint . --fix --ext .js,.json"
+  },
   "dependencies": {
     "archiver": "^3.1.1",
     "chalk": "^2.4.2",
@@ -33,16 +37,13 @@
     "yaml": "^1.7.2"
   },
   "devDependencies": {
-    "eslint": "^7.2.0",
+    "eslint": "^7.8.1",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-json-format": "^2.0.1",
     "eslint-plugin-jsx-a11y": "^6.3.0",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.0.0"
-  },
-  "bugs": {
-    "url": "https://github.com/awslabs/amplify-video/issues"
-  },
-  "homepage": "https://github.com/awslabs/amplify-video#readme"
+  }
 }

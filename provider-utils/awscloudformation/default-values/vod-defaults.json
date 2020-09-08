@@ -6,7 +6,7 @@
     "enableDistribution": true
   },
   "contentManagementSystem": {
-    "enableCMS":true,
-    "overrideSchema":true
+    "enableCMS": true,
+    "overrideSchema": true
   }
 }

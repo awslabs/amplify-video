@@ -1,0 +1,10 @@
+{
+  "shared": {
+    "resourceName": "mylivestream"
+  },
+  "channel": {
+    "channelQuality": "STANDARD",
+    "channelLatency": "LOW",
+    "privateChannel": false
+  }
+}

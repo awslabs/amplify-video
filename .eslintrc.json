@@ -1,15 +1,30 @@
 {
-    "extends": "airbnb-base",
-    "rules": {
-    	"no-param-reassign": "off",
-    	"no-return-await" : "off",
-    	"no-continue": "off",
-    	"no-await-in-loop": "off",
-    	"no-use-before-define": "off",
-    	"no-console": "off",
-    	"global-require": "off",
-    	"import/no-dynamic-require": "off",
-		"consistent-return": "off",
-		"no-plusplus": "off"
-    }
+  "plugins": [
+    "json-format"
+  ],
+  "extends": [
+    "airbnb-base"
+  ],
+  "rules": {
+    "no-param-reassign": "off",
+    "no-return-await": "off",
+    "no-continue": "off",
+    "no-await-in-loop": "off",
+    "no-use-before-define": "off",
+    "no-console": "off",
+    "global-require": "off",
+    "import/no-dynamic-require": "off",
+    "consistent-return": "off",
+    "no-plusplus": "off"
+  },
+  "settings": {
+    "json/sort-package-json": "standard",
+    "json/ignore-files": [
+      "**/package-lock.json"
+    ],
+    "json/json-with-comments-files": [
+      "**/tsconfig.json",
+      ".vscode/**"
+    ]
+  }
 }

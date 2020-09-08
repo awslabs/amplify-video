@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: Quality of channel
     Default: <%= props.channel.channelQuality %>
+  pAuthorized:
+    Type: String
+    Description: Is this a private stream
+    Default: <%= props.channel.privateChannel %>
 Outputs:
   oVideoChannelArn:
     Value: !GetAtt rIVSChannel.arn
@@ -36,3 +40,4 @@ Resources:
       name: !Ref pProjectName
       type: !Ref pQuality
       latencyMode: !Ref pLatencyMode
+      authorized: !Ref pAuthorized

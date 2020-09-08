@@ -4,24 +4,24 @@
     "gopSize": "1",
     "gopPerSegment": "2",
     "segsPerPlist": "3"
-    },
-    "mediaLive": {
-        "securityGroup": "0.0.0.0/0",
-        "ingestType": "RTMP_PUSH",
-        "encodingProfile": "FULL",
-        "autoStart": "YES"
-    },
-    "mediaPackage": {
-        "endpoints": "HLS,DASH",
-        "startOverWindow": "86400"
-    },
-    "mediaStorage": {
-        "storageType": "mStore"
-    },
-    "cloudFront": {
-        "enableDistrubtion": "YES",
-        "priceClass": "PriceClass_100",
-        "sBucketLogs": "",
-        "sLogPrefix": "cf_logs/"
-    }
+  },
+  "mediaLive": {
+    "securityGroup": "0.0.0.0/0",
+    "ingestType": "RTMP_PUSH",
+    "encodingProfile": "FULL",
+    "autoStart": "YES"
+  },
+  "mediaPackage": {
+    "endpoints": "HLS,DASH",
+    "startOverWindow": "86400"
+  },
+  "mediaStorage": {
+    "storageType": "mStore"
+  },
+  "cloudFront": {
+    "enableDistrubtion": "YES",
+    "priceClass": "PriceClass_100",
+    "sBucketLogs": "",
+    "sLogPrefix": "cf_logs/"
+  }
 }

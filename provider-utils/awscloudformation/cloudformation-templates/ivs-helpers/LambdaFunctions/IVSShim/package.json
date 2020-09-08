@@ -2,12 +2,12 @@
   "name": "starfruitchannellambda",
   "version": "1.0.0",
   "description": "Create and delete Starfruit Channels",
+  "license": "ISC",
+  "author": "",
   "main": "index.js",
   "scripts": {
     "test": "node index.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "request": "^2.88.0",
     "request-promise-native": "^1.0.8"

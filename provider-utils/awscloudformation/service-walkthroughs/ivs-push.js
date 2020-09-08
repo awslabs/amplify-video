@@ -1,5 +1,7 @@
 const inquirer = require('inquirer');
-const question = require('../../ivs-questions.json');
+const fs = require('fs-extra');
+const path = require('path');
+const ivsQuestions = require('../../ivs-questions.json');
 
 module.exports = {
   serviceQuestions,
@@ -8,21 +10,18 @@ module.exports = {
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
   const { amplify } = context;
   const projectMeta = context.amplify.getProjectMeta();
-  // const projectDetails = context.amplify.getProjectDetails();
-  // const defaultLocation =
-  // path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
-  // const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
-  // const targetDir = amplify.pathManager.getBackendDirPath();
+  const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
+  const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
+  const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
   let nameDict = {};
 
-  const { inputs } = question.video;
+  const { questions } = ivsQuestions.video;
   const nameProject = [
     {
-      type: inputs[0].type,
-      name: inputs[0].key,
-      message: inputs[0].question,
-      validate: amplify.inputValidation(inputs[0]),
+      name: 'resoureName',
+      message: questions.resourceName.question,
+      validate: amplify.inputValidation(questions.resourceName.question),
       default: 'mylivestream',
     },
   ];
@@ -30,6 +29,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   if (resourceName) {
     nameDict.resourceName = resourceName;
     props.shared = nameDict;
+    try {
+      const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+      Object.assign(defaults, oldValues);
+    } catch (err) {
+      // Do nothing
+    }
   } else {
     nameDict = await inquirer.prompt(nameProject);
     props.shared = nameDict;
@@ -37,18 +42,24 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
   const createChannel = [
     {
-      type: inputs[1].type,
-      name: inputs[1].key,
-      message: inputs[1].question,
-      choices: inputs[1].options,
-      default: 'STANDARD',
+      name: 'channelQuality',
+      type: questions.channelQuality.type,
+      message: questions.channelQuality.question,
+      choices: questions.channelQuality.options,
+      default: defaults.channel.channelQuality,
     },
     {
-      type: inputs[2].type,
-      name: inputs[2].key,
-      message: inputs[2].question,
-      choices: inputs[2].options,
-      default: 'LOW',
+      name: 'chanelLatency',
+      type: questions.channelLatency.type,
+      message: questions.channelLatency.question,
+      choices: questions.channelLatency.options,
+      default: defaults.channel.channelLatency,
+    },
+    {
+      name: 'privateChannel',
+      type: questions.privateChannel.type,
+      message: questions.privateChannel.question,
+      default: defaults.channel.privateChannel,
     },
   ];
 
