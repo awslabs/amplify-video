@@ -49,7 +49,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       default: defaults.channel.channelQuality,
     },
     {
-      name: 'chanelLatency',
+      name: 'channelLatency',
       type: questions.channelLatency.type,
       message: questions.channelLatency.question,
       choices: questions.channelLatency.options,

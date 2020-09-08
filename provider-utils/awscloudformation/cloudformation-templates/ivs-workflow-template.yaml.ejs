@@ -28,6 +28,10 @@ Parameters:
     Type: String
     Description: Quality of channel
     Default: <%= props.channel.channelQuality %>
+  pAuthorized:
+    Type: String
+    Description: Is this a private stream
+    Default: <%= props.channel.privateChannel %>
 
 Conditions:
   HasEnvironmentParameter:
@@ -50,6 +54,7 @@ Resources:
         pFunctionArn: !GetAtt rIVSShimLambda.Outputs.oIVSLambda
         pLatencyMode: !Ref pLatencyMode
         pQuality: !Ref pQuality
+        pAuthorized: !Ref pAuthorized
   rIVSShimLambda:
     Type: AWS::CloudFormation::Stack
     Properties:

@@ -13,15 +13,15 @@ Parameters:
   pLatencyMode:
     Type: String
     Description: Latency Mode for IVS-Channel
-    Default: <%= props.channel.channelLatency %>
+    Default: LOW
   pQuality:
     Type: String
     Description: Quality of channel
-    Default: <%= props.channel.channelQuality %>
+    Default: STANDARD
   pAuthorized:
     Type: String
     Description: Is this a private stream
-    Default: <%= props.channel.privateChannel %>
+    Default: "false"
 Outputs:
   oVideoChannelArn:
     Value: !GetAtt rIVSChannel.arn

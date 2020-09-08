@@ -1,8 +1,8 @@
 {
-  "name": "starfruitchannellambda",
+  "name": "ivschannellambda",
   "version": "1.0.0",
-  "description": "Create and delete Starfruit Channels",
-  "license": "ISC",
+  "description": "Create and delete IVS Channels",
+  "license": "Apache 2.0",
   "author": "",
   "main": "index.js",
   "scripts": {
