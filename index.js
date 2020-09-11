@@ -91,7 +91,6 @@ async function handlePrePush(context) {
   if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
     return;
   }
-
   await pushTemplates(context);
 }
 

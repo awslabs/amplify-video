@@ -1,20 +1,20 @@
 {
-  "name": "video",
-  "type": "category",
-  "commands": [
-    "add",
-    "build",
-    "get-info",
-    "help",
-    "push",
-    "remove",
-    "setup-obs",
-    "start",
-    "stop",
-    "update",
-    "version"
-  ],
-  "eventHandlers": [
-    "PrePush"
-  ]
+    "name": "video",
+    "type": "category",
+    "commands": [
+        "add",
+        "build",
+        "get-info",
+        "help",
+        "push",
+        "remove",
+        "setup-obs",
+        "start",
+        "stop",
+        "update",
+        "version"
+    ],
+    "eventHandlers":[
+        "PrePush"
+    ]
 }

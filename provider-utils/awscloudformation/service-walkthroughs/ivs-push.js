@@ -19,9 +19,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const { questions } = ivsQuestions.video;
   const nameProject = [
     {
-      name: 'resoureName',
+      name: 'resourceName',
       message: questions.resourceName.question,
-      validate: amplify.inputValidation(questions.resourceName.question),
+      validate: amplify.inputValidation(questions.resourceName),
       default: 'mylivestream',
     },
   ];

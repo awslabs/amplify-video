@@ -1,6 +1,6 @@
 {
   "name": "amplify-category-video",
-  "version": "3.1.1",
+  "version": "3.1.2-debug1",
   "description": "An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by AWS Amplify and AWS Media Services",
   "keywords": [
     "amplify",
