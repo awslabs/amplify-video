@@ -81,6 +81,10 @@
                 "type":"list",
                 "options": [
                     {
+                        "name": "UHD (7 renditions)",
+                        "value": "UHD"
+                    },
+                    {
                         "name": "FULL (6 renditions)",
                         "value": "FULL"
                     },
