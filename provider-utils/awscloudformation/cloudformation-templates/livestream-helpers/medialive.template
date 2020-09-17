@@ -299,9 +299,9 @@
 
     "pEncodingProfile": {
       "Type": "String",
-      "Description": "FULL (6 renditions), MOBILE (3 renditions), HD (single 1080p), SD (single 432p)",
+      "Description": "UHD (7 renditions), FULL (6 renditions), MOBILE (3 renditions), HD (single 1080p), SD (single 432p)",
       "Default": "FULL",
-      "AllowedValues": [ "FULL", "MOBILE", "HD", "SD" ]
+      "AllowedValues": [ "UHD", "FULL", "MOBILE", "HD", "SD" ]
     },
 
     "pGopSizeInSec": {
