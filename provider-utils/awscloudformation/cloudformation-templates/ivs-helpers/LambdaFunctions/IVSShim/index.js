@@ -76,7 +76,7 @@ async function signAndRequest(method, uriRaw, config) {
   const secretKey = process.env.AWS_SECRET_ACCESS_KEY;
   const token = encodeURIComponent(process.env.AWS_SESSION_TOKEN);
   const algorithm = 'AWS4-HMAC-SHA256';
-  const host = 'ivs.us-west-2.amazonaws.com';
+  const host = `ivs.${process.env.AWS_REGION}.amazonaws.com`;
   const canonicalUri = uriRaw;
 
   const now = new Date();

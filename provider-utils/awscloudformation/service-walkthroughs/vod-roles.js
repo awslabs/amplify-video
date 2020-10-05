@@ -21,7 +21,7 @@ function generateIAMAdminPolicy(resourceName, bucketName) {
             's3:PutObject',
             's3:DeleteObject',
           ],
-          Resource: `arn:aws:s3:::${bucketName}/public/*`,
+          Resource: `arn:aws:s3:::${bucketName}/*`,
         },
       ],
     },
