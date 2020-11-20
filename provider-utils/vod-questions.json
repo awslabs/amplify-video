@@ -54,7 +54,7 @@
             {
                 "key": "pemKeyLocation",
                 "type":"input",
-                "question": "Provide the location to the pem key you want CloudFront you want to sign urls with:",
+                "question": "Provide the location to the pem key (private key) you want CloudFront to sign urls with (must be full path):",
                 "required": true
             },
             {
