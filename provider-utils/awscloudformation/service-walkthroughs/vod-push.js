@@ -164,6 +164,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cmsResponse = await inquirer.prompt(cmsEnable);
 
+  props.parameters = {
+    authRoleName: {
+      Ref: 'AuthRoleName',
+    },
+  };
+
   if (cmsResponse.enableCMS) {
     let apiName = getAPIName(context);
     if (apiName === '') {
@@ -178,22 +184,17 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
 
     await createCMS(context, apiName, props);
-    props.parameters = {
-      authRoleName: {
-        Ref: 'AuthRoleName',
-      },
-      GraphQLAPIId: {
-        'Fn::GetAtt': [
-          `api${apiName}`,
-          'Outputs.GraphQLAPIIdOutput',
-        ],
-      },
-      GraphQLEndpoint: {
-        'Fn::GetAtt': [
-          `api${apiName}`,
-          'Outputs.GraphQLAPIEndpointOutput',
-        ],
-      },
+    props.parameters.GraphQLAPIId = {
+      'Fn::GetAtt': [
+        `api${apiName}`,
+        'Outputs.GraphQLAPIIdOutput',
+      ],
+    };
+    props.parameters.GraphQLEndpoint = {
+      'Fn::GetAtt': [
+        `api${apiName}`,
+        'Outputs.GraphQLAPIEndpointOutput',
+      ],
     };
   }
 
