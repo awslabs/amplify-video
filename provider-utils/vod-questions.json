@@ -60,7 +60,7 @@
             {
                 "key": "pemKeyID",
                 "type":"input",
-                "question": "What is the ID associated with the pem key?",
+                "question": "What is the CloudFront Key Pair Access Key ID associated with the pem key?",
                 "required": true
             },
             {
