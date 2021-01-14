@@ -4,7 +4,9 @@
   "description": "Plugin for Amplify to add support for live streaming. Made for Unicorn Trivia Workshop",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node scripts/post-install.js",
+    "postinstall": "husky install && node scripts/post-install.js",
+    "prepublishOnly": "pinst --disable",
+    "postpublish": "pinst --enable",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix"
   },
@@ -39,7 +41,9 @@
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-jsx-a11y": "^6.3.0",
     "eslint-plugin-react": "^7.20.0",
-    "eslint-plugin-react-hooks": "^4.0.0"
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "husky": "^5.0.6",
+    "pinst": "^2.1.1"
   },
   "bugs": {
     "url": "https://github.com/awslabs/amplify-video/issues"
