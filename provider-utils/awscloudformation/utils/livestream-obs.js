@@ -94,7 +94,6 @@ function generateServiceLive(directory, primaryURL) {
     },
     type: 'rtmp_custom',
   };
-  console.log(setup);
   const json = JSON.stringify(setup);
   fs.writeFileSync(`${directory}service.json`, json);
 }
