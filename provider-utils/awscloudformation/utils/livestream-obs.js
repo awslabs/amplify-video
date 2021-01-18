@@ -86,13 +86,15 @@ function generateServiceIVS(directory, projectOutput) {
 
 function generateServiceLive(directory, primaryURL) {
   const primaryKey = primaryURL.split('/');
+  const formatedPrimaryURL = primaryURL.replace('rtmp://', '');
   const setup = {
     settings: {
       key: primaryKey[3],
-      server: `rtmps://${primaryURL}`,
+      server: `rtmps://${formatedPrimaryURL}`,
     },
     type: 'rtmp_custom',
   };
+  console.log(setup);
   const json = JSON.stringify(setup);
   fs.writeFileSync(`${directory}service.json`, json);
 }
