@@ -86,11 +86,10 @@ function generateServiceIVS(directory, projectOutput) {
 
 function generateServiceLive(directory, primaryURL) {
   const primaryKey = primaryURL.split('/');
-  const formatedPrimaryURL = primaryURL.replace('rtmp://', '');
   const setup = {
     settings: {
       key: primaryKey[3],
-      server: `rtmps://${formatedPrimaryURL}`,
+      server: `rtmps://${primaryURL}`,
     },
     type: 'rtmp_custom',
   };
