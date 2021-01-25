@@ -119,6 +119,14 @@ Manual installation of Amplify Video can be useful for development purposes.
 npm install -g
 ```
 
+## Tests
+Please ensure that your change still passes unit tests, and ideally integration/UI tests. It's OK if you're still working on tests at the time that you submit, but be prepared to be asked about them. Wherever possible, pull requests should contain tests as appropriate. Bugfixes should contain tests that exercise the corrected behavior (i.e., the test should fail without the bugfix and pass with it), and new features should be accompanied by tests exercising the feature.
+
+To run the tests:
+```
+npm test
+```
+
 ### Commit Style
 
 Current version: `Release`
