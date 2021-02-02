@@ -1,3 +1,5 @@
+const { spawn } = require('child_process');
+
 function autoAnswer({
   context, answers, key, value,
 }) {
@@ -8,6 +10,29 @@ function autoAnswer({
   }
 }
 
+async function exec(command, args) {
+  return new Promise((resolve, reject) => {
+    const childProcess = spawn(command, args);
+
+    childProcess.stdout.on('data', (stdout) => {
+      console.log(stdout.toString());
+    });
+
+    childProcess.stderr.on('data', (stderr) => {
+      console.log(stderr.toString());
+    });
+
+    childProcess.on('close', async (code) => {
+      console.log(`child process exited with code ${code}`);
+      if (code !== 0) {
+        reject(new Error('Something went wrong, check above'));
+      }
+      resolve();
+    });
+  });
+}
+
 module.exports = {
   autoAnswer,
+  exec,
 };
