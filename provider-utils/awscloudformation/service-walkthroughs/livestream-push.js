@@ -29,7 +29,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   }
 
   const { inputs } = question.video;
-  const args = JSON.parse(context.parameters.options.payload);
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
 
   // question dictionaries taken by inquirer
   // project name
