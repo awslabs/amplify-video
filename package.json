@@ -8,7 +8,7 @@
     "preversion": "git fetch upstream && git checkout upstream/master && npm run lint && npm run test",
     "version": "cross-env-shell git checkout -b release/$npm_package_version ",
     "postversion": "git push upstream && git push --tags",
-    "test": "jest",
+    "test": "jest --detectOpenHandles --runInBand",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
     "release": "node scripts/release.js"
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
+    "aws-sdk": "^2.834.0",
     "eslint": "^7.2.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-airbnb-base": "^13.2.0",
@@ -47,6 +48,7 @@
     "eslint-plugin-jsx-a11y": "^6.3.0",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.0.0",
+    "glob": "^7.1.6",
     "jest": "^26.6.3"
   },
   "bugs": {
