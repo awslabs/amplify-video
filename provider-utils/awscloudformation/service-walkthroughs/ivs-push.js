@@ -19,7 +19,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const defaultName = 'mylivestream';
 
   const { inputs } = question.video;
-  const args = JSON.parse(context.parameters.options.payload);
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
 
   const nameProject = [
     {
