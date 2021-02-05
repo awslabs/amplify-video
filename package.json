@@ -9,6 +9,7 @@
     "version": "cross-env-shell git checkout -b release/$npm_package_version ",
     "postversion": "git push upstream && git push --tags",
     "test": "jest --detectOpenHandles --runInBand",
+    "dev-test": "NODE_ENV=dev jest --detectOpenHandles --runInBand",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
     "release": "node scripts/release.js"
