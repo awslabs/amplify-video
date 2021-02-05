@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "node scripts/post-install.js",
     "test": "jest --detectOpenHandles --runInBand",
+    "dev-test": "NODE_ENV=dev jest --detectOpenHandles --runInBand",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix"
   },
