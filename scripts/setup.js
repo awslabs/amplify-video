@@ -18,4 +18,6 @@ async function executeScripts() {
   await exec('bash', ['./scripts/headless/init-new-project.sh']);
   console.log('\namplify add video');
   await exec('bash', ['./scripts/headless/add-ivs.sh']);
+  console.log('\namplify push');
+  await exec('bash', ['./scripts/headless/amplify-push.sh']);
 }

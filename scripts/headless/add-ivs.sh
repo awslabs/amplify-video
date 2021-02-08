@@ -6,7 +6,7 @@ STD_LOW="{\
 \"service\":\"video\",\
 \"serviceType\":\"ivs\",\
 \"providerName\":\"awscloudformation\",\
-\"resourceName\":\"std-low\",\
+\"resourceName\":\"stdLow\",\
 \"channelQuality\":\"STANDARD\",\
 \"channelLatency\":\"LOW\"\
 }"
@@ -15,7 +15,7 @@ STD_NORMAL="{\
 \"service\":\"video\",\
 \"serviceType\":\"ivs\",\
 \"providerName\":\"awscloudformation\",\
-\"resourceName\":\"std-normal\",\
+\"resourceName\":\"stdNormal\",\
 \"channelQuality\":\"STANDARD\",\
 \"channelLatency\":\"NORMAL\"\
 }"
@@ -24,7 +24,7 @@ BASIC_LOW="{\
 \"service\":\"video\",\
 \"serviceType\":\"ivs\",\
 \"providerName\":\"awscloudformation\",\
-\"resourceName\":\"basic-low\",\
+\"resourceName\":\"basicLow\",\
 \"channelQuality\":\"BASIC\",\
 \"channelLatency\":\"LOW\"\
 }"
@@ -33,7 +33,7 @@ BASIC_NORMAL="{\
 \"service\":\"video\",\
 \"serviceType\":\"ivs\",\
 \"providerName\":\"awscloudformation\",\
-\"resourceName\":\"basic-normal\",\
+\"resourceName\":\"basicNormal\",\
 \"channelQuality\":\"BASIC\",\
 \"channelLatency\":\"NORMAL\"\
 }"
