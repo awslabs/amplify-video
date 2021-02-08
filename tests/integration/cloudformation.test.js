@@ -3,13 +3,14 @@ const glob = require('glob');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
+const cloudformation = new AWS.CloudFormation();
+
 test('Should validate CloudFormation templates', async () => {
   let directoryPath = path.join(__dirname, '../../amplify/backend/video/**/build/**/*.template');
   if (process.env.NODE_ENV !== 'test' && process.env.AMP_PATH) {
     directoryPath = path.join(__dirname, `../../${process.env.AMP_PATH}/amplify/backend/video/**/build/**/*.template`);
   }
   const files = glob.sync(directoryPath);
-  const cloudformation = new AWS.CloudFormation();
 
   if (files.length === 0) {
     console.log('No templates found. Passing to next test.');
@@ -27,4 +28,19 @@ test('Should validate CloudFormation templates', async () => {
       throw (new Error(`template path: ${filePath}\n${error}`));
     }
   }));
+});
+
+test('Should validate CloudFormation stack status', async () => {
+  let directoryPath = path.join(__dirname, '../../amplify/team-provider-info.json');
+  if (process.env.NODE_ENV !== 'test' && process.env.AMP_PATH) {
+    directoryPath = path.join(__dirname, `../../${process.env.AMP_PATH}/amplify/team-provider-info.json`);
+  }
+  const teamProvider = JSON.parse(fs.readFileSync(directoryPath, 'utf8'));
+  const stackName = teamProvider.dev.awscloudformation.StackName;
+
+  const stacksDescription = await cloudformation.describeStacks({ StackName: stackName }).promise();
+  const stackStatus = stacksDescription.Stacks[0].StackStatus;
+  if (stackStatus !== 'UPDATE_COMPLETE' && stackStatus !== 'CREATE_COMPLETE') {
+    throw (new Error(`Error deploying stack, please check the stack events.\nStack status: ${stackStatus}`));
+  }
 });
