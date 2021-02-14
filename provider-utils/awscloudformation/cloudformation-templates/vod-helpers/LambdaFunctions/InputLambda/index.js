@@ -3,8 +3,9 @@
 /* eslint-disable */
 const AWS = require('aws-sdk');
 /* eslint-enable */
-const jobSettings = require('./settings.json');
 // Set the region
+
+
 
 exports.handler = async (event) => {
   AWS.config.update({ region: event.awsRegion });
@@ -43,9 +44,94 @@ async function createJob(eventObject) {
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  // Set the output to have the filename (without extension) as a folder
-  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-  jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+  let tmplName = process.env.ARN_TEMPLATE.split(':')[5].split('/')[1];
+  let tmpl = await mcClient.getJobTemplate({ Name: tmplName }).promise();
+  console.log(`TEMPLATE:: ${JSON.stringify(tmpl, null, 2)}`);
+
+
+  var allOutputs = [];
+  tmpl.JobTemplate.Settings.OutputGroups.forEach(group => {
+
+    if (group.OutputGroupSettings.Type === 'HLS_GROUP_SETTINGS') {
+
+      group.OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      allOutputs.push({
+        "Name": "Apple HLS",
+        "Outputs": [],
+        "OutputGroupSettings": group.OutputGroupSettings
+      });
+
+    }
+
+    if (group.OutputGroupSettings.Type === 'DASH_ISO_GROUP_SETTINGS') {
+
+      group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      allOutputs.push({
+        "Name": "DASH ISO",
+        "Outputs": [],
+        "OutputGroupSettings": group.OutputGroupSettings
+      });
+    }
+
+    if (group.OutputGroupSettings.Type === 'FILE_GROUP_SETTINGS') {
+      
+      group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      allOutputs.push({
+        "Name": "File Group",
+        "Outputs": [],
+        "OutputGroupSettings": group.OutputGroupSettings
+      });
+
+    }
+
+    if (group.OutputGroupSettings.Type === 'MS_SMOOTH_GROUP_SETTINGS') {
+      
+      group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      allOutputs.push({
+        "Name": "MS Smooth",
+        "Outputs": [],
+        "OutputGroupSettings": group.OutputGroupSettings
+      });
+  }
+
+  if (group.OutputGroupSettings.Type === 'CMAF_GROUP_SETTINGS') {
+    
+    group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+    allOutputs.push({
+      "Name": "CMAF",
+      "Outputs": [],
+      "OutputGroupSettings": group.OutputGroupSettings
+    });
+  }
+
+
+  });
+
+  var allGroups = {
+    "OutputGroups": allOutputs,
+    "AdAvailOffset": 0,
+    "Inputs": [
+      {
+        "AudioSelectors": {
+          "Audio Selector 1": {
+            "Offset": 0,
+            "DefaultSelection": "DEFAULT",
+            "ProgramSelection": 1
+          }
+        },
+        "VideoSelector": {
+          "ColorSpace": "FOLLOW"
+        },
+        "FilterEnable": "AUTO",
+        "PsiControl": "USE_PSI",
+        "FilterStrength": 0,
+        "DeblockFilter": "DISABLED",
+        "DenoiseFilter": "DISABLED",
+        "TimecodeSource": "ZEROBASED",
+        "FileInput": `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`
+      }
+    ]
+  };
 
   let queueARN = '';
   if (process.env.QUEUE_ARN) {
@@ -63,7 +149,7 @@ async function createJob(eventObject) {
     Queue: queueARN,
     UserMetadata: {},
     Role: process.env.MC_ROLE,
-    Settings: jobSettings,
+    Settings: allGroups
   };
   await mcClient.createJob(jobParams).promise();
 }
