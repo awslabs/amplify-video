@@ -38,7 +38,7 @@ async function createJob(eventObject) {
       allOutputs.push({
         Name: 'Apple HLS',
         Outputs: [],
-        OutputGroupSettings: group.OutputGroupSettings
+        OutputGroupSettings: group.OutputGroupSettings,
       });
     }
 
@@ -47,7 +47,7 @@ async function createJob(eventObject) {
       allOutputs.push({
         Name: 'DASH ISO',
         Outputs: [],
-        OutputGroupSettings: group.OutputGroupSettings
+        OutputGroupSettings: group.OutputGroupSettings,
       });
     }
 
@@ -56,7 +56,7 @@ async function createJob(eventObject) {
       allOutputs.push({
         Name: 'File Group',
         Outputs: [],
-        OutputGroupSettings: group.OutputGroupSettings
+        OutputGroupSettings: group.OutputGroupSettings,
       });
     }
 
@@ -65,7 +65,7 @@ async function createJob(eventObject) {
       allOutputs.push({
         Name: 'MS Smooth',
         Outputs: [],
-        OutputGroupSettings: group.OutputGroupSettings
+        OutputGroupSettings: group.OutputGroupSettings,
       });
     }
 
@@ -74,7 +74,7 @@ async function createJob(eventObject) {
       allOutputs.push({
         Name: 'CMAF',
         Outputs: [],
-        OutputGroupSettings: group.OutputGroupSettings
+        OutputGroupSettings: group.OutputGroupSettings,
       });
     }
   });
