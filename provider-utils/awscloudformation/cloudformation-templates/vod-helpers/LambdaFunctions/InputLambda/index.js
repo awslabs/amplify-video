@@ -125,7 +125,9 @@ async function createJob(eventObject) {
   await mcClient.createJob(jobParams).promise();
 }
 
-exports.handler = async (event) => {
+//exports.handler = async (event) => {
+//exports.handler =  async function(event) {
+  exports.handler = async function(event) {
   AWS.config.update({ region: event.awsRegion });
   if (event.Records[0].eventName.includes('ObjectCreated')) {
     await createJob(event.Records[0].s3);
