@@ -12,7 +12,7 @@
   "license": "Apache 2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/awslabs/amplify-video.git"
+    "url": "https://github.com/awslabs/amplify-video.git"
   },
   "keywords": [
     "amplify",
@@ -33,11 +33,10 @@
     "yaml": "^1.7.2"
   },
   "devDependencies": {
-    "eslint": "^7.20.0",
+    "eslint": "^7.2.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-plugin-babel": "^5.3.0",
-    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-jsx-a11y": "^6.3.0",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.0.0"
