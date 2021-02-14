@@ -5,8 +5,6 @@ const AWS = require('aws-sdk');
 /* eslint-enable */
 // Set the region
 
-
-
 exports.handler = async (event) => {
   AWS.config.update({ region: event.awsRegion });
   console.log(event);
@@ -23,6 +21,8 @@ exports.handler = async (event) => {
 // Function to submit job to Elemental MediaConvert
 async function createJob(eventObject) {
   let mcClient = new AWS.MediaConvert();
+  var allOutputs = [];
+
   if (!AWS.config.mediaconvert) {
     try {
       const endpoints = await mcClient.describeEndpoints().promise();
@@ -43,28 +43,20 @@ async function createJob(eventObject) {
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
+  const tmplName = process.env.ARN_TEMPLATE.split(':')[5].split('/')[1];
+  const tmpl = await mcClient.getJobTemplate({ Name: tmplName }).promise();
 
-  let tmplName = process.env.ARN_TEMPLATE.split(':')[5].split('/')[1];
-  let tmpl = await mcClient.getJobTemplate({ Name: tmplName }).promise();
-  console.log(`TEMPLATE:: ${JSON.stringify(tmpl, null, 2)}`);
-
-
-  var allOutputs = [];
   tmpl.JobTemplate.Settings.OutputGroups.forEach(group => {
-
     if (group.OutputGroupSettings.Type === 'HLS_GROUP_SETTINGS') {
-
       group.OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
         "Name": "Apple HLS",
         "Outputs": [],
         "OutputGroupSettings": group.OutputGroupSettings
       });
-
     }
 
     if (group.OutputGroupSettings.Type === 'DASH_ISO_GROUP_SETTINGS') {
-
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
         "Name": "DASH ISO",
@@ -74,41 +66,45 @@ async function createJob(eventObject) {
     }
 
     if (group.OutputGroupSettings.Type === 'FILE_GROUP_SETTINGS') {
-      
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
         "Name": "File Group",
         "Outputs": [],
         "OutputGroupSettings": group.OutputGroupSettings
       });
-
     }
 
     if (group.OutputGroupSettings.Type === 'MS_SMOOTH_GROUP_SETTINGS') {
-      
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
         "Name": "MS Smooth",
         "Outputs": [],
         "OutputGroupSettings": group.OutputGroupSettings
       });
-  }
+    }
 
-  if (group.OutputGroupSettings.Type === 'CMAF_GROUP_SETTINGS') {
-    
-    group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-    allOutputs.push({
-      "Name": "CMAF",
-      "Outputs": [],
-      "OutputGroupSettings": group.OutputGroupSettings
-    });
-  }
-
-
+    if (group.OutputGroupSettings.Type === 'CMAF_GROUP_SETTINGS') {
+      group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      allOutputs.push({
+        "Name": "CMAF",
+        "Outputs": [],
+        "OutputGroupSettings": group.OutputGroupSettings
+      });
+    }
   });
 
-  var allGroups = {
-    "OutputGroups": allOutputs,
+  let queueARN = '';
+  if (process.env.QUEUE_ARN) {
+    queueARN = process.env.QUEUE_ARN;
+  } else {
+    const q = await mcClient.getQueue(queueParams, (err, data) => {
+      if (err) console.log(err, err.stack); // an error occurred
+      else console.log(data);
+    }).promise();
+    queueARN = q.Queue.Arn;
+  }
+  const allGroups = {
+    OutputGroups: allOutputs,
     "AdAvailOffset": 0,
     "Inputs": [
       {
@@ -133,23 +129,12 @@ async function createJob(eventObject) {
     ]
   };
 
-  let queueARN = '';
-  if (process.env.QUEUE_ARN) {
-    queueARN = process.env.QUEUE_ARN;
-  } else {
-    const q = await mcClient.getQueue(queueParams, (err, data) => {
-      if (err) console.log(err, err.stack); // an error occurred
-      else console.log(data);
-    }).promise();
-    queueARN = q.Queue.Arn;
-  }
-
   const jobParams = {
     JobTemplate: process.env.ARN_TEMPLATE,
     Queue: queueARN,
     UserMetadata: {},
     Role: process.env.MC_ROLE,
-    Settings: allGroups
+    Settings: allGroups,
   };
   await mcClient.createJob(jobParams).promise();
 }
