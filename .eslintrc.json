@@ -1,5 +1,8 @@
 {
-    "extends": "airbnb-base",
+    "plugins": [
+		"babel"
+	  ],
+	"extends": "airbnb-base",
     "rules": {
     	"no-param-reassign": "off",
     	"no-return-await" : "off",
@@ -10,6 +13,8 @@
     	"global-require": "off",
     	"import/no-dynamic-require": "off",
 		"consistent-return": "off",
-		"no-plusplus": "off"
+		"no-plusplus": "off",
+		"arrow-parens": 0,
+    	"babel/arrow-parens": 2
     }
 }
