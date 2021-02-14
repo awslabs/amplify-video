@@ -4,20 +4,6 @@
 const AWS = require('aws-sdk');
 /* eslint-enable */
 // Set the region
-
-exports.handler = async (event) => {
-  AWS.config.update({ region: event.awsRegion });
-  console.log(event);
-  if (event.Records[0].eventName.includes('ObjectCreated')) {
-    await createJob(event.Records[0].s3);
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify(`Transcoding your file: ${event.Records[0].s3.object.key}`),
-    };
-    return response;
-  }
-};
-
 // Function to submit job to Elemental MediaConvert
 async function createJob(eventObject) {
   let mcClient = new AWS.MediaConvert();
@@ -50,45 +36,45 @@ async function createJob(eventObject) {
     if (group.OutputGroupSettings.Type === 'HLS_GROUP_SETTINGS') {
       group.OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
-        "Name": "Apple HLS",
-        "Outputs": [],
-        "OutputGroupSettings": group.OutputGroupSettings
+        Name: 'Apple HLS',
+        Outputs: [],
+        OutputGroupSettings: group.OutputGroupSettings
       });
     }
 
     if (group.OutputGroupSettings.Type === 'DASH_ISO_GROUP_SETTINGS') {
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
-        "Name": "DASH ISO",
-        "Outputs": [],
-        "OutputGroupSettings": group.OutputGroupSettings
+        Name: 'DASH ISO',
+        Outputs: [],
+        OutputGroupSettings: group.OutputGroupSettings
       });
     }
 
     if (group.OutputGroupSettings.Type === 'FILE_GROUP_SETTINGS') {
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
-        "Name": "File Group",
-        "Outputs": [],
-        "OutputGroupSettings": group.OutputGroupSettings
+        Name: 'File Group',
+        Outputs: [],
+        OutputGroupSettings: group.OutputGroupSettings
       });
     }
 
     if (group.OutputGroupSettings.Type === 'MS_SMOOTH_GROUP_SETTINGS') {
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
-        "Name": "MS Smooth",
-        "Outputs": [],
-        "OutputGroupSettings": group.OutputGroupSettings
+        Name: 'MS Smooth',
+        Outputs: [],
+        OutputGroupSettings: group.OutputGroupSettings
       });
     }
 
     if (group.OutputGroupSettings.Type === 'CMAF_GROUP_SETTINGS') {
       group.OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
-        "Name": "CMAF",
-        "Outputs": [],
-        "OutputGroupSettings": group.OutputGroupSettings
+        Name: 'CMAF',
+        Outputs: [],
+        OutputGroupSettings: group.OutputGroupSettings
       });
     }
   });
@@ -105,28 +91,28 @@ async function createJob(eventObject) {
   }
   const allGroups = {
     OutputGroups: allOutputs,
-    "AdAvailOffset": 0,
-    "Inputs": [
+    AdAvailOffset: 0,
+    Inputs: [
       {
-        "AudioSelectors": {
-          "Audio Selector 1": {
-            "Offset": 0,
-            "DefaultSelection": "DEFAULT",
-            "ProgramSelection": 1
-          }
+        AudioSelectors: {
+          'Audio Selector 1': {
+            Offset: 0,
+            DefaultSelection: 'DEFAULT',
+            ProgramSelection: 1,
+          },
         },
-        "VideoSelector": {
-          "ColorSpace": "FOLLOW"
+        VideoSelector: {
+          ColorSpace: 'FOLLOW',
         },
-        "FilterEnable": "AUTO",
-        "PsiControl": "USE_PSI",
-        "FilterStrength": 0,
-        "DeblockFilter": "DISABLED",
-        "DenoiseFilter": "DISABLED",
-        "TimecodeSource": "ZEROBASED",
-        "FileInput": `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`
-      }
-    ]
+        FilterEnable: 'AUTO',
+        PsiControl: 'USE_PSI',
+        FilterStrength: 0,
+        DeblockFilter: 'DISABLED',
+        DenoiseFilter: 'DISABLED',
+        TimecodeSource: 'ZEROBASED',
+        FileInput: `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`,
+      },
+    ],
   };
 
   const jobParams = {
@@ -138,3 +124,15 @@ async function createJob(eventObject) {
   };
   await mcClient.createJob(jobParams).promise();
 }
+
+exports.handler = async (event) => {
+  AWS.config.update({ region: event.awsRegion });
+  if (event.Records[0].eventName.includes('ObjectCreated')) {
+    await createJob(event.Records[0].s3);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(`Transcoding your file: ${event.Records[0].s3.object.key}`),
+    };
+    return response;
+  }
+};
