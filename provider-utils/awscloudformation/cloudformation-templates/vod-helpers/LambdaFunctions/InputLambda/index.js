@@ -34,7 +34,6 @@ async function createJob(eventObject) {
 
   tmpl.JobTemplate.Settings.OutputGroups.forEach( (group) => {
 
-
     if (group.OutputGroupSettings.Type === 'HLS_GROUP_SETTINGS') {
       group.OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
