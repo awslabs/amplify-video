@@ -1,15 +1,20 @@
 Description: CloudFront Distribution for output bucket
 
 Parameters:
-  pBucketName:
+  pBucketUrl:
     Type: String
     Description: ProjectName
-    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
   pOriginAccessIdentity:
     Type: String
     Description: Policy for bucket
     Default: NA
+  <% if (props.contentDeliveryNetwork.signedKey) { %>
+  pProjectName:
+    Type: String
+    Description: Name for public key
+    Default: PublicKey
+  <% } %>
 
 Resources:
   rCloudFrontDist:
@@ -26,19 +31,39 @@ Resources:
           TargetOriginId: "vodS3Origin"
           ViewerProtocolPolicy: "allow-all"
           <% if (props.contentDeliveryNetwork.signedKey) { %>
-          TrustedSigners:
-            - self
+          TrustedKeyGroups:
+            - !Ref rCloudFrontKeyGroup
           <% } %>
         Origins: 
           - 
-            DomainName: !Sub "${pBucketName}.s3.amazonaws.com"
+            DomainName: !Ref pBucketUrl
             Id: vodS3Origin
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${pOriginAccessIdentity}"
         Enabled: 'true'
         PriceClass: PriceClass_All
-
+  <% if (props.contentDeliveryNetwork.signedKey) { %>
+  <%= props.contentDeliveryNetwork.rPublicName %>:
+    Type: AWS::CloudFront::PublicKey
+    Properties:
+      PublicKeyConfig:
+        CallerReference: <%= props.contentDeliveryNetwork.publicKeyName %>
+        Name: <%= props.contentDeliveryNetwork.publicKeyName %>
+        EncodedKey: "<%= props.contentDeliveryNetwork.publicKey %>"
+  rCloudFrontKeyGroup:
+    Type: AWS::CloudFront::KeyGroup
+    Properties:
+      KeyGroupConfig:
+        Name: !Sub "${pProjectName}-KeyGroup"
+        Items:
+            - !Ref <%= props.contentDeliveryNetwork.rPublicName %>
+  <% } %>
 Outputs:
+<% if (props.contentDeliveryNetwork.signedKey) { %>
+  oPemId:
+    Value: !Ref <%= props.contentDeliveryNetwork.rPublicName %>
+    Description: Pem Key Id
+<% } %>
   oCFDomain:
     Value: !GetAtt rCloudFrontDist.DomainName
     Description: Domain for our videos

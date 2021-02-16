@@ -52,13 +52,26 @@
                 "required":true
             }, 
             {
-                "key": "pemKeyLocation",
-                "type":"input",
-                "question": "Provide the location to the pem key you want CloudFront you want to sign urls with:",
-                "required": true
+                "key": "modifySignedUrl",
+                "type":"list",
+                "question": "We detected you have signed urls configured. Would you like to:",
+                "options": [
+                    {
+                        "name": "Leave as configured",
+                        "value": "leave"
+                    },
+                    {
+                        "name": "Rotate the keys for the signed urls",
+                        "value": "rotate"
+                    },
+                    {
+                        "name": "Remove signed urls",
+                        "value": "remove"
+                    }
+                ]
             },
             {
-                "key": "pemKeyID",
+                "key": "pemKeyID-DEADDONOTUSE",
                 "type":"input",
                 "question": "What is the CloudFront Key Pair Access Key ID associated with the pem key?",
                 "required": true
