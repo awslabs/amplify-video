@@ -33,7 +33,6 @@ async function createJob(eventObject) {
   const tmpl = await mcClient.getJobTemplate({ Name: tmplName }).promise();
 
   tmpl.JobTemplate.Settings.OutputGroups.forEach((group) => {
-
     if (group.OutputGroupSettings.Type === 'HLS_GROUP_SETTINGS') {
       group.OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       allOutputs.push({
