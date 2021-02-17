@@ -209,7 +209,7 @@ async function createCDN(context, props, options, aws, oldValues) {
   const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
 
-  if (oldValues.contentDeliveryNetwork.signedKey) {
+  if (oldValues.contentDeliveryNetwork && oldValues.contentDeliveryNetwork.signedKey) {
     const signedURLQuestion = [{
       type: inputs[7].type,
       name: inputs[7].key,
