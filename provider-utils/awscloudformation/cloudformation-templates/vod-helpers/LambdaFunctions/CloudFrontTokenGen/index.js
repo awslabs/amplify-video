@@ -42,3 +42,7 @@ async function signPath(id) {
 
   return urlParams;
 }
+
+module.exports = {
+  signPath,
+};
