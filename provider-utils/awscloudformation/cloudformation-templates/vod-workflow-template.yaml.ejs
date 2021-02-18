@@ -103,15 +103,23 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFDistribution.template"
       Parameters:
-          pBucketName: !Ref pS3OutputName
+          pBucketUrl: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
           pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity
-<% if (props.contentDeliveryNetwork.signedKey) { %>
+  <% if (props.contentDeliveryNetwork.signedKey) { %>
+          pProjectName:
+            !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+            - !Ref pProjectName
   rCloudfrontTokenGenerator:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/CFTokenGen.template"
       Parameters:
-          pPemID: <%= props.contentDeliveryNetwork.pemID %>
+          pPemID: !GetAtt rCloudfrontDistribution.Outputs.oPemId
           pSecretPem: <%= props.contentDeliveryNetwork.secretPem %>
           pSecretPemArn: <%= props.contentDeliveryNetwork.secretPemArn %>
           pDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
@@ -129,7 +137,7 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'tokenGen'
-<% } %>
+  <% } %>
 <% } %>
   rMediaConvertTemplate:
     Type: AWS::CloudFormation::Stack

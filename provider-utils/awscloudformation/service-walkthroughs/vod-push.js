@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
+const { generateKeyPairSync } = require('crypto');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
 const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
@@ -18,6 +19,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
+  let oldValues = {};
   let nameDict = {};
   let aws;
 
@@ -35,7 +37,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     nameDict.resourceName = resourceName;
     props.shared = nameDict;
     try {
-      const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+      oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
       Object.assign(defaults, oldValues);
     } catch (err) {
       // Do nothing
@@ -147,7 +149,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const cdnResponse = await inquirer.prompt(cdnEnable);
 
   if (cdnResponse.enableCDN === true) {
-    const contentDeliveryNetwork = await createCDN(context, props, options, aws);
+    const contentDeliveryNetwork = await createCDN(context, props, options, aws, oldValues);
     props.contentDeliveryNetwork = contentDeliveryNetwork;
   }
 
@@ -201,62 +203,77 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   return props;
 }
 
-async function createCDN(context, props, options, aws) {
+async function createCDN(context, props, options, aws, oldValues) {
   const { inputs } = question.video;
   const { amplify } = context;
   const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
-  const validateFile = (input) => {
-    if (fs.existsSync(input)) {
-      return true;
+
+  if (oldValues.contentDeliveryNetwork && oldValues.contentDeliveryNetwork.signedKey) {
+    const signedURLQuestion = [{
+      type: inputs[7].type,
+      name: inputs[7].key,
+      message: inputs[7].question,
+      choices: inputs[7].options,
+      default: 'leave',
+    }];
+    const signedURLResponse = await inquirer.prompt(signedURLQuestion);
+    if (signedURLResponse.modifySignedUrl === 'leave') {
+      return oldValues.contentDeliveryNetwork;
     }
-    return 'File does not exist';
-  };
-  const signedURLQuestion = [{
-    type: inputs[9].type,
-    name: inputs[9].key,
-    message: inputs[9].question,
-    validate: amplify.inputValidation(inputs[9]),
-    default: true,
-  }];
+    if (signedURLResponse.modifySignedUrl === 'remove') {
+      cdnConfigDetails.signedKey = false;
+    } else {
+      cdnConfigDetails.signedKey = true;
+    }
+  } else {
+    const signedURLQuestion = [{
+      type: inputs[9].type,
+      name: inputs[9].key,
+      message: inputs[9].question,
+      validate: amplify.inputValidation(inputs[9]),
+      default: true,
+    }];
+    const signedURLResponse = await inquirer.prompt(signedURLQuestion);
 
-  const signedURLResponse = await inquirer.prompt(signedURLQuestion);
+    cdnConfigDetails.signedKey = signedURLResponse.signedKey;
+  }
 
-  cdnConfigDetails.signedKey = signedURLResponse.signedKey;
-
-  if (signedURLResponse.signedKey) {
-    const tokenGenQuestions = [
-      {
-        type: inputs[7].type,
-        name: inputs[7].key,
-        message: inputs[7].question,
-        validate: validateFile,
-        default: '',
+  if (cdnConfigDetails.signedKey) {
+    const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem',
       },
-      {
-        type: inputs[8].type,
-        name: inputs[8].key,
-        message: inputs[8].question,
-        validate: amplify.inputValidation(inputs[8]),
-        default: '',
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
       },
-    ];
+    });
 
-    const tokenGenResponse = await inquirer.prompt(tokenGenQuestions);
-
-    const pemKey = fs.readFileSync(tokenGenResponse.pemKeyLocation);
     if (!aws) {
       const provider = getAWSConfig(context, options);
       aws = await provider.getConfiguredAWSClient(context);
     }
+    const uuid = Math.random().toString(36).substring(2, 6)
+                + Math.random().toString(36).substring(2, 6);
+    const secretName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-pem-${uuid}`.slice(0, 63);
+    const rPublicName = `rCloudFrontPublicKey${uuid}`.slice(0, 63);
+    const publicKeyName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-publickey-${uuid}`.slice(0, 63);
     const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
     const createSecretParams = {
-      Name: `${props.shared.resourceName}-pem`,
-      SecretBinary: pemKey,
+      Name: secretName,
+      SecretBinary: privateKey,
     };
     const secretCreate = await smClient.createSecret(createSecretParams).promise();
-
-    cdnConfigDetails.pemID = tokenGenResponse.pemKeyID;
+    cdnConfigDetails.publicKey = publicKey.replace(/\n/g, '\\n');
+    // Note: This is NOT best pratices for CloudFormation but their is
+    // a bug with CloudFront's new Key Groups that doesn't allow
+    // us to rotate them so we are temporary doing a hard rotate
+    // Ref: ISSUE - TBD
+    cdnConfigDetails.rPublicName = rPublicName;
+    cdnConfigDetails.publicKeyName = publicKeyName;
     cdnConfigDetails.secretPem = secretCreate.Name;
     cdnConfigDetails.secretPemArn = secretCreate.ARN;
     cdnConfigDetails.functionName = (projectDetails.localEnvInfo.envName)
