@@ -21,6 +21,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
   const defaultName = 'myvodstreams';
+  let oldValues = {};
   let nameDict = {};
   let aws;
 
@@ -101,7 +102,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           context,
           answers,
           key: inputs[1].key,
-          value: availableTemplates[0].value,
+          value: args.encodingTemplate ? args.encodingTemplate : availableTemplates[0].value,
         });
       },
     },
@@ -242,7 +243,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
 async function createCDN(context, props, options, aws, oldValues) {
   const { inputs } = question.video;
+  const { payload } = context.parameters.options;
   const { amplify } = context;
+  const args = payload ? JSON.parse(payload) : {};
   const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
 
@@ -270,6 +273,14 @@ async function createCDN(context, props, options, aws, oldValues) {
       message: inputs[9].question,
       validate: amplify.inputValidation(inputs[9]),
       default: true,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[9].key,
+          value: args.signedKey ? args.signedKey : false,
+        });
+      },
     }];
     const signedURLResponse = await inquirer.prompt(signedURLQuestion);
 
