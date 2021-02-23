@@ -19,7 +19,6 @@ test('Should validate CloudFormation templates', async () => {
 
   await Promise.all(files.map(async (filePath) => {
     try {
-      console.log(`Testing: ${filePath}`);
       await cloudformation.validateTemplate({
         TemplateBody: fs.readFileSync(filePath,
           { encoding: 'utf8', flag: 'r' }),
@@ -40,7 +39,9 @@ test('Should validate CloudFormation stack status', async () => {
 
   const stacksDescription = await cloudformation.describeStacks({ StackName: stackName }).promise();
   const stackStatus = stacksDescription.Stacks[0].StackStatus;
-  if (stackStatus !== 'UPDATE_COMPLETE' && stackStatus !== 'CREATE_COMPLETE') {
-    throw (new Error(`Error deploying stack, please check the stack events.\nStack status: ${stackStatus}`));
+  try {
+    expect(stackStatus).toBe('UPDATE_COMPLETE');
+  } catch (e) {
+    expect(stackStatus).toBe('CREATE_COMPLETE');
   }
 });
