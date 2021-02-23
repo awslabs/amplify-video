@@ -14,10 +14,16 @@ module.exports = async function setup() {
 };
 
 async function executeScripts() {
-  console.log('\namplify init');
-  await exec('bash', ['./scripts/headless/init-new-project.sh']);
-  console.log('\namplify add video');
-  await exec('bash', ['./scripts/headless/add-ivs.sh']);
-  console.log('\namplify push');
-  await exec('bash', ['./scripts/headless/amplify-push.sh']);
+  try {
+    console.log('\namplify init');
+    await exec('bash', ['./scripts/headless/init-new-project.sh']);
+    console.log('\namplify add video');
+    await exec('bash', ['./scripts/headless/add-ivs.sh']);
+    await exec('bash', ['./scripts/headless/add-vod.sh']);
+    console.log('\namplify push');
+    await exec('bash', ['./scripts/headless/amplify-push.sh']);
+  } catch (error) {
+    await exec('bash', ['./scripts/headless/amplify-delete.sh']);
+    throw (new Error(error));
+  }
 }
