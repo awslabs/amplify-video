@@ -39,6 +39,6 @@ BASIC_NORMAL="{\
 }"
 
 amplify video add --payload $STD_LOW
-amplify video add --payload $STD_NORMAL
-amplify video add --payload $BASIC_LOW
-amplify video add --payload $BASIC_NORMAL
+# amplify video add --payload $STD_NORMAL
+# amplify video add --payload $BASIC_LOW
+# amplify video add --payload $BASIC_NORMAL
