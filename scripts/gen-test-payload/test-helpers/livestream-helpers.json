@@ -1,0 +1,221 @@
+{
+    "name": {
+        "key": "name",
+        "next": "gopSize",
+        "defaultValue": "mylivestream"
+    },
+    "gopSize": {
+        "key": "gopSize",
+        "next": "gopPerSegment",
+        "defaultValue": "1"
+    },
+    "gopPerSegment": {
+        "key": "gopPerSegment",
+        "next": "segsPerPlist",
+        "defaultValue": "2"
+    },
+    "segsPerPlist": {
+        "key": "segsPerPlist",
+        "next": "securityGroup",
+        "defaultValue": "3"
+    },
+    "securityGroup": {
+        "key": "securityGroup",
+        "next": "encodingProfile",
+        "defaultValue": "0.0.0.0/0"
+    },
+    "ingestType": {
+        "key": "ingestType",
+        "type": "list",
+        "options": {
+            "RTMP_PUSH": {
+                "next": "storageType",
+                "value": "RTMP_PUSH"
+            },
+            "RTP_PUSH": {
+                "next": "storageType",
+                "value": "RTP_PUSH"
+            },
+            "UDP_PUSH": {
+                "next": "storageType",
+                "value": "UDP_PUSH"
+            },
+            "MP4_FILE": {
+                "next": "mp4URL",
+                "value": "MP4_FILE"
+            }
+        }
+    },
+    "encodingProfile": {
+        "key": "encodingProfile",
+        "type": "list",
+        "options": {
+            "UHD": {
+                "next": "autoStart",
+                "value": "UHD"
+            },
+            "FULL": {
+                "next": "autoStart",
+                "value": "FULL"
+            },
+            "MOBILE": {
+                "next": "autoStart",
+                "value": "MOBILE"
+            },
+            "HD": {
+                "next": "autoStart",
+                "value": "HD"
+            },
+            "SD": {
+                "next": "autoStart",
+                "value": "SD"
+            }
+        }
+    },
+    "autoStart": {
+        "key": "autoStart",
+        "type": "list",
+        "options": {
+            "YES": {
+                "next": "ingestType",
+                "value": "YES"
+            },
+            "NO": {
+                "next": "ingestType",
+                "value": "NO"
+            }
+        }
+    },
+    "endpoints": {
+        "key": "endpoints",
+        "type": "list",
+        "options": {
+            "HLS": {
+                "next": "startOverWindow",
+                "value": "HLS"
+            },
+            "HLS,DASH": {
+                "next": "startOverWindow",
+                "value": "HLS,DASH"
+            },
+            "HLS,MSS": {
+                "next": "startOverWindow",
+                "value": "HLS,MSS"
+            },
+            "HLS,DASH,MSS": {
+                "next": "startOverWindow",
+                "value": "HLS,DASH,MSS"
+            },
+            "HLS,DASH,MSS,CMAF": {
+                "next": "startOverWindow",
+                "value": "HLS,DASH,MSS,CMAF"
+            },
+            "DASH": {
+                "next": "startOverWindow",
+                "value": "DASH"
+            },
+            "DASH,MSS": {
+                "next": "startOverWindow",
+                "value": "DASH,MSS"
+            },
+            "DASH,MSS,CMAF": {
+                "next": "startOverWindow",
+                "value": "DASH,MSS,CMAF"
+            },
+            "MSS": {
+                "next": "startOverWindow",
+                "value": "MSS"
+            },
+            "MSS,CMAF": {
+                "next": "startOverWindow",
+                "value": "MSS,CMAF"
+            },
+            "CMAF": {
+                "next": "startOverWindow",
+                "value": "CMAF"
+            }
+        }
+    },
+    "startOverWindow": {
+        "key": "startOverWindow",
+        "next": "enableDistribution",
+        "defaultValue": "86400"
+    },
+    "enableMediaStore": {
+        "key": "enableMediaStore",
+        "type": "list",
+        "options": {
+            "YES": {
+                "next": "",
+                "value": "YES"
+            },
+            "NO": {
+                "next": "",
+                "value": "NO"
+            }
+        }
+    },
+    "enableDistribution": {
+        "key": "enableDistribution",
+        "type": "list",
+        "options": {
+            "YES": {
+                "next": "priceClass",
+                "value": "YES"
+            },
+            "NO": {
+                "value": "NO"
+            }
+        }
+    },
+    "priceClass": {
+        "key": "priceClass",
+        "type": "list",
+        "options": {
+            "PriceClass_100": {
+                "next": "sBucketLogs",
+                "value": "PriceClass_100"
+            },
+            "PriceClass_200": {
+                "next": "sBucketLogs",
+                "value": "PriceClass_200"
+            },
+            "PriceClass_All": {
+                "next": "sBucketLogs",
+                "value": "PriceClass_All"
+            }
+        }
+    },
+    "sBucketLogs": {
+        "key": "sBucketLogs",
+        "next": "sLogPrefix",
+        "defaultValue": ""
+    },
+    "sLogPrefix": {
+        "key": "sLogPrefix",
+        "defaultValue": "cf_logs/"
+    },
+    "storageType": {
+        "key": "storageType",
+        "type": "list",
+        "options": {
+            "mPackage": {
+                "next": "endpoint",
+                "value": "mPackage"
+            },
+            "mPackageStore": {
+                "next": "endpoint",
+                "value": "mPackageStore"
+            },
+            "mStore": {
+                "next": "enableDistribution",
+                "value": "mStore"
+            }
+        }
+    },
+    "mp4URL": {
+        "key": "mp4URL",
+        "next": "storageType",
+        "defaultValue": ""
+    }
+}

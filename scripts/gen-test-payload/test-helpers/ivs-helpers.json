@@ -1,0 +1,33 @@
+{
+    "resourceName": {
+        "key": "ressourceName",
+        "next": "channelQuality",
+        "defaultValue": "mylivestream"
+    },
+    "channelQuality": {
+        "key": "channelQuality",
+        "type": "list",
+        "options": {
+            "STANDARD": {
+                "value": "STANDARD",
+                "next": "channelLatency"
+            },
+            "BASIC": {
+                "value": "BASIC",
+                "next": "channelLatency"
+            }
+        }
+    },
+    "channelLatency": {
+        "key": "channelLatency",
+        "type": "list",
+        "options": {
+            "LOW": {
+                "value": "LOW"
+            },
+            "NORMAL": {
+                "value": "NORMAL"
+            }
+        }
+    }
+}

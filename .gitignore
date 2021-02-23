@@ -1,6 +1,7 @@
 .DS_STORE
 node_modules
 scripts/flow/*/.flowconfig
+scripts/gen-test-payload/output/*.sh
 *~
 *.pyc
 .grunt

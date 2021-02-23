@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+IFS='|'
+
+PERMUTATION="{
+\"service\":\"video\",
+\"serviceType\":\"<%- payload.serviceType %>\",
+\"providerName\":\"<%- payload.provider %>\",
+<% payload.inputs.forEach(({key, value}) => { %>
+\"<%- key %>\":\"<%- value %>\",
+<% }); %>
+}"
+amplify video add --payload $PERMUTATION
