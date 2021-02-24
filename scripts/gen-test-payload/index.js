@@ -44,15 +44,16 @@ class Tree {
   }
 
   buildTree(questions, helper) {
-    this.rootNode = new TreeNode('root', 'root', 0);
-    const firstQuestion = helper[questions.content.video.inputs[0].key];
     const getNextNode = (currNode, currQuestion, depth) => {
       depth++;
-      if (typeof currQuestion === 'undefined' || (!!currQuestion.next && !!currQuestion.options)) {
+      if (typeof currQuestion === 'undefined' || (!!currQuestion.next && !!currQuestion.options) || (typeof currQuestion.ignore !== 'undefined')) {
         return;
       }
       if (!!currQuestion.type && currQuestion.type === 'list') {
         Object.keys(currQuestion.options).forEach((optionKey) => {
+          if (currQuestion.options[optionKey].ignore === true) {
+            return;
+          }
           if (!currQuestion.options[optionKey].next) {
             currNode.addChild(new TreeNode(currQuestion.options[optionKey].value,
               currQuestion.key, depth));
@@ -78,6 +79,9 @@ class Tree {
         getNextNode(nextNode, helper[currQuestion.next], depth);
       }
     };
+
+    this.rootNode = new TreeNode('root', 'root', 0);
+    const firstQuestion = helper[questions.content.video.inputs[0].key];
     const firstNode = new TreeNode(helper[questions.content.video.inputs[0].key].defaultValue,
       questions.content.video.inputs[0].key, 1);
     this.rootNode.addChild(firstNode);
@@ -99,28 +103,30 @@ class Tree {
     });
   }
 
-  static buildScript(questions, path, idx) {
-    ejs.renderFile('./template.ejs', {
-      payload: {
-        inputs: path,
-        serviceType: questions.serviceType,
-        provider: questions.content.video.provider,
-      },
-    }, (ejsErr, str) => {
-      if (ejsErr) {
-        console.error(ejsErr);
-        return;
-      }
-      fs.writeFile(`output/${questions.serviceType}-${idx}.sh`, str, (fsErr) => {
-        if (fsErr) {
-          console.error(fsErr);
+  buildScript(questions) {
+    this.paths.forEach((path, idx) => {
+      ejs.renderFile('./template.ejs', {
+        payload: {
+          inputs: path,
+          serviceType: questions.serviceType,
+          provider: questions.content.video.provider,
+        },
+      }, (ejsErr, str) => {
+        if (ejsErr) {
+          console.error(ejsErr);
+          return;
         }
+        fs.writeFile(`output/${questions.serviceType}-${idx}.sh`, str, (fsErr) => {
+          if (fsErr) {
+            console.error(fsErr);
+          }
+        });
       });
     });
   }
 }
 
-// Entrypoint
+// Entrypoint (node index.js)
 servicesQuestions.forEach((question) => {
   if (question.serviceType === 'livestream' || question.serviceType === 'ivs') {
     console.info(`---Service ${question.serviceType}---`);
@@ -128,8 +134,6 @@ servicesQuestions.forEach((question) => {
     tree.buildTree(question, servicesHelpers[`${question.serviceType}`]);
     tree.buildPaths(tree.rootNode, [], servicesHelpers[`${question.serviceType}`].content);
     console.info('Number of permutations:', tree.paths.length);
-    tree.paths.forEach((val, idx) => {
-      tree.buildScript(question, val, idx);
-    });
+    tree.buildScript(question);
   }
 });

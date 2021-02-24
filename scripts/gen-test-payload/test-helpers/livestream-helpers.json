@@ -30,7 +30,8 @@
         "options": {
             "RTMP_PUSH": {
                 "next": "storageType",
-                "value": "RTMP_PUSH"
+                "value": "RTMP_PUSH",
+                "ignore": true
             },
             "RTP_PUSH": {
                 "next": "storageType",
@@ -38,11 +39,13 @@
             },
             "UDP_PUSH": {
                 "next": "storageType",
-                "value": "UDP_PUSH"
+                "value": "UDP_PUSH",
+                "ignore": true
             },
             "MP4_FILE": {
                 "next": "mp4URL",
-                "value": "MP4_FILE"
+                "value": "MP4_FILE",
+                "ignore": true
             }
         }
     },
@@ -200,11 +203,11 @@
         "type": "list",
         "options": {
             "mPackage": {
-                "next": "endpoint",
+                "next": "endpoints",
                 "value": "mPackage"
             },
             "mPackageStore": {
-                "next": "endpoint",
+                "next": "endpoints",
                 "value": "mPackageStore"
             },
             "mStore": {
