@@ -23,7 +23,7 @@ describe('CloudFront signed urls', () => {
     }
     const files = glob.sync(directoryPath);
     const backendConfig = JSON.parse(fs.readFileSync(files[0], fsOptions));
-    projectNames = Object.entries(backendConfig.video)
+    projectNames = Object.entries(backendConfig.video ? backendConfig.video : {})
       .filter(([, value]) => value.serviceType === 'video-on-demand')
       .map(([project]) => project);
     projectPaths = projectNames.map((projectName) => {
