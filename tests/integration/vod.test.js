@@ -62,18 +62,17 @@ describe('VOD Tests', () => {
   });
 
   describe('CloudFront signed urls', () => {
-
     test('Should generate Cloudfront token', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
         return;
       }
       const cloudfront = new AWS.CloudFront();
-  
+
       const enabledCDNProjects = projectProps
         .filter(props => props.contentDeliveryNetwork.enableDistribution)
         .map(props => props);
-  
+
       await Promise.all(enabledCDNProjects.map(async (project) => {
         const publicKeys = await cloudfront.listPublicKeys().promise();
         const publicKey = publicKeys.PublicKeyList.Items
@@ -98,7 +97,7 @@ describe('VOD Tests', () => {
         expect(token).not.toBe(undefined);
       }));
     });
-  
+
     test('Should return 200 HTTP status code', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
@@ -106,7 +105,7 @@ describe('VOD Tests', () => {
       }
       await request(`https://${domainName}`).get(`/test/test.png${token}`).expect(200);
     });
-  
+
     test('Should return 403 HTTP status code', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
@@ -117,7 +116,6 @@ describe('VOD Tests', () => {
   });
 
   describe('CloudFront distribution', () => {
-
     test('GET, HEAD, OPTIONS Should return 200 status code', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
@@ -127,7 +125,7 @@ describe('VOD Tests', () => {
       await request(`https://${domainName}`).head(`/test/test.png${token}`).expect(200);
       // await request(`https://${domainName}`).options(`/test/test.png${token}`).expect(200);
     });
-  
+
     test('POST, PUT, PATCH, DELETE Should return 403 status code', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
@@ -156,5 +154,5 @@ describe('VOD Tests', () => {
       });
     });
     */
-  })
-})
+  });
+});
