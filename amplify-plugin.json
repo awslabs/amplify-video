@@ -9,6 +9,7 @@
         "push",
         "remove",
         "setup-obs",
+        "setup-player",
         "start",
         "stop",
         "update",
