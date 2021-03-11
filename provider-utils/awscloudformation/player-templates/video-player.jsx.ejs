@@ -1,0 +1,31 @@
+/* eslint-disable jsx-a11y/media-has-caption */
+import React from 'react';
+import videojs from 'video.js';
+<% if (ivs) { -%>
+import { registerIVSTech } from 'amazon-ivs-player';
+<% } -%>
+import 'video.js/dist/video-js.css';
+
+
+export default class VideoPlayer extends React.Component {
+  componentDidMount() {
+    registerIVSTech(videojs, this.props);
+    this.player = videojs(this.videoNode, this.props);
+  }
+
+  componentWillUnmount() {
+    if (this.player) {
+      this.player.dispose();
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        <div data-vjs-player>
+          <video ref={(node) => { this.videoNode = node; }} className="video-js" <% if (ivs) { -%>data-setup='{"techOrder": ["AmazonIVS"]}'<% } -%>></video>
+        </div>
+      </div>
+    );
+  }
+}
