@@ -1,14 +1,10 @@
 import React from 'react';
 import videojs from 'video.js';
-<% if (ivs) { -%>
-import { registerIVSTech } from 'amazon-ivs-player';
-<% } -%>
 import 'video.js/dist/video-js.css';
 
 
 export default class VideoPlayer extends React.Component {
   componentDidMount() {
-    <% if (ivs) { -%>registerIVSTech(videojs, this.props);<% } -%>
     this.player = videojs(this.videoNode, this.props);
   }
 
@@ -22,7 +18,7 @@ export default class VideoPlayer extends React.Component {
     return (
       <div>
         <div data-vjs-player>
-          <video ref={(node) => { this.videoNode = node; }} className="video-js" <% if (ivs) { -%>data-setup='{"techOrder": ["AmazonIVS"]}'<% } -%>></video>
+          <video ref={(node) => { this.videoNode = node; }} className="video-js"></video>
         </div>
       </div>
     );

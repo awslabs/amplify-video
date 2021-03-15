@@ -10,12 +10,14 @@ function autoAnswer({
   }
 }
 
-async function exec(command, args) {
+async function exec(command, args, verbose = true) {
   return new Promise((resolve, reject) => {
     const childProcess = spawn(command, args);
 
     childProcess.stdout.on('data', (stdout) => {
-      console.log(stdout.toString());
+      if (verbose) {
+        console.log(stdout.toString());
+      }
     });
 
     childProcess.stderr.on('data', (stderr) => {
@@ -23,7 +25,9 @@ async function exec(command, args) {
     });
 
     childProcess.on('close', async (code) => {
-      console.log(`child process exited with code ${code}`);
+      if (verbose) {
+        console.log(`child process exited with code ${code}`);
+      }
       if (code !== 0) {
         reject(new Error('Something went wrong, check above'));
       }
