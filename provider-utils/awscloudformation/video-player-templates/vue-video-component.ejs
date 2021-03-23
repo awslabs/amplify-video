@@ -1,0 +1,30 @@
+<template>
+	<div>
+		<video-player :options="videoOptions"/>
+	</div>
+</template>
+
+<script>
+import VideoPlayer from "@/components/VideoPlayer.vue";
+
+export default {
+	name: "App",
+	components: {
+		VideoPlayer
+	},
+	data() {
+		return {
+			videoOptions: {
+				autoplay: true,
+				controls: true,
+				sources: [
+					{
+						src: "<%= src %>",
+						type: "application/x-mpegURL"
+					}
+				]
+			}
+		};
+	}
+};
+</script>
