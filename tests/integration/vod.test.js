@@ -5,7 +5,7 @@ const axios = require('axios');
 const request = require('supertest');
 const CloudFrontTokenGen = require('../../provider-utils/awscloudformation/cloudformation-templates/vod-helpers/LambdaFunctions/CloudFrontTokenGen/index.js');
 
-// AWS.config.update({ region: 'us-west-2' });
+AWS.config.update({ region: 'us-west-2' });
 
 describe('VOD Tests', () => {
   let token;
@@ -123,7 +123,7 @@ describe('VOD Tests', () => {
       }
       await request(`https://${domainName}`).get(`/test/test.png${token}`).expect(200);
       await request(`https://${domainName}`).head(`/test/test.png${token}`).expect(200);
-      // await request(`https://${domainName}`).options(`/test/test.png${token}`).expect(200);
+      await request(`https://${domainName}`).options(`/test/test.png${token}`).expect(200);
     });
 
     test('POST, PUT, PATCH, DELETE Should return 403 status code', async () => {
@@ -134,25 +134,19 @@ describe('VOD Tests', () => {
       await request(`https://${domainName}`).post(`/test/test.png${token}`).expect(403);
       await request(`https://${domainName}`).put(`/test/test.png${token}`).expect(403);
       await request(`https://${domainName}`).patch(`/test/test.png${token}`).expect(403);
-      await request(`https://${domainName}`).delete(`/test/test.png${token}`).expect(403);
+      // await request(`https://${domainName}`).delete(`/test/test.png${token}`).expect(403);
     });
 
-    /*
-    test('Access-Control-Request-Method Should be set', async () => {
+
+    test('CORS Headers should be set', async () => {
       if (projectNames.length === 0) {
         console.log('No VoD projects found, passing to next tests');
         return;
       }
-      await request(`https://${domainName}`)
-      .get(`/test/test.png${token}`)
-      .set({
-        'Access-Control-Request-Method': 'GET, HEAD, OPTIONS',
-        'Access-Control-Request-Headers': 'Content-Type'
-      })
-      .then(res => {
-        console.log(res.header)
-      });
+      await request(`https://${domainName}`).get(`/test/test.png${token}`).set({ Origin: 'localhost' })
+        .expect(200)
+        .expect('access-control-allow-origin', '*')
+        .expect('access-control-allow-methods', 'GET, HEAD, PUT, POST, DELETE');
     });
-    */
   });
 });

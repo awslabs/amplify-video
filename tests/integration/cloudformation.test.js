@@ -3,6 +3,8 @@ const glob = require('glob');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
+AWS.config.update({ region: 'us-west-2' });
+
 const cloudformation = new AWS.CloudFormation();
 
 test('Should validate CloudFormation templates', async () => {
