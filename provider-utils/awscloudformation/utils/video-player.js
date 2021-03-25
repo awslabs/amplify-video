@@ -27,7 +27,7 @@ function fileExtension(framework) {
     case 'angular':
       return 'ts';
     case 'ember':
-      return 'hbs';
+      return 'js';
     case 'ionic':
       return 'ts';
     default:
@@ -58,7 +58,11 @@ async function setupPlayer(context, resourceName) {
         props.src = output.oVideoOutput;
         break;
       case 'video-on-demand':
-        props.src = `http://${output.oVodOutputUrl}/{path}/{path.m3u8}`;
+        if (output.oVodOutputUrl) {
+          props.src = `https://${output.oVodOutputUrl}/{path}/{path.m3u8}`;
+        } else {
+          props.src = output.oVODOutputS3;
+        }
         break;
       default:
     }
@@ -74,6 +78,9 @@ async function setupPlayer(context, resourceName) {
         break;
       case 'vue':
         fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/components/VideoPlayer.${fileExtension(framework)}`, appendVideoTemplate);
+        break;
+      case 'ember':
+        fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/app/components/video-player.${fileExtension(framework)}`, appendVideoTemplate);
         break;
       default:
         fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/VideoPlayer.${fileExtension(framework)}`, appendVideoTemplate);

@@ -113,3 +113,30 @@ export default {
     }
   }
 <% } %>
+<% if (framework === 'ember') { %>
+import Ember from 'ember';
+import videojs from 'video.js';
+
+export default Ember.Component.extend({
+  tagName: 'video',
+
+  classNames: ['video-js'],
+
+  didInsertElement() {
+    this._super(...arguments);
+    const { controls, autoplay, src, type, tech } = this;
+    const player = videojs(this.element, {
+      controls,
+      autoplay,
+      preload: 'auto',
+    });
+
+    player.ready(() => {
+      player.src({ src, type }, tech);
+      this.one('willDestroyElement', function () {
+        player.dispose();
+      });
+    });
+  },
+});
+<% } %>
