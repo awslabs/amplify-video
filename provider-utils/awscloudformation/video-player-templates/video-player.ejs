@@ -1,0 +1,142 @@
+<% if (framework === 'react') { %>
+import React from 'react';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+
+
+export default class VideoPlayer extends React.Component {
+  componentDidMount() {
+    this.player = videojs(this.videoNode, this.props);
+  }
+
+  componentWillUnmount() {
+    if (this.player) {
+      this.player.dispose();
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        <div data-vjs-player>
+          <video ref={(node) => { this.videoNode = node; }} className="video-js"></video>
+        </div>
+      </div>
+    );
+  }
+}
+<% } %>
+<% if (framework === 'vue') { %>
+<template>
+  <div>
+      <video ref="videoPlayer" class="video-js"></video>
+  </div>
+</template>
+
+<script>
+import 'video.js/dist/video-js.css'
+import videojs from 'video.js';
+
+
+export default {
+  name: "VideoPlayer",
+  props: {
+      options: {
+          type: Object,
+          default() {
+              return {};
+          }
+      }
+  },
+  data() {
+      return {
+          player: null
+      }
+  },
+  mounted() {
+      this.player = videojs(this.$refs.videoPlayer, this.options, function onPlayerReady() {
+          console.log('onPlayerReady', this);
+      })
+  },
+  beforeDestroy() {
+      if (this.player) {
+          this.player.dispose()
+      }
+  }
+}
+</script>
+<% } %>
+<% if (framework === 'angular') { %>
+  import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+  import videojs from 'video.js';
+  
+  @Component({
+    selector: 'video-player',
+    template: `
+      <video #target class="video-js" controls muted playsinline preload="none"></video>
+    `,
+    styleUrls: [
+      './video-player.component.scss'
+    ],
+    encapsulation: ViewEncapsulation.None,
+  })
+  export class VideoPlayerComponent implements OnInit, OnDestroy {
+    @ViewChild('target', {static: true}) target: ElementRef;
+    // see options: https://github.com/videojs/video.js/blob/maintutorial-options.html
+    @Input() options: {
+        fluid: boolean,
+        aspectRatio: string,
+        autoplay: boolean,
+        sources: {
+            src: string,
+            type: string,
+        }[],
+    };
+    player: videojs.Player;
+  
+    constructor(
+      private elementRef: ElementRef,
+    ) { }
+  
+    ngOnInit() {
+      // instantiate Video.js
+      this.player = videojs(this.target.nativeElement, this.options, function onPlayerReady() {
+        console.log('onPlayerReady', this);
+      });
+    }
+  
+    ngOnDestroy() {
+      // destroy player
+      if (this.player) {
+        this.player.dispose();
+      }
+    }
+  }
+<% } %>
+<% if (framework === 'ember') { %>
+import Ember from 'ember';
+import videojs from 'video.js';
+
+export default Ember.Component.extend({
+  tagName: 'video',
+
+  classNames: ['video-js'],
+
+  didInsertElement() {
+    this._super(...arguments);
+    const { controls, autoplay, src, type, tech } = this;
+    const player = videojs(this.element, {
+      controls,
+      autoplay,
+      preload: 'auto',
+    });
+
+    player.ready(() => {
+      player.src({ src, type }, tech);
+      this.one('willDestroyElement', function () {
+        player.dispose();
+      });
+    });
+  },
+});
+<% } %>

@@ -35,6 +35,10 @@ module.exports = {
         description: 'Sets up OBS with your stream settings.',
       },
       {
+        name: 'setup-video-player',
+        description: 'Sets up a player with your settings.',
+      },
+      {
         name: 'start',
         description: `Starts your ${featureName} stream from an idle state`,
       },
