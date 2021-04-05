@@ -11,7 +11,7 @@ jobs:
       - name: Create Pull Request
         uses: thomaseizinger/create-pull-request@1.0.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           title: '[Version Release] New version Release'
           body: >
             This PR is auto-generated.
