@@ -12,7 +12,6 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Add report file
           title: '[Version Release] Add report file'
           body: >
             This PR is auto-generated.
