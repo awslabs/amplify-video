@@ -1,6 +1,9 @@
 name: Test On Pull
 
-on: [pull_request]
+on: 
+  push:
+    branches:
+      - release/**
 
 jobs:
   jest:
