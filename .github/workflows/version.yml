@@ -2,7 +2,7 @@ name: Version Pull Request
 on:
   push:
     branches:
-      - releasegenerator
+      - release/**
     paths:
       - 'package.json'
 jobs:
