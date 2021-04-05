@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "node scripts/post-install.js",
+    "preversion": "npm run eslint && npm run test",
+    "postversion": "git push upstream && git push --tags",
     "test": "jest",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
