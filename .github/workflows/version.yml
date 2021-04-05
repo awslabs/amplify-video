@@ -9,13 +9,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: thomaseizinger/create-pull-request@1.0.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: '[Version Release] Add report file'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          title: '[Version Release] New version Release'
           body: >
             This PR is auto-generated.
-          labels: version, automated pr
-          assignees: wizage
-          branch: master
-          base: releasegenerator
+          reviewers: wizage
+          head: releasegenerator
+          base: master
