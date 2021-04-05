@@ -1,7 +1,7 @@
 name: Test On Pull
 
 on: 
-  pull_request:
+  push:
     branches:
       - releasegenerator
 

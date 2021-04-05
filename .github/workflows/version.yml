@@ -17,3 +17,4 @@ jobs:
             This PR is auto-generated.
           labels: version, automated pr
           assignees: wizage
+          branch: releasegenerator
