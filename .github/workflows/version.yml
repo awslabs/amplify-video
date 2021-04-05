@@ -18,5 +18,5 @@ jobs:
           body: >
             This PR is auto-generated.
           reviewers: wizage
-          head: releasegenerator
+          head: ${{ github.ref }}
           base: master
