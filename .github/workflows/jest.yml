@@ -3,7 +3,7 @@ name: Test On Pull
 on: 
   push:
     branches:
-      - releases/**
+      - releasegenerator
 
 jobs:
   jest:
