@@ -18,7 +18,5 @@
 //     }],
 //     default: 'patch',
 //   }];
-
 // inquirer.prompt(versionQuestion).then(answers => {
-  
 // }).catch(e => console.log(e));
