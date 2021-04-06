@@ -13,8 +13,10 @@ function autoAnswer({
 async function exec(command, args, verbose = true) {
   return new Promise((resolve, reject) => {
     const childProcess = spawn(command, args);
+    let output = '';
 
     childProcess.stdout.on('data', (stdout) => {
+      output += stdout.toString();
       if (verbose) {
         console.log(stdout.toString());
       }
@@ -22,6 +24,10 @@ async function exec(command, args, verbose = true) {
 
     childProcess.stderr.on('data', (stderr) => {
       console.log(stderr.toString());
+    });
+
+    childProcess.on('exit', () => {
+      resolve(output);
     });
 
     childProcess.on('close', async (code) => {

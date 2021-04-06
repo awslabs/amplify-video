@@ -2,101 +2,116 @@ const chalk = require('chalk');
 const ejs = require('ejs');
 const fs = require('fs');
 const ora = require('ora');
+const xcode = require('xcode');
 const { exec } = require('./headless-mode');
+const videoPlayerUtils = require('./video-player-utils');
 
 module.exports = {
-  setupPlayer,
+  setupVideoPlayer,
 };
 
-function checkDependencies(context, dependency) {
-  const projectRootPath = context.amplify.pathManager.searchProjectRootPath();
-  const packageJSONFile = fs.readFileSync(`${projectRootPath}/package.json`, { encoding: 'utf-8' });
-  const packageJSON = JSON.parse(packageJSONFile);
-  if (!packageJSON.dependencies[dependency]) {
-    return false;
-  }
-  return true;
-}
 
-function fileExtension(framework) {
-  switch (framework) {
-    case 'react':
-      return 'jsx';
-    case 'vue':
-      return 'vue';
-    case 'angular':
-      return 'ts';
-    case 'ember':
-      return 'js';
-    case 'ionic':
-      return 'ts';
-    default:
-  }
-}
-
-async function setupPlayer(context, resourceName) {
+async function setupVideoPlayer(context, resourceName) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
+
   if ('output' in amplifyMeta.video[resourceName]) {
-    const projectConfigFilePath = context.amplify.pathManager.getProjectConfigFilePath();
-    const { serviceType, output } = amplifyMeta.video[resourceName];
-    let projectConfig = fs.readFileSync(projectConfigFilePath, { encoding: 'utf-8' });
-    projectConfig = JSON.parse(projectConfig);
-    const { framework, config } = projectConfig[projectConfig.frontend];
-
-    const props = {
-      framework,
-    };
-    const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/video-player.ejs`, { encoding: 'utf-8' });
-    const appendVideoTemplate = ejs.render(videoTemplate, props);
-    const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/${framework}-video-component.ejs`, { encoding: 'utf-8' });
-    switch (serviceType) {
-      case 'livestream':
-        props.src = output.oPrimaryMediaStoreEgressUrl;
-        break;
-      case 'ivs':
-        props.src = output.oVideoOutput;
-        break;
-      case 'video-on-demand':
-        if (output.oVodOutputUrl) {
-          props.src = `https://${output.oVodOutputUrl}/{path}/{path.m3u8}`;
-        } else {
-          props.src = output.oVODOutputS3;
-        }
-        break;
-      default:
+    if (videoPlayerUtils.getProjectConfig(context).frontend === 'ios') {
+      await setupIosProject(context, resourceName);
+    } else {
+      await setupWebProjects(context, resourceName);
     }
-    const appendVideoComponentTemplate = ejs.render(videoComponentTemplate, props);
-
-    switch (framework) {
-      case 'angular':
-        fs.mkdirSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/app/video-player`, { recursive: true });
-        fs.copyFileSync(`${__dirname}/../video-player-templates/video-player.component.scss`,
-          `${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/app/video-player/video-player.component.scss`);
-        fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/app/video-player/video-player.component.${fileExtension(framework)}`, appendVideoTemplate);
-        context.print.info("Don't forget to add the component to your angular module");
-        break;
-      case 'vue':
-        fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/components/VideoPlayer.${fileExtension(framework)}`, appendVideoTemplate);
-        break;
-      case 'ember':
-        fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/app/components/video-player.${fileExtension(framework)}`, appendVideoTemplate);
-        break;
-      default:
-        fs.writeFileSync(`${amplify.pathManager.searchProjectRootPath()}/${config.SourceDir}/VideoPlayer.${fileExtension(framework)}`, appendVideoTemplate);
-        break;
-    }
-
-    const spinner = ora('Checking package.json dependencies...');
-    spinner.start();
-    if (!checkDependencies(context, 'video.js')) {
-      spinner.text = 'Adding video.js to package.json...';
-      await exec('npm', ['install', 'video.js'], false);
-    }
-    spinner.succeed('Configuration complete.');
-    context.print.blue(chalk`{underline Import and add the following ${framework} component:}`);
-    context.print.info(appendVideoComponentTemplate);
   } else {
     context.print.warning(chalk`{bold You have not pushed ${resourceName} to the cloud yet.}`);
   }
+}
+
+async function setupIosProject(context, resourceName) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const { serviceType, output } = amplifyMeta.video[resourceName];
+  const projectRootPath = amplify.pathManager.searchProjectRootPath();
+  const framework = videoPlayerUtils.getProjectConfig(context).frontend;
+  const pbxprojPath = `${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}.xcodeproj/project.pbxproj`;
+  const pbxproj = xcode.project(pbxprojPath);
+  const props = {
+    framework,
+  };
+
+  await videoPlayerUtils.installIosDependencies(context);
+
+  props.src = videoPlayerUtils.getServiceUrl({ serviceType, output });
+  props.creationDate = new Date();
+  props.projectName = videoPlayerUtils.getProjectConfig(context).projectName;
+
+  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/video-player.ejs`, { encoding: 'utf-8' });
+  const appendVideoTemplate = ejs.render(videoTemplate, props);
+  const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/ios/${framework}-video-component.ejs`, { encoding: 'utf-8' });
+
+  ['h', 'cpp', 'hpp'].map(extension => videoPlayerUtils.genIosSourcesAndHeaders(context, props, extension));
+
+  fs.writeFileSync(`${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
+  const parser = pbxproj.parseSync();
+  const [hash] = Object.entries(parser.hash.project.objects.PBXGroup).find(
+    ([, group]) => group.path === videoPlayerUtils.getProjectConfig(context).projectName,
+  );
+
+  pbxproj.addSourceFile(`VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, {}, hash);
+  pbxproj.addSourceFile('empty.cpp', {}, hash);
+  pbxproj.addHeaderFile('empty.hpp', {}, hash);
+  pbxproj.addHeaderFile(`${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, {}, hash);
+  pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Debug');
+  pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Release');
+  fs.writeFileSync(pbxprojPath, pbxproj.writeSync());
+
+  context.print.blue(chalk`{underline Import and add the following ${framework} component to your ContentView:}`);
+  context.print.info(videoComponentTemplate);
+}
+
+async function setupWebProjects(context, resourceName) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const { serviceType, output } = amplifyMeta.video[resourceName];
+  const { framework, config } = videoPlayerUtils
+    .getProjectConfig(context)[videoPlayerUtils.getProjectConfig(context).frontend];
+  const projectRootPath = amplify.pathManager.searchProjectRootPath();
+  const props = {
+    framework,
+  };
+
+  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/video-player.ejs`, { encoding: 'utf-8' });
+  const appendVideoTemplate = ejs.render(videoTemplate, props);
+  const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/${framework}-video-component.ejs`, { encoding: 'utf-8' });
+  props.src = videoPlayerUtils.getServiceUrl({ serviceType, output });
+
+  const appendVideoComponentTemplate = ejs.render(videoComponentTemplate, props);
+
+  switch (framework) {
+    case 'angular':
+      fs.mkdirSync(`${projectRootPath}/${config.SourceDir}/app/video-player`, { recursive: true });
+      fs.copyFileSync(`${__dirname}/../video-player-templates/web/video-player.component.scss`,
+        `${projectRootPath}/${config.SourceDir}/app/video-player/video-player.component.scss`);
+      fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/app/video-player/video-player.component.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
+      context.print.info("Don't forget to add the component to your angular module");
+      break;
+    case 'vue':
+      fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/components/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
+      break;
+    case 'ember':
+      fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/app/components/video-player.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
+      break;
+    default:
+      fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
+      break;
+  }
+
+  const spinner = ora('Checking package.json dependencies...');
+  spinner.start();
+  if (!videoPlayerUtils.checkNpmDependencies(context, 'video.js')) {
+    spinner.text = 'Adding video.js to package.json...';
+    await exec('npm', ['install', 'video.js'], false);
+  }
+  spinner.succeed('Configuration complete.');
+  context.print.blue(chalk`{underline Import and add the following ${framework} component:}`);
+  context.print.info(appendVideoComponentTemplate);
 }
