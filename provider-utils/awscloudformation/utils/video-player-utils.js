@@ -1,7 +1,7 @@
 const fs = require('fs');
-const readLastLines = require('read-last-lines');
 const ora = require('ora');
 const ejs = require('ejs');
+const inquirer = require('inquirer');
 const { exec } = require('./headless-mode');
 
 module.exports = {
@@ -87,6 +87,54 @@ function isVLCKitInstalled(podfile, projectName) {
   }
 }
 
+function readPodFile(path) {
+  const podContent = fs.readFileSync(path, 'utf8');
+  return podContent.split(/\r?\n/g);
+}
+
+function addPodEntry(
+  podLines,
+  linesToAddEntry,
+  platformVersion,
+  podName,
+  podVersion,
+) {
+  const platform = `platform :ios, '${platformVersion}'`;
+  const pod = `pod '${podName}', '~>${podVersion}'`;
+  const { line, indentation } = linesToAddEntry;
+
+  function getLineToAdd(newEntry, offset) {
+    const spaces = Array(offset + 1).join(' ');
+    return spaces + newEntry;
+  }
+
+  podLines.splice(line, 0, getLineToAdd(pod, indentation));
+  podLines.splice(line, 0, getLineToAdd(platform, indentation));
+}
+
+function listTargets(podLines) {
+  const target = /target ('|")\w+('|") do/g;
+  const targets = [];
+
+  for (let i = 0, len = podLines.length; i < len; i++) {
+    const matchNextConstruct = podLines[i].match(target);
+
+    if (matchNextConstruct) {
+      const firstNonSpaceCharacter = podLines[i].search(/\S/);
+      targets.push({
+        name: podLines[i].replace(/target|do|'| /g, ''),
+        value: { line: i + 1, indentation: firstNonSpaceCharacter + 2, target: podLines[i].replace(/target|do|'| /g, '') },
+      });
+    }
+  }
+  return targets;
+}
+
+function savePodFile(podfilePath, podLines) {
+  const newPodfile = podLines.join('\n');
+  fs.writeFileSync(podfilePath, newPodfile);
+}
+
 async function installIosDependencies(context) {
   const { amplify } = context;
   const projectRootPath = amplify.pathManager.searchProjectRootPath();
@@ -95,18 +143,28 @@ async function installIosDependencies(context) {
     fs.readFileSync(`${projectRootPath}/Podfile`, { encoding: 'utf-8' });
     let podFileData = await exec('pod', ['ipc', 'podfile-json', 'Podfile'], false);
     podFileData = JSON.parse(podFileData);
-    if (isVLCKitInstalled(podFileData, getProjectConfig(context).projectName)) {
+    const pod = readPodFile(`${projectRootPath}/Podfile`);
+    const targets = listTargets(pod);
+    const chooseTarget = [
+      {
+        type: 'list',
+        name: 'podTarget',
+        message: 'Choose which pod target you want to set up a player for?',
+        choices: targets,
+      },
+    ];
+    const props = await inquirer.prompt(chooseTarget);
+    if (isVLCKitInstalled(podFileData, props.podTarget.target)) {
       context.print.info('Podfile already contains MobileVLCKit');
-      await exec('pod', ['install'], true);
-    } else {
-      const lines = await readLastLines.read(`${projectRootPath}/Podfile`, 1);
-      const toVanquish = lines.length;
-      const stats = fs.statSync(`${projectRootPath}/Podfile`);
-      fs.truncateSync(`${projectRootPath}/Podfile`, stats.size - toVanquish);
-      fs.appendFileSync(`${projectRootPath}/Podfile`, "\tplatform :ios, '8.4'\n\tpod 'MobileVLCKit', '~>3.3.0'\nend");
-      const spinner = ora('Checking package.json dependencies...');
+      const spinner = ora('Installing dependencies...');
       spinner.start();
-      spinner.text = 'Installing MobileVLCKit with CocoaPods...';
+      await exec('pod', ['install'], true);
+      spinner.succeed('Configuration complete.');
+    } else {
+      addPodEntry(pod, props.podTarget, '8.4', 'MobileVLCKit', '3.3.0');
+      savePodFile(`${projectRootPath}/Podfile`, pod);
+      const spinner = ora('Installing MobileVLCKit with CocoaPods...');
+      spinner.start();
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');
     }

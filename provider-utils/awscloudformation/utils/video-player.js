@@ -34,9 +34,7 @@ async function setupIosProject(context, resourceName) {
   const framework = videoPlayerUtils.getProjectConfig(context).frontend;
   const pbxprojPath = `${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}.xcodeproj/project.pbxproj`;
   const pbxproj = xcode.project(pbxprojPath);
-  const props = {
-    framework,
-  };
+  const props = {};
 
   await videoPlayerUtils.installIosDependencies(context);
 
@@ -44,7 +42,7 @@ async function setupIosProject(context, resourceName) {
   props.creationDate = new Date();
   props.projectName = videoPlayerUtils.getProjectConfig(context).projectName;
 
-  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/video-player.ejs`, { encoding: 'utf-8' });
+  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/ios/video-player.ejs`, { encoding: 'utf-8' });
   const appendVideoTemplate = ejs.render(videoTemplate, props);
   const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/ios/${framework}-video-component.ejs`, { encoding: 'utf-8' });
 
@@ -79,7 +77,7 @@ async function setupWebProjects(context, resourceName) {
     framework,
   };
 
-  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/video-player.ejs`, { encoding: 'utf-8' });
+  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/video-player.ejs`, { encoding: 'utf-8' });
   const appendVideoTemplate = ejs.render(videoTemplate, props);
   const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/${framework}-video-component.ejs`, { encoding: 'utf-8' });
   props.src = videoPlayerUtils.getServiceUrl({ serviceType, output });

@@ -34,7 +34,6 @@
     "inquirer": "^8.0.0",
     "mime-types": "^2.1.21",
     "ora": "^4.0.3",
-    "read-last-lines": "^1.8.0",
     "sha1": "^1.1.1",
     "xcode": "^3.0.1",
     "yaml": "^1.7.2"
