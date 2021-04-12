@@ -5,8 +5,6 @@ const axios = require('axios');
 const request = require('supertest');
 const CloudFrontTokenGen = require('../../provider-utils/awscloudformation/cloudformation-templates/vod-helpers/LambdaFunctions/CloudFrontTokenGen/index.js');
 
-AWS.config.update({ region: 'us-west-2' });
-
 describe('VOD Tests', () => {
   let token;
   let domainName;
@@ -123,7 +121,6 @@ describe('VOD Tests', () => {
       }
       await request(`https://${domainName}`).get(`/test/test.png${token}`).expect(200);
       await request(`https://${domainName}`).head(`/test/test.png${token}`).expect(200);
-      await request(`https://${domainName}`).options(`/test/test.png${token}`).expect(200);
     });
 
     test('POST, PUT, PATCH, DELETE Should return 403 status code', async () => {
@@ -134,7 +131,7 @@ describe('VOD Tests', () => {
       await request(`https://${domainName}`).post(`/test/test.png${token}`).expect(403);
       await request(`https://${domainName}`).put(`/test/test.png${token}`).expect(403);
       await request(`https://${domainName}`).patch(`/test/test.png${token}`).expect(403);
-      // await request(`https://${domainName}`).delete(`/test/test.png${token}`).expect(403);
+      await request(`https://${domainName}`).delete(`/test/test.png${token}`).expect(403);
     });
 
 
