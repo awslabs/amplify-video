@@ -2,6 +2,7 @@ const fs = require('fs');
 const ora = require('ora');
 const ejs = require('ejs');
 const inquirer = require('inquirer');
+const xmlParser = require('xml2js');
 const { exec } = require('./headless-mode');
 
 module.exports = {
@@ -12,6 +13,9 @@ module.exports = {
   installIosDependencies,
   checkNpmDependencies,
   genIosSourcesAndHeaders,
+  parseAndroidManifest,
+  isGradleDependencyInstalled,
+  appendGradleDependency,
 };
 
 function getProjectConfig(context) {
@@ -19,6 +23,26 @@ function getProjectConfig(context) {
   let projectConfig = fs.readFileSync(projectConfigFilePath, { encoding: 'utf-8' });
   projectConfig = JSON.parse(projectConfig);
   return projectConfig;
+}
+
+async function parseAndroidManifest(path) {
+  const androidManifestFile = fs.readFileSync(path, { encoding: 'utf-8' });
+  return xmlParser.parseStringPromise(androidManifestFile);
+}
+
+function isGradleDependencyInstalled(buildGradlePath, name) {
+  const installPattern = new RegExp(`(implementation '${name}:(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)')`);
+  const buildGradle = fs.readFileSync(buildGradlePath);
+  return installPattern.test(buildGradle);
+}
+
+function appendGradleDependency(buildGradlePath, dependency) {
+  fs.writeFileSync(
+    buildGradlePath,
+    fs
+      .readFileSync(buildGradlePath, 'utf8')
+      .replace(/[^ \t]dependencies {(\r\n|\n)/, match => `${match}\timplementation '${dependency}'\n`),
+  );
 }
 
 function fileExtension(framework) {

@@ -10,6 +10,35 @@ module.exports = {
   setupVideoPlayer,
 };
 
+async function setupAndroidProject(context, resourceName) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const { serviceType, output } = amplifyMeta.video[resourceName];
+  const projectRootPath = amplify.pathManager.searchProjectRootPath();
+  const androidManifest = await videoPlayerUtils.parseAndroidManifest(`${projectRootPath}/app/src/main/AndroidManifest.xml`);
+  const sourcePath = `${projectRootPath}/app/src/main/java/${androidManifest.manifest.$.package.split('.').join('/')}`;
+  const resPath = `${projectRootPath}/app/src/main/res/layout`;
+  const buildGradlePath = `${projectRootPath}/app/build.gradle`;
+  const props = {
+    packageName: androidManifest.manifest.$.package,
+    src: videoPlayerUtils.getServiceUrl({ serviceType, output }),
+  };
+  const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/android/video-player.ejs`, { encoding: 'utf-8' });
+  const appendVideoTemplate = ejs.render(videoTemplate, props);
+  const spinner = ora();
+
+  fs.writeFileSync(`${sourcePath}/VideoPlayerActivity.kt`, appendVideoTemplate);
+  fs.writeFileSync(`${resPath}/activity_video_player.xml`, fs.readFileSync(`${__dirname}/../video-player-templates/android/activity_video_player.xml`));
+  if (!videoPlayerUtils.isGradleDependencyInstalled(buildGradlePath, 'com.google.android.exoplayer:exoplayer')) {
+    spinner.info('Adding EXOPlayer dependency');
+    videoPlayerUtils.appendGradleDependency(buildGradlePath, 'com.google.android.exoplayer:exoplayer:2.13.2');
+  } else {
+    spinner.info('EXOPlayer is already installed');
+  }
+  spinner.succeed('Configuration complete, please reload your gradle dependencies.');
+  context.print.blue(chalk`{underline A new Android Activity has been created:}`);
+  context.print.info(`${sourcePath}/VideoPlayerActivity.kt`);
+}
 
 async function setupVideoPlayer(context, resourceName) {
   const { amplify } = context;
@@ -18,6 +47,8 @@ async function setupVideoPlayer(context, resourceName) {
   if ('output' in amplifyMeta.video[resourceName]) {
     if (videoPlayerUtils.getProjectConfig(context).frontend === 'ios') {
       await setupIosProject(context, resourceName);
+    } else if (videoPlayerUtils.getProjectConfig(context).frontend === 'android') {
+      await setupAndroidProject(context, resourceName);
     } else {
       await setupWebProjects(context, resourceName);
     }
