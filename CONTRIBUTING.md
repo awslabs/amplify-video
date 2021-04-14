@@ -127,6 +127,17 @@ To run the tests:
 npm test
 ```
 
+### Development tests
+If you want to run your tests using an existing amplify project you can use the following command:
+
+```
+AMP_PATH='../amplify-sandbox/' npm run dev-test
+```
+
+When you use `npm run dev-test` you must have to pass the AMP_PATH environment variable with the relative path to your amplify project from amplify-video directory.
+
+Using `npm run dev-test` avoids you to run deployment scripts when you are developing.
+
 ### Commit Style
 
 Current version: `Release`

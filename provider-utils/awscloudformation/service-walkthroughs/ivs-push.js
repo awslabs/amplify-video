@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const question = require('../../ivs-questions.json');
+const headlessMode = require('../utils/headless-mode');
 
 module.exports = {
   serviceQuestions,
@@ -15,15 +16,27 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
   let nameDict = {};
+  const defaultName = 'mylivestream';
 
   const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
+
   const nameProject = [
     {
       type: inputs[0].type,
       name: inputs[0].key,
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
-      default: 'mylivestream',
+      default: defaultName,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[0].key,
+          value: args.resourceName ? args.resourceName : defaultName,
+        });
+      },
     },
   ];
 
@@ -42,6 +55,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[1].question,
       choices: inputs[1].options,
       default: 'STANDARD',
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[1].key,
+          value: args.channelQuality ? args.channelQuality : 'STANDARD',
+        });
+      },
     },
     {
       type: inputs[2].type,
@@ -49,6 +70,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[2].question,
       choices: inputs[2].options,
       default: 'LOW',
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[2].key,
+          value: args.channelLatency ? args.channelLatency : 'LOW',
+        });
+      },
     },
   ];
 

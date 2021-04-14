@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
 const { generateKeyPairSync } = require('crypto');
+const headlessMode = require('../utils/headless-mode');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
 const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
@@ -19,18 +20,30 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   const targetDir = amplify.pathManager.getBackendDirPath();
   const props = {};
+  const defaultName = 'myvodstreams';
   let oldValues = {};
   let nameDict = {};
   let aws;
 
   const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
+
   const nameProject = [
     {
       type: inputs[0].type,
       name: inputs[0].key,
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
-      default: 'myvodstreams',
+      default: defaultName,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[0].key,
+          value: args.resourceName ? args.resourceName : defaultName,
+        });
+      },
     }];
 
   if (resourceName) {
@@ -83,6 +96,15 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[1].key,
       message: inputs[1].question,
       choices: availableTemplates,
+      default: availableTemplates[0].value,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[1].key,
+          value: args.encodingTemplate ? args.encodingTemplate : availableTemplates[0].value,
+        });
+      },
     },
   ];
   const template = await inquirer.prompt(templateQuestion);
@@ -144,6 +166,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[3].question,
       validate: amplify.inputValidation(inputs[3]),
       default: defaults.contentDeliveryNetwork[inputs[3].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[3].key,
+          value: args.enableCDN ? args.enableCDN : defaults.contentDeliveryNetwork[inputs[3].key],
+        });
+      },
     }];
 
   const cdnResponse = await inquirer.prompt(cdnEnable);
@@ -162,6 +192,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[4].question,
       validate: amplify.inputValidation(inputs[4]),
       default: defaults.contentManagementSystem[inputs[4].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[4].key,
+          value: args.enableCMS ? args.enableCMS : false,
+        });
+      },
     }];
 
   const cmsResponse = await inquirer.prompt(cmsEnable);
@@ -205,7 +243,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
 async function createCDN(context, props, options, aws, oldValues) {
   const { inputs } = question.video;
+  const { payload } = context.parameters.options;
   const { amplify } = context;
+  const args = payload ? JSON.parse(payload) : {};
   const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
 
@@ -233,6 +273,14 @@ async function createCDN(context, props, options, aws, oldValues) {
       message: inputs[9].question,
       validate: amplify.inputValidation(inputs[9]),
       default: true,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[9].key,
+          value: args.signedKey ? args.signedKey : false,
+        });
+      },
     }];
     const signedURLResponse = await inquirer.prompt(signedURLQuestion);
 
