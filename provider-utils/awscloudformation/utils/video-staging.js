@@ -410,7 +410,7 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
       context.print.error(err);
     }
   });
-  archive.on('end', async () => {
+  output.on('close', async () => {
     await uploadFile(context, s3Client, targetBucket, zipDir, newFilePath, stackFolder, hashName);
   });
   archive.on('error', (err) => {
@@ -438,6 +438,7 @@ async function uploadFile(context, s3Client, hostingBucketName, distributionDirP
     ContentType: contentType || 'text/plain',
   };
   try {
+    context.print.warning(`UPLOADING: ${distributionDirPath}/${filePath} -> ${fileKey}`);
     await s3Client.upload(uploadParams).promise();
   } catch (error) {
     context.print.error(`Failed pushing to S3 with error: ${error}`);

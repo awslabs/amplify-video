@@ -1,35 +1,114 @@
 /* eslint-disable */
 const AWS = require('aws-sdk');
+const path = require('path');
+const URL = require('url');
+const https = require('https');
 /* eslint-enable */
 const s3 = new AWS.S3({});
 
-/* eslint-disable */
-exports.handler = function (event, context) {
-/* eslint-enable */
-
-/*
-Function that triggers on the output bucket.
-
-event.Records contains an array of S3 records that you can take action on.
-*/
-
-<% if (!props.contentDeliveryNetwork.enableDistribution) { %>
-  event.Records.forEach((s3Record) => {
-    console.log(s3Record.s3.object.key);
-    const objectKey = s3Record.s3.object.key;
-    const bucketName = s3Record.s3.bucket.name;
-    const params = {
-      Bucket: bucketName,
-      Key: objectKey,
-      ACL: 'public-read',
-    };
-    s3.putObjectAcl(params, (err, data) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(data);
-      }
+<% if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+function httpCall(req, uri) {
+  return new Promise((resolve, reject) => {
+    const httpsRequest = https.request({ ...req, host: uri.hostname.toString() }, (result) => {
+      result.on('data', (data) => {
+        resolve(JSON.parse(data.toString()));
+      });
     });
+    httpsRequest.write(req.body);
+    httpsRequest.end();
   });
+};
+
+async function appSyncCall(post_body) {
+  const apiUrl = process.env.GRAPHQLEP;
+  const uri = URL.parse(apiUrl);
+  const req = new AWS.HttpRequest(apiUrl, process.env.AWS_REGION);
+  req.headers.host = uri.host;
+  req.headers['Content-Type'] = 'application/json';
+  req.method = 'POST';
+  req.body = JSON.stringify(post_body);
+
+  const signer = new AWS.Signers.V4(req, "appsync", true);
+  signer.addAuthorization(AWS.config.credentials, AWS.util.date.getDate());
+  return httpCall(req, uri)
+};
+
+async function handleImage(bucketName, objectKey) {
+  const [imageId, imageNum] = path.basename(objectKey, '.jpg').split('.');
+  const prefix = path.dirname(objectKey);
+  const getVideoObject = `query GetVideoObject($id: ID!) {
+            getVideoObject(id: $id) {
+              asset {
+                id
+              }
+            }
+          }`;
+  const getVideoObjectVariables = { id: imageId };
+  const get_video_object_post_body = {
+    query: getVideoObject,
+    operationName: 'GetVideoObject',
+    variables: getVideoObjectVariables
+  };
+  const ret = await appSyncCall(get_video_object_post_body);
+  const assetId = ret.data.getVideoObject.asset.id;
+  const imageSequence = {
+    bucket: bucketName,
+    prefix: prefix + '/' + imageId,
+    imageCount: (parseInt(imageNum, 10) + 1),
+    paddingLength: imageNum.length,
+    extension: '.jpg'
+  }
+  const input = {
+    id: assetId,
+    images: imageSequence
+  }
+  const updateImageSequence = `mutation UpdateImageSequence($input: UpdateVodAssetImageSequenceInput!) {
+            updateAssetImageSequence(input: $input) {
+              id
+              images {
+                imageCount
+              }
+            }
+          }`;
+  const updateImageSequenceVariables = { input: input };
+  const update_image_sequence_post_body = {
+    query: updateImageSequence,
+    operationName: 'UpdateImageSequence',
+    variables: updateImageSequenceVariables
+  };
+  const ret2 = await appSyncCall(update_image_sequence_post_body);
+}
 <% } %>
+exports.handler = async (event, context, callback) => {
+  <% if (!props.contentDeliveryNetwork.enableDistribution || props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+  const s3Record = event.Records[0]
+  const objectKey = s3Record.s3.object.key;
+  const bucketName = s3Record.s3.bucket.name;
+  <% } %>
+  <% if (!props.contentDeliveryNetwork.enableDistribution) { %>
+  const params = {
+    Bucket: bucketName,
+    Key: objectKey,
+    ACL: 'public-read',
+  };
+  const aclRequest = s3.putObjectAcl(params);
+  const aclPromise = aclRequest.promise();
+  aclPromise.then(
+    async function (data) {
+      console.log(data);
+      <% if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>
+      if (objectKey.endsWith('.jpg')) {
+        await handleImage(bucketName, objectKey);
+      }
+      <% } %>
+    },
+    function (error) {
+      console.log(error);
+    }
+  );
+  <% } else if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json')  {%>
+  if (objectKey.endsWith('.jpg')) {
+      await handleImage(bucketName, objectKey);
+  }
+  <% } %>
 };

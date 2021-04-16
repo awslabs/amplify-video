@@ -108,6 +108,18 @@ function createOutputNotifications(config) {
             },
           },
         },
+        <% if (props.template.name == 'Amplify_Video_HLS_With_Thumbnails.json') { %>{
+          Events: ['s3:ObjectCreated:*'],
+          LambdaFunctionArn: config.IngestArn,
+          Filter: {
+            Key: {
+              FilterRules: [{
+                Name: 'suffix',
+                Value: '.jpg',
+              }],
+            },
+          },
+        },<% } %>
       ],
     },
   };

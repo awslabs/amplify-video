@@ -236,6 +236,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
         'Outputs.GraphQLAPIEndpointOutput',
       ],
     };
+    if (template.encodingTemplate === 'Amplify_Video_HLS_With_Thumbnails.json') {
+      console.log(apiName);
+      fs.copySync(`${pluginDir}/resolvers/Mutation.updateAssetImageSequence.req.vtl`, `${targetDir}/api/${apiName}/resolvers/Mutation.updateAssetImageSequence.req.vtl`);
+      fs.copySync(`${pluginDir}/resolvers/Mutation.updateAssetImageSequence.res.vtl`, `${targetDir}/api/${apiName}/resolvers/Mutation.updateAssetImageSequence.res.vtl`);
+      fs.copySync(`${pluginDir}/stacks/Image.json`, `${targetDir}/api/${apiName}/stacks/Image.json`);
+    }
   }
 
   return props;
