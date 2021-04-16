@@ -129,18 +129,24 @@ async function setupWebProjects(context, resourceName) {
     case 'ember':
       fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/app/components/video-player.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
       break;
+    case 'none':
+      break;
     default:
       fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
       break;
   }
 
-  const spinner = ora('Checking package.json dependencies...');
-  spinner.start();
-  if (!videoPlayerUtils.checkNpmDependencies(context, 'video.js')) {
-    spinner.text = 'Adding video.js to package.json...';
-    await exec('npm', ['install', 'video.js'], false);
+  if (framework !== 'none') {
+    const spinner = ora('Checking package.json dependencies...');
+    spinner.start();
+    if (!videoPlayerUtils.checkNpmDependencies(context, 'video.js')) {
+      spinner.text = 'Adding video.js to package.json...';
+      await exec('npm', ['install', 'video.js'], false);
+    }
+    spinner.succeed('Configuration complete.');
+    context.print.blue(chalk`{underline Import and add the following ${framework} component:}`);
+  } else {
+    context.print.blue(chalk`{underline Copy and paste the following snippet of code:}`);
   }
-  spinner.succeed('Configuration complete.');
-  context.print.blue(chalk`{underline Import and add the following ${framework} component:}`);
   context.print.info(appendVideoComponentTemplate);
 }
