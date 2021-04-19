@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
 const question = require('../../livestream-questions.json');
+const headlessMode = require('../utils/headless-mode');
 
 module.exports = {
   serviceQuestions,
@@ -28,6 +29,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   }
 
   const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
 
   // question dictionaries taken by inquirer
   // project name
@@ -38,6 +41,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[0].question,
       validate: amplify.inputValidation(inputs[0]),
       default: defaults.resourceName,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[0].key,
+          value: args.resourceName ? args.resourceName : defaults.resourceName,
+        });
+      },
     }];
 
   // prompt for advanced options
@@ -47,6 +58,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[16].key,
       message: inputs[16].question,
       default: defaults.advanced[inputs[16].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[16].key,
+          value: defaults.advanced[inputs[16].key],
+        });
+      },
     },
   ];
 
@@ -58,6 +77,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[1].question,
       validate: amplify.inputValidation(inputs[1]),
       default: defaults.advanced[inputs[1].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[1].key,
+          value: defaults.advanced[inputs[1].key],
+        });
+      },
     },
     {
       type: inputs[2].type,
@@ -65,6 +92,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[2].question,
       validate: amplify.inputValidation(inputs[2]),
       default: defaults.advanced[inputs[2].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[2].key,
+          value: defaults.advanced[inputs[2].key],
+        });
+      },
     },
     {
       type: inputs[3].type,
@@ -72,6 +107,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[3].question,
       validate: amplify.inputValidation(inputs[3]),
       default: defaults.advanced[inputs[3].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[3].key,
+          value: defaults.advanced[inputs[3].key],
+        });
+      },
     },
   ];
 
@@ -82,6 +125,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[4].question,
       validate: amplify.inputValidation(inputs[4]),
       default: defaults.mediaLive[inputs[4].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[4].key,
+          value: defaults.mediaLive[inputs[4].key],
+        });
+      },
     },
     {
       type: inputs[5].type,
@@ -89,6 +140,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[5].question,
       choices: inputs[5].options,
       default: defaults.mediaLive[inputs[5].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[5].key,
+          value: defaults.mediaLive[inputs[5].key],
+        });
+      },
     },
     {
       type: inputs[6].type,
@@ -96,6 +155,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[6].question,
       choices: inputs[6].options,
       default: defaults.mediaLive[inputs[6].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[6].key,
+          value: defaults.mediaLive[inputs[6].key],
+        });
+      },
     },
     {
       type: inputs[7].type,
@@ -103,6 +170,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[7].question,
       choices: inputs[7].options,
       default: defaults.mediaLive[inputs[7].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[7].key,
+          value: defaults.mediaLive[inputs[7].key],
+        });
+      },
     },
   ];
 
@@ -112,6 +187,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: inputs[17].key,
       message: inputs[17].question,
       default: defaults.advanced[inputs[17].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[17].key,
+          value: defaults.advanced[inputs[17].key],
+        });
+      },
     },
   ];
 
@@ -122,6 +205,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[8].question,
       choices: inputs[8].options,
       default: defaults.mediaPackage[inputs[8].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[8].key,
+          value: defaults.mediaPackage[inputs[8].key],
+        });
+      },
     },
     {
       type: inputs[9].type,
@@ -129,6 +220,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[9].question,
       validate: amplify.inputValidation(inputs[9]),
       default: defaults.mediaPackage[inputs[9].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[9].key,
+          value: defaults.mediaPackage[inputs[9].key],
+        });
+      },
     },
   ];
 
@@ -139,6 +238,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[15].question,
       choices: inputs[15].options,
       default: defaults.mediaStorage[inputs[15].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[15].key,
+          value: defaults.mediaStorage[inputs[15].key],
+        });
+      },
     },
   ];
 
@@ -149,6 +256,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[11].question,
       choices: inputs[11].options,
       default: defaults.cloudFront[inputs[11].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[11].key,
+          value: defaults.cloudFront[inputs[11].key],
+        });
+      },
     },
   ];
 
@@ -159,6 +274,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[12].question,
       choices: inputs[12].options,
       default: defaults.cloudFront[inputs[12].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[12].key,
+          value: defaults.cloudFront[inputs[12].key],
+        });
+      },
     },
     {
       type: inputs[13].type,
@@ -166,6 +289,14 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[13].question,
       validate: amplify.inputValidation(inputs[13]),
       default: defaults.cloudFront[inputs[13].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[13].key,
+          value: defaults.cloudFront[inputs[13].key],
+        });
+      },
     },
     {
       type: inputs[14].type,
@@ -173,10 +304,18 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       message: inputs[14].question,
       validate: amplify.inputValidation(inputs[14]),
       default: defaults.cloudFront[inputs[14].key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: inputs[14].key,
+          value: defaults.cloudFront[inputs[14].key],
+        });
+      },
     },
   ];
   if (resourceName) {
-    resource.name = resourceName;
+    resource.resourceName = resourceName;
   } else {
     resource = await inquirer.prompt(nameProject);
   }

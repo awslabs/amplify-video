@@ -10,13 +10,36 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x]
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
+    # - name: Install AWS CLI
+    #   run : |
+    #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    #       unzip awscliv2.zip
+    #       ./aws/install --update
+    - name: Configure AWS credentials from Test account
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    - name: Add profile credentials to ~/.aws/credentials
+      env:
+         AWS_ACCESS_KEY_ID: ${{ secrets.TEST_AWS_ACCESS_KEY_ID }}
+         AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_AWS_SECRET_ACCESS_KEY }}
+      run: |
+         aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile default
+         aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile default
+         aws configure set region us-west-2 --profile default
+    - name: Install amplify-cli
+      run : npm install -g @aws-amplify/cli 
+    - name: Install amplify-video
+      run : npm install -g
     - name: Install dependencies
       run : npm install
     - name: Run Jest
