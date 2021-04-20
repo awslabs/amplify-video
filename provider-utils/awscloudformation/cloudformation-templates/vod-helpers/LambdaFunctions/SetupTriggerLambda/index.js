@@ -8,17 +8,14 @@ exports.handler = function (event, context) {
 /* eslint-enable */
   const config = event.ResourceProperties;
 
-  console.log(config);
-
   const responseData = {};
 
   switch (event.RequestType) {
     case 'Create':
-      if (config.BucketFunction === 'Input') {
-        createInputNotifications(config);
-      } else {
-        createOutputNotifications(config);
-      }
+      createNotifications(config);
+      break;
+    case 'Update':
+      createNotifications(config);
       break;
     case 'Delete':
       deleteNotifications(config);
@@ -79,105 +76,30 @@ function sendResponse(event, context, responseStatus, responseData) {
   request.end();
 }
 
-function createOutputNotifications(config) {
-  const params = {
-    Bucket: config.BucketName,
-    NotificationConfiguration: {
-      LambdaFunctionConfigurations: [
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.m3u8',
-              }],
-            },
-          },
-        },
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.ts',
-              }],
-            },
-          },
-        },
-      ],
-    },
-  };
+function createNotifications(config) {
+  const LambdaFunctionConfig = [];
 
-  console.log(params);
-
-  s3.putBucketNotificationConfiguration(params, (err, data) => {
-    if (err) console.log(err, err.stack);
-    else console.log(data);
+  Object.values(config.TriggerSuffix).forEach((suffix) => {
+    const suffixConfigure = {
+      Events: ['s3:ObjectCreated:*'],
+      LambdaFunctionArn: config.IngestArn,
+      Filter: {
+        Key: {
+          FilterRules: [{
+            Name: 'suffix',
+            Value: suffix,
+          }],
+        },
+      },
+    };
+    LambdaFunctionConfig.push(suffixConfigure);
   });
-}
-
-function createInputNotifications(config) {
   const params = {
     Bucket: config.BucketName,
     NotificationConfiguration: {
-      LambdaFunctionConfigurations: [
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.mpg',
-              }],
-            },
-          },
-        },
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.mp4',
-              }],
-            },
-          },
-        },
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.m2ts',
-              }],
-            },
-          },
-        },
-        {
-          Events: ['s3:ObjectCreated:*'],
-          LambdaFunctionArn: config.IngestArn,
-          Filter: {
-            Key: {
-              FilterRules: [{
-                Name: 'suffix',
-                Value: '.mov',
-              }],
-            },
-          },
-        },
-      ],
     },
   };
-
-  console.log(params);
+  params.NotificationConfiguration.LambdaFunctionConfigurations = LambdaFunctionConfig;
 
   s3.putBucketNotificationConfiguration(params, (err, data) => {
     if (err) console.log(err, err.stack);
