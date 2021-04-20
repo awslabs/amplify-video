@@ -5,6 +5,8 @@ const axios = require('axios');
 const request = require('supertest');
 const CloudFrontTokenGen = require('../../provider-utils/awscloudformation/cloudformation-templates/vod-helpers/LambdaFunctions/CloudFrontTokenGen/index.js');
 
+AWS.config.update({region:'us-west-2'});
+
 describe('VOD Tests', () => {
   let token;
   let domainName;
