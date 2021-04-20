@@ -1,28 +1,38 @@
 {
-    "name": {
-        "key": "name",
-        "next": "gopSize",
-        "defaultValue": "mylivestream"
+    "resourceName": {
+        "key": "resourceName",
+        "next": "advancedChoice",
+        "value": "mylivestream"
+    },
+    "advancedChoice": {
+        "key": "advancedChoice",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "next": "gopSize"
+            }
+        ]
     },
     "gopSize": {
         "key": "gopSize",
         "next": "gopPerSegment",
-        "defaultValue": "1"
+        "value": "1"
     },
     "gopPerSegment": {
         "key": "gopPerSegment",
         "next": "segsPerPlist",
-        "defaultValue": "2"
+        "value": "2"
     },
     "segsPerPlist": {
         "key": "segsPerPlist",
         "next": "securityGroup",
-        "defaultValue": "3"
+        "value": "3"
     },
     "securityGroup": {
         "key": "securityGroup",
         "next": "encodingProfile",
-        "defaultValue": "0.0.0.0/0"
+        "value": "0.0.0.0/0"
     },
     "ingestType": {
         "key": "ingestType",
@@ -30,12 +40,12 @@
         "options": {
             "RTMP_PUSH": {
                 "next": "storageType",
-                "value": "RTMP_PUSH",
-                "ignore": true
+                "value": "RTMP_PUSH"
             },
             "RTP_PUSH": {
                 "next": "storageType",
-                "value": "RTP_PUSH"
+                "value": "RTP_PUSH",
+                "ignore": true
             },
             "UDP_PUSH": {
                 "next": "storageType",
@@ -55,7 +65,8 @@
         "options": {
             "UHD": {
                 "next": "autoStart",
-                "value": "UHD"
+                "value": "UHD",
+                "ignore": true
             },
             "FULL": {
                 "next": "autoStart",
@@ -63,15 +74,18 @@
             },
             "MOBILE": {
                 "next": "autoStart",
-                "value": "MOBILE"
+                "value": "MOBILE",
+                "ignore": true
             },
             "HD": {
                 "next": "autoStart",
-                "value": "HD"
+                "value": "HD",
+                "ignore": true
             },
             "SD": {
                 "next": "autoStart",
-                "value": "SD"
+                "value": "SD",
+                "ignore": true
             }
         }
     },
@@ -85,7 +99,8 @@
             },
             "NO": {
                 "next": "ingestType",
-                "value": "NO"
+                "value": "NO",
+                "ignore": true
             }
         }
     },
@@ -142,7 +157,7 @@
     "startOverWindow": {
         "key": "startOverWindow",
         "next": "enableDistribution",
-        "defaultValue": "86400"
+        "value": "86400"
     },
     "enableMediaStore": {
         "key": "enableMediaStore",
@@ -177,11 +192,13 @@
         "options": {
             "PriceClass_100": {
                 "next": "sBucketLogs",
-                "value": "PriceClass_100"
+                "value": "PriceClass_100",
+                "ignore": true
             },
             "PriceClass_200": {
                 "next": "sBucketLogs",
-                "value": "PriceClass_200"
+                "value": "PriceClass_200",
+                "ignore": true
             },
             "PriceClass_All": {
                 "next": "sBucketLogs",
@@ -192,11 +209,11 @@
     "sBucketLogs": {
         "key": "sBucketLogs",
         "next": "sLogPrefix",
-        "defaultValue": ""
+        "value": "s3://amplifyvideotest/logs/"
     },
     "sLogPrefix": {
         "key": "sLogPrefix",
-        "defaultValue": "cf_logs/"
+        "value": "cf_logs/"
     },
     "storageType": {
         "key": "storageType",
@@ -204,11 +221,13 @@
         "options": {
             "mPackage": {
                 "next": "endpoints",
-                "value": "mPackage"
+                "value": "mPackage",
+                "ignore": true
             },
             "mPackageStore": {
                 "next": "endpoints",
-                "value": "mPackageStore"
+                "value": "mPackageStore",
+                "ignore": true
             },
             "mStore": {
                 "next": "enableDistribution",
@@ -219,6 +238,6 @@
     "mp4URL": {
         "key": "mp4URL",
         "next": "storageType",
-        "defaultValue": ""
+        "value": "s3://amplifyvideotest/VANLIFE.mp4"
     }
 }

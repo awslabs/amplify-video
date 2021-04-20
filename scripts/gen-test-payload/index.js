@@ -1,24 +1,19 @@
 const fs = require('fs');
 const ejs = require('ejs');
 
+let fullCoverage = false;
+
 const servicesQuestions = [];
 const servicesHelpers = {};
 
-const questionFolder = `${__dirname}/../../provider-utils/`;
-fs.readdirSync(questionFolder).forEach((file) => {
-  if (file.includes('questions')) {
-    servicesQuestions.push({
-      serviceType: file.split('-')[0],
-      content: require(`${questionFolder}${file}`),
-    });
-  }
-});
-
-const helpersFolder = './test-helpers/';
-fs.readdirSync(helpersFolder).forEach((file) => {
-  if (file.includes('helpers')) {
-    servicesHelpers[file.split('-')[0]] = require(`${helpersFolder}${file}`);
-  }
+const supportedServices = require(`${__dirname}/../../provider-utils/supported-services.json`);
+const helpersFolder = `${__dirname}/test-helpers/`;
+Object.keys(supportedServices).forEach((key) => {
+  servicesQuestions.push({
+    serviceType: `${key}`,
+    provider: `${supportedServices[key].questionFilename}`,
+  });
+  servicesHelpers[key] = require(`${helpersFolder}${key}-helpers.json`);
 });
 
 class TreeNode {
@@ -38,85 +33,129 @@ class TreeNode {
 }
 
 class Tree {
-  constructor() {
+  constructor(serviceType, provider) {
+    this.serviceType = serviceType;
+    this.provider = provider;
     this.maxDepth = 0;
     this.paths = [];
   }
 
-  buildTree(questions, helper) {
+  buildTree(helper) {
     const getNextNode = (currNode, currQuestion, depth) => {
       depth++;
-      if (typeof currQuestion === 'undefined' || (!!currQuestion.next && !!currQuestion.options) || (typeof currQuestion.ignore !== 'undefined')) {
+      this.maxDepth = depth;
+      if (typeof currQuestion === 'undefined'
+        || (!!currQuestion.next && !!currQuestion.options && currQuestion.type !== 'checkbox')) {
         return;
       }
       if (!!currQuestion.type && currQuestion.type === 'list') {
         Object.keys(currQuestion.options).forEach((optionKey) => {
-          if (currQuestion.options[optionKey].ignore === true) {
+          if (currQuestion.options[optionKey].ignore === true && !fullCoverage) {
             return;
           }
           if (!currQuestion.options[optionKey].next) {
-            currNode.addChild(new TreeNode(currQuestion.options[optionKey].value,
+            currNode.addChild(new TreeNode(currQuestion.options[optionKey].value || '',
               currQuestion.key, depth));
           } else {
-            const nextNode = new TreeNode(currQuestion.options[optionKey].value,
-              currQuestion.key, depth);
-            currNode.addChild(nextNode);
-            getNextNode(nextNode, helper[currQuestion.options[optionKey].next],
-              depth);
+            currQuestion.options[optionKey].next.split('||').forEach((next) => {
+              const nextNode = new TreeNode(currQuestion.options[optionKey].value || '',
+                currQuestion.key, depth);
+              currNode.addChild(nextNode);
+              getNextNode(nextNode, helper[next],
+                depth);
+            });
           }
         });
       } else if (!!currQuestion.type && currQuestion.type === 'confirm') {
-        // don't create node out of those because they don't hold payload
-        // they might hold one but we have no example for that
-        getNextNode(currNode, helper[currQuestion.yesNext], depth); // yes
-        getNextNode(currNode, helper[currQuestion.noNext], depth); // no
+        currQuestion.options.forEach((option) => {
+          if (option.ignore === true && !fullCoverage) {
+            return;
+          }
+          if (!option.next) {
+            const nextNode = new TreeNode(option.value, currQuestion.key, depth);
+            currNode.addChild(nextNode);
+          } else {
+            option.next.split('||').forEach((next) => {
+              const nextNode = new TreeNode(option.value, currQuestion.key, depth);
+              currNode.addChild(nextNode);
+              getNextNode(nextNode, helper[next], depth);
+            });
+          }
+        });
       } else if (!!currQuestion.type && currQuestion.type === 'checkbox') {
-        // gen all permutations of checkboxes and call getNextNode for each of them
+        const getCombinations = (array) => {
+          const result = [];
+          const fGetCombinations = (prefix, arr) => {
+            for (let i = 0; i < arr.length; i++) {
+              result.push(`${prefix},${arr[i]}`);
+              fGetCombinations(`${prefix},${arr[i]}`, arr.slice(i + 1));
+            }
+          };
+          fGetCombinations('', array);
+          return result.map(r => r.slice(1, r.length)).map(r => r.split(','));
+        };
+        getCombinations(currQuestion.options).forEach((combinaison) => {
+          const nextNode = new TreeNode(combinaison || '',
+            currQuestion.key, depth);
+          currNode.addChild(nextNode);
+          getNextNode(nextNode, helper[currQuestion.next], depth);
+        });
+      } else if (currQuestion.next) {
+        currQuestion.next.split('||').forEach((next) => {
+          const nextNode = new TreeNode(helper[currQuestion.key].value || '',
+            currQuestion.key, depth);
+          currNode.addChild(nextNode);
+          getNextNode(nextNode, helper[next], depth);
+        });
       } else {
-        const nextNode = new TreeNode(helper[currQuestion.key].defaultValue,
-          currQuestion.key, depth);
-        currNode.addChild(nextNode);
-        getNextNode(nextNode, helper[currQuestion.next], depth);
+        currNode.addChild(new TreeNode(helper[currQuestion.key].value || '',
+          currQuestion.key, depth));
       }
     };
 
     this.rootNode = new TreeNode('root', 'root', 0);
-    const firstQuestion = helper[questions.content.video.inputs[0].key];
-    const firstNode = new TreeNode(helper[questions.content.video.inputs[0].key].defaultValue,
-      questions.content.video.inputs[0].key, 1);
+    const firstQuestion = helper.resourceName;
+    const firstNode = new TreeNode(firstQuestion.value, 'resourceName', 1);
     this.rootNode.addChild(firstNode);
     getNextNode(firstNode, helper[firstQuestion.next], firstNode.depth);
     return this;
   }
 
-  buildPaths(node, path, helpers) {
-    if (node.childs.length === 0) {
-      path = [...path, { key: node.key, value: node.value }];
-      this.paths = [...this.paths, path];
+  buildPaths(node, path) {
+    if (node.parents.length === 0) {
+      this.paths = [...this.paths, [...path]];
       return;
     }
     if (node.key !== 'root') {
       path = [...path, { key: node.key, value: node.value }];
     }
-    node.childs.forEach((c) => {
-      this.buildPaths(c, path, helpers);
+    node.parents.forEach((c) => {
+      this.buildPaths(c, [...path]);
     });
   }
 
-  buildScript(questions) {
+  getBottomNodes(node, arr) {
+    if (node.childs.length === 0) {
+      arr.push(node);
+    } else {
+      node.childs.forEach(child => this.getBottomNodes(child, arr));
+    }
+  }
+
+  buildScript() {
     this.paths.forEach((path, idx) => {
-      ejs.renderFile('./template.ejs', {
+      ejs.renderFile(`${__dirname}/template.ejs`, {
         payload: {
           inputs: path,
-          serviceType: questions.serviceType,
-          provider: questions.content.video.provider,
+          serviceType: this.serviceType,
+          provider: this.provider,
         },
       }, (ejsErr, str) => {
         if (ejsErr) {
           console.error(ejsErr);
           return;
         }
-        fs.writeFile(`output/${questions.serviceType}-${idx}.sh`, str, (fsErr) => {
+        fs.writeFile(`${__dirname}/output/${this.serviceType}-${idx}.sh`, str, (fsErr) => {
           if (fsErr) {
             console.error(fsErr);
           }
@@ -126,14 +165,30 @@ class Tree {
   }
 }
 
-// Entrypoint (node index.js)
+if (process.argv.length !== 3 && process.argv.length !== 2) {
+  console.info("Arguments should be 'node index.js [full-coverage]");
+  process.exit(1);
+}
+
+fullCoverage = process.argv[2] === 'full-coverage';
+
+console.info('\nGenerating script files...');
+
 servicesQuestions.forEach((question) => {
-  if (question.serviceType === 'livestream' || question.serviceType === 'ivs') {
-    console.info(`---Service ${question.serviceType}---`);
-    const tree = new Tree();
-    tree.buildTree(question, servicesHelpers[`${question.serviceType}`]);
-    tree.buildPaths(tree.rootNode, [], servicesHelpers[`${question.serviceType}`].content);
-    console.info('Number of permutations:', tree.paths.length);
-    tree.buildScript(question);
+  if (['livestream', 'ivs', 'video-on-demand'].includes(question.serviceType)) {
+    const tree = new Tree(question.serviceType, question.provider);
+    tree.buildTree(servicesHelpers[`${question.serviceType}`]);
+    const bottomNodes = [];
+    tree.getBottomNodes(tree.rootNode, bottomNodes);
+    bottomNodes.forEach(node => tree.buildPaths(node, []));
+    tree.paths.forEach((path) => {
+      path.forEach((elem) => {
+        if (elem.key === 'resourceName') {
+          elem.value += `${Math.random().toString(36).substring(2, 6)}`;
+        }
+      });
+    });
+    tree.buildScript();
+    console.info(`Generated ${tree.paths.length} scripts for ${question.serviceType} service`);
   }
 });

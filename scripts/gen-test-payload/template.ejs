@@ -2,12 +2,18 @@
 set -e
 IFS='|'
 
-PERMUTATION="{
-\"service\":\"video\",
-\"serviceType\":\"<%- payload.serviceType %>\",
-\"providerName\":\"<%- payload.provider %>\",
-<% payload.inputs.forEach(({key, value}) => { %>
-\"<%- key %>\":\"<%- value %>\",
+PERMUTATION="{\
+\"service\":\"video\",\
+\"serviceType\":\"<%- payload.serviceType %>\",\
+\"providerName\":\"<%- payload.provider %>\",\
+<% let token = ','; %>
+<% payload.inputs.forEach(({key, value}, index, array) => { %>
+<% if (index === array.length - 1) { token = '' } %>
+<% if (value === 'true' || value === 'false') { %>
+\"<%- key %>\":<%- value %><%- token %>\
+<% } else { %>
+\"<%- key %>\":\"<%- value %>\"<%- token %>\
+<% } %>
 <% }); %>
 }"
 amplify video add --payload $PERMUTATION

@@ -1,0 +1,131 @@
+{
+    "resourceName": {
+        "key": "resourceName",
+        "next": "enableCDN",
+        "value": "myvodservice"
+    },
+    "encodingTemplate": {
+        "key": "encodingTemplate",
+        "type": "list",
+        "options": {
+            "System-Ott_Hls_Ts_Avc_Aac": {
+                "value": "System-Ott_Hls_Ts_Avc_Aac",
+                "next": "enableCDN"
+            },
+            "advanced": {
+                "next": "encodingTemplate-advanced",
+                "ignore": true
+            }
+        }
+    },
+    "encodingTemplate-advanced": {
+        "key": "encodingTemplate-advanced",
+        "next": "enableCDN"
+    },
+    "enableCDN": {
+        "key": "enableCDN",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "next": "modifySignedUrl",
+                "ignore": true
+            },
+            {
+                "value": "true",
+                "next": "signedKey"
+            },
+            {
+                "value": "false",
+                "next": "enableCMS"
+            }
+        ]
+    },
+    "enableCMS": {
+        "key": "enableCMS",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "next": "permissionSchema",
+                "ignore": true
+            },
+            {
+                "value": "false"
+            }
+        ]
+    },
+    "editAPI": {
+        "key": "editAPI",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "ignore": true
+            }
+        ]
+    },
+    "modifySignedUrl": {
+        "key": "modifySignedUrl",
+        "type": "list",
+        "options": {
+            "leave": {
+                "value": "leave",
+                "next": "enableCMS",
+                "ignore": true
+            },
+            "rotate": {
+                "value": "rotate",
+                "next": "enableCMS",
+                "ignore": true
+            },
+            "remove": {
+                "value": "remove",
+                "next": "enableCMS",
+                "ignore": true
+            }
+        }
+    },
+    "signedKey": {
+        "key": "signedKey",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "next": "enableCMS"
+            },
+            {
+                "value": "false",
+                "next": "enableCMS",
+                "ignore": true
+            }
+        ]
+    },
+    "overrideSchema": {
+        "key": "overrideSchema",
+        "type": "confirm",
+        "options": [
+            {
+                "value": "true",
+                "next": "editAPI",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "next": "editAPI",
+                "ignore": true
+            }
+        ]
+    },
+    "permissionSchema": {
+        "key": "permissionSchema",
+        "type": "checkbox",
+        "next": "overrideSchema",
+        "options": ["admin", "any"],
+        "ignore": true
+    }
+}

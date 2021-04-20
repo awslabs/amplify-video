@@ -10,7 +10,7 @@ const { getAWSConfig } = require('./get-aws');
 
 async function buildTemplates(context, props) {
   const { amplify } = context;
-  const amplifyMeta = amplify.getProjectMeta();
+  const amplifyMeta = await amplify.getProjectMeta();
   const { serviceType } = amplifyMeta.video[props.shared.resourceName];
   const spinner = ora('Building video resources...');
   spinner.start();

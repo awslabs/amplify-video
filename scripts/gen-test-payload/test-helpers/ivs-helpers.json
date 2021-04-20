@@ -2,7 +2,7 @@
     "resourceName": {
         "key": "ressourceName",
         "next": "channelQuality",
-        "defaultValue": "mylivestream"
+        "value": "mylivestream"
     },
     "channelQuality": {
         "key": "channelQuality",
