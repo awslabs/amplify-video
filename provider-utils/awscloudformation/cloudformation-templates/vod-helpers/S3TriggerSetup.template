@@ -84,6 +84,11 @@ Resources:
       BucketName: !Ref pInputS3
       IngestArn: !Ref pInputTriggerLambda
       BucketFunction: "Input"
+      TriggerSuffix:
+        - ".mpg"
+        - ".mp4"
+        - ".m2ts"
+        - ".mov"
 
   rCreateOutputTrigger:
     Type: "Custom::OutputTrigger"
@@ -92,6 +97,9 @@ Resources:
       BucketName: !Ref pOutputS3
       IngestArn: !Ref pOutputTriggerLambda
       BucketFunction: "Output"
+      TriggerSuffix:
+        - ".m3u8"
+        - ".ts"
 
   rSetupTriggerLambdaRole:
     Type: AWS::IAM::Role
