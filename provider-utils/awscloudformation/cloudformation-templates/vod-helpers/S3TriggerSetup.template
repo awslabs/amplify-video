@@ -97,6 +97,9 @@ Resources:
       BucketName: !Ref pOutputS3
       IngestArn: !Ref pOutputTriggerLambda
       BucketFunction: "Output"
+      TriggerSuffix:
+        - ".m3u8"
+        - ".ts"
 
   rSetupTriggerLambdaRole:
     Type: AWS::IAM::Role
