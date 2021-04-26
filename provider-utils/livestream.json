@@ -1,0 +1,350 @@
+{
+    "resourceName": {
+        "key": "resourceName",
+        "question": "Provide a friendly name for your resource to be used as a label for this category in the project:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-zA-Z0-9\\-]+$",
+            "onErrorMsg": "Resource name should be alphanumeric"
+        },
+        "required": true,
+        "default": "mylivestream",
+        "next": ""
+    },
+    "gopSize": {
+        "key": "gopSize",
+        "question": "GOP Size:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[1-9][0-9]*$",
+            "onErrorMsg": "You can use the following characters: 0-9"
+        },
+        "required": true,
+        "default": "1",
+        "next": "gopPerSegment"
+    },
+    "gopPerSegment": {
+        "key": "gopPerSegment",
+        "question": "GOP(s) Per Segment:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[1-9][0-9]*$",
+            "onErrorMsg": "You can use the following characters: 0-9"
+        },
+        "required": true,
+        "default": "2",
+        "next": "segsPerPlist"
+    },
+    "segsPerPlist": {
+        "key": "segsPerPlist",
+        "question": "Segment(s) Per Playlist:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[1-9][0-9]*$",
+            "onErrorMsg": "You can use the following characters: 0-9"
+        },
+        "required": true,
+        "default": "3",
+        "next": "securityGroup"
+    },
+    "securityGroup": {
+        "key": "securityGroup",
+        "question": "Input Security Group: ",
+        "validation": {
+            "operator": "regex",
+            "value": "^(([0-9]{1,3}.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))+,?){1,}$",
+            "onErrorMsg": "You can use the following characters: 0-9"
+        },
+        "required": true,
+        "default": "encodingProfile",
+        "next": "0.0.0.0/0"
+    },
+    "ingestType": {
+        "key": "ingestType",
+        "question": "MediaLive ingest type: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "RTMP_PUSH",
+                "value": "RTMP_PUSH",
+                "next": "storageType"
+            },
+            {
+                "name": "RTP_PUSH",
+                "value": "RTP_PUSH",
+                "next": "storageType",
+                "ignore": true
+            },
+            {
+                "name": "UDP_PUSH",
+                "value": "UDP_PUSH",
+                "next": "storageType",
+                "ignore": true
+            },
+            {
+                "name": "MP4_FILE",
+                "value": "MP4_FILE",
+                "next": "mp4URL",
+                "ignore": true
+            }
+        ],
+        "required": true
+    },
+    "encodingProfile": {
+        "key": "encodingProfile",
+        "question": "Encoding Profile: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "UHD (7 renditions)",
+                "next": "autoStart",
+                "value": "UHD",
+                "ignore": true
+            },
+            {
+                "name": "FULL (6 renditions)",
+                "next": "autoStart",
+                "value": "FULL"
+            },
+            {
+                "name": "MOBILE (3 renditions)",
+                "next": "autoStart",
+                "value": "MOBILE",
+                "ignore": true
+            },
+            {
+                "name": "HD (single 1080p)",
+                "next": "autoStart",
+                "value": "HD",
+                "ignore": true
+            },
+            {
+                "name": "SD (single 432p)",
+                "next": "autoStart",
+                "value": "SD",
+                "ignore": true
+            }
+        ],
+        "required": true
+    },
+    "autoStart": {
+        "key": "autoStart",
+        "question": "Auto Start: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "Yes",
+                "value": "YES",
+                "next": "ingestType"
+            },
+            {
+                "name": "No",
+                "value": "NO",
+                "next": "ingestType",
+                "ignore": true
+            }
+        ],
+        "required": true
+    },
+    "endpoints": {
+        "key": "endpoints",
+        "question": "Output streaming standards. MediaPackage supports HLS, DASH, MSS, and/or CMAF: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "HLS",
+                "value": "HLS",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "HLS,DASH",
+                "value": "HLS,DASH",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "HLS,MSS",
+                "value": "HLS,MSS",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "HLS,DASH,MSS",
+                "value": "HLS,DASH,MSS",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "HLS,DASH,MSS,CMAF",
+                "value": "HLS,DASH,MSS,CMAF",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "DASH",
+                "value": "DASH",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "DASH,MSS",
+                "value": "DASH,MSS",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "DASH,MSS,CMAF",
+                "value": "DASH,MSS,CMAF",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "MSS",
+                "value": "MSS",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "MSS,CMAF",
+                "value": "MSS,CMAF",
+                "next": "startOverWindow"
+            },
+            {
+                "name": "CMAF",
+                "value": "CMAF",
+                "next": "startOverWindow"
+            }
+        ],
+        "required": true
+    },
+    "startOverWindow": {
+        "key": "startOverWindow",
+        "question": "Specify catch-up TV window: ",
+        "validation": {
+            "operator": "regex",
+            "value": "^([6-8][0-9]|9[0-9]|[1-8][0-9]{2}|9[0-8][0-9]|99[0-9]|[1-8][0-9]{3}|9[0-8][0-9]{2}|99[0-8][0-9]|999[0-9]|[1-8][0-9]{4}|9[0-8][0-9]{3}|99[0-8][0-9]{2}|999[0-8][0-9]|9999[0-9]|1[0-9]{5}|2[0-4][0-9]{4}|25[0-8][0-9]{3}|259[01][0-9]{2}|259200)$",
+            "onErrorMsg": "You need to choose a number between 60 and 259200"
+        },
+        "required": true,
+        "default": "86400",
+        "next": "enableDistribution"
+    },
+    "enableMediaStore": {
+        "key": "enableMediaStore",
+        "question": "Enable Media Store: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "Yes",
+                "value": "YES"
+            },
+            {
+                "name": "No",
+                "value": "NO"
+            }
+        ],
+        "required": true
+    },
+    "enableDistribution": {
+        "key": "enableDistribution",
+        "question": "Create distribution: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "Yes",
+                "value": "YES",
+                "next": "priceClass"
+            },
+            {
+                "name": "No",
+                "value": "NO"
+            }
+        ],
+        "required": true
+    },
+    "priceClass": {
+        "key": "priceClass",
+        "question": "Cloud Front Price Class: ",
+        "type": "list",
+        "options": [
+            {
+                "name": "Use Only U.S., Canada and Europe",
+                "value": "PriceClass_100",
+                "next": "sBucketLogs",
+                "ignore": true
+            },
+            {
+                "name": "Use U.S., Canada, Europe, Asia, Middle East and Africa",
+                "value": "PriceClass_200",
+                "next": "sBucketLogs",
+                "ignore": true
+            },
+            {
+                "name": "Use All Edge Locations (Best Performance)",
+                "value": "PriceClass_All",
+                "next": "sBucketLogs"
+            }
+        ],
+        "required": true
+    },
+    "sBucketLogs": {
+        "key": "sBucketLogs",
+        "question": "S3 bucket for CloudFront Logs: (Must already exist): ",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-z0-9-]+$",
+            "onErrorMsg": "Bucket name can only use the following characters: a-z 0-9 -"
+        },
+        "required": true,
+        "default": "s3://amplifyvideotest/logs/",
+        "next": "sLogPrefix"
+    },
+    "sLogPrefix": {
+        "key": "sLogPrefix",
+        "question": "S3 Prefix (Folder) for CloudFront logs: ",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-z0-9_\\/]+$",
+            "onErrorMsg": "Bucket name can only use the following characters: a-z 0-9 -"
+        },
+        "required": true,
+        "default": "cf_logs/"
+    },
+    "storageType": {
+        "key": "storageType",
+        "question": "Where do you want to stream to?",
+        "type": "list",
+        "options": [
+            {
+                "name": "MediaPackage",
+                "value": "mPackage",
+                "next": "endpoints",
+                "ignore": true
+            },
+            {
+                "name": "MediaPackage & MediaStore",
+                "value": "mPackageStore",
+                "next": "endpoints",
+                "ignore": true
+            },
+            {
+                "name": "MediaStore",
+                "value": "mStore",
+                "next": "enableDistribution"
+            }
+        ],
+        "required": true
+    },
+    "advancedChoice": {
+        "key": "advancedChoice",
+        "type": "confirm",
+        "question": "Do you want to modify any advanced video encoding parameters?",
+        "required": true,
+        "default": "true",
+        "next": "gopSize"
+    },
+    "mp4URL": {
+        "key": "mp4URL",
+        "question": "Provide URL to the MP4 file: ",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-z0-9_:\\/]+$",
+            "onErrorMsg": "Error the provided URL is not valid"
+        },
+        "required": true,
+        "default": "s3://amplifyvideotest/VANLIFE.mp4",
+        "next": "storageType"
+    }
+}

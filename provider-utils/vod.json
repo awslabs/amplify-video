@@ -1,0 +1,182 @@
+{
+    "resourceName": {
+        "key": "resourceName",
+        "question": "Provide a friendly name for your resource to be used as a label for this category in the project:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-zA-Z0-9]+$",
+            "onErrorMsg": "Resource name should be alphanumeric"
+        },
+        "required": true,
+        "default": "myvodservice",
+        "next": "enableCDN"
+    },
+    "encodingTemplate": {
+        "key": "encodingTemplate",
+        "question": "Provide a specific MediaConvert template name (must be available in project region):",
+        "validation": {
+            "operator": "regex",
+            "value": "^(?!System-)[^$&,:;?<>`\"#%{}\\/|^~]{1,80}$",
+            "onErrorMsg": "Resource name should be alphanumeric, should not begin with System-, or contain $&,:;?<>`\"#%{}/|^~"
+        },
+        "required": true,
+        "default": "System-Ott_Hls_Ts_Avc_Aac",
+        "next": "enableCDN"
+    },
+    "enableCDN": {
+        "key": "enableCDN",
+        "type": "confirm",
+        "question": "Is this a production enviroment?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "modifySignedUrl",
+                "ignore": true
+            },
+            {
+                "value": "true",
+                "next": "signedKey"
+            },
+            {
+                "value": "false",
+                "next": "enableCMS"
+            }
+        ]
+    },
+    "enableCMS": {
+        "key": "enableCMS",
+        "type": "confirm",
+        "question": "Do you want Amplify to create a new GraphQL API to manage your videos? (Beta)",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "permissionSchema",
+                "ignore": true
+            },
+            {
+                "value": "false"
+            }
+        ]
+    },
+    "subscribeField": {
+        "key": "subscribeField",
+        "type": "confirm",
+        "question": "Do you want to lock your videos with a subscription?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": ""
+            },
+            {
+                "value": "false",
+                "next": ""
+            }
+        ]
+    },
+    "editAPI": {
+        "key": "editAPI",
+        "type": "confirm",
+        "question": "Do you want to edit your newly created model?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "ignore": true
+            }
+        ]
+    },
+    "modifySignedUrl": {
+        "key": "modifySignedUrl",
+        "type": "list",
+        "question": "We detected you have signed urls configured. Would you like to:",
+        "options": [
+            {
+                "name": "Leave as configured",
+                "value": "leave",
+                "next": "enableCMS",
+                "ignore": true
+            },
+            {
+                "name": "Rotate the keys for the signed urls",
+                "value": "rotate",
+                "next": "enableCMS",
+                "ignore": true
+            },
+            {
+                "name": "Remove signed urls",
+                "value": "remove",
+                "next": "enableCMS",
+                "ignore": true
+            }
+        ]
+    },
+    "pemKeyID-DEADDONOTUSE": {
+        "key": "pemKeyID-DEADDONOTUSE",
+        "type": "input",
+        "question": "What is the CloudFront Key Pair Access Key ID associated with the pem key?",
+        "required": true,
+        "default": "",
+        "next": ""
+    },
+    "signedKey": {
+        "key": "signedKey",
+        "type": "confirm",
+        "question": "Do you want to protect your content with signed urls?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "enableCMS"
+            },
+            {
+                "value": "false",
+                "next": "enableCMS",
+                "ignore": true
+            }
+        ]
+    },
+    "overrideSchema": {
+        "key": "overrideSchema",
+        "type": "confirm",
+        "question": "Do you want to override your GraphQL schema?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "editAPI",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "next": "editAPI",
+                "ignore": true
+            }
+        ]
+    },
+    "permissionSchema": {
+        "key": "permissionSchema",
+        "question": "Define your permission schema",
+        "type": "checkbox",
+        "options": [
+            {
+                "name": "Admins can only upload videos",
+                "value": "admin",
+                "checked": true,
+                "ignore": true
+            },
+            {
+                "name": "Any authenticated user can upload videos",
+                "value": "any",
+                "ignore": true
+            }
+        ],
+        "next": "overrideSchema"
+    }
+}
