@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
-const question = require('../../livestream.-questionsjson');
+const question = require('../../livestream-questions.json');
 const headlessMode = require('../utils/headless-mode');
 
 module.exports = {
@@ -37,16 +37,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // project name
   const nameProject = [
     {
-      type: question['resourceName'].type,
-      name: question['resourceName'].key,
-      message: question['resourceName'].question,
-      validate: amplify.inputValidation(question['resourceName']),
+      type: question.resourceName.type,
+      name: question.resourceName.key,
+      message: question.resourceName.question,
+      validate: amplify.inputValidation(question.resourceName),
       default: defaults.resourceName,
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['resourceName'].key,
+          key: question.resourceName.key,
           value: args.resourceName ? args.resourceName : defaults.resourceName,
         });
       },
@@ -55,16 +55,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // prompt for advanced options
   const advanced = [
     {
-      type: question['advancedChoice'].type,
-      name: question['advancedChoice'].key,
-      message: question['advancedChoice'].question,
-      default: defaults.advanced[question['advancedChoice'].key],
+      type: question.advancedChoice.type,
+      name: question.advancedChoice.key,
+      message: question.advancedChoice.question,
+      default: defaults.advanced[question.advancedChoice.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['advancedChoice'].key,
-          value: defaults.advanced[question['advancedChoice'].key],
+          key: question.advancedChoice.key,
+          value: defaults.advanced[question.advancedChoice.key],
         });
       },
     },
@@ -73,47 +73,47 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // advanced options (currently only segmentation settings)
   const advancedQuestions = [
     {
-      type: question['gopSize'].type,
-      name: question['gopSize'].key,
-      message: question['gopSize'].question,
-      validate: amplify.inputValidation(question['gopSize']),
-      default: defaults.advanced[question['gopSize'].key],
+      type: question.gopSize.type,
+      name: question.gopSize.key,
+      message: question.gopSize.question,
+      validate: amplify.inputValidation(question.gopSize),
+      default: defaults.advanced[question.gopSize.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['gopSize'].key,
-          value: defaults.advanced[question['gopSize'].key],
+          key: question.gopSize.key,
+          value: defaults.advanced[question.gopSize.key],
         });
       },
     },
     {
-      type: question['gopPerSegment'].type,
-      name: question['gopPerSegment'].key,
-      message: question['gopPerSegment'].question,
-      validate: amplify.inputValidation(question['gopPerSegment']),
-      default: defaults.advanced[question['gopPerSegment'].key],
+      type: question.gopPerSegment.type,
+      name: question.gopPerSegment.key,
+      message: question.gopPerSegment.question,
+      validate: amplify.inputValidation(question.gopPerSegment),
+      default: defaults.advanced[question.gopPerSegment.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['gopPerSegment'].key,
-          value: defaults.advanced[question['gopPerSegment'].key],
+          key: question.gopPerSegment.key,
+          value: defaults.advanced[question.gopPerSegment.key],
         });
       },
     },
     {
-      type: question['segsPerPlist'].type,
-      name: question['segsPerPlist'].key,
-      message: question['segsPerPlist'].question,
-      validate: amplify.inputValidation(question['segsPerPlist']),
-      default: defaults.advanced[question['segsPerPlist'].key],
+      type: question.segsPerPlist.type,
+      name: question.segsPerPlist.key,
+      message: question.segsPerPlist.question,
+      validate: amplify.inputValidation(question.segsPerPlist),
+      default: defaults.advanced[question.segsPerPlist.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['segsPerPlist'].key,
-          value: defaults.advanced[question['segsPerPlist'].key],
+          key: question.segsPerPlist.key,
+          value: defaults.advanced[question.segsPerPlist.key],
         });
       },
     },
@@ -121,62 +121,62 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const mediaLiveQuestions = [
     {
-      type: question['securityGroup'].type,
-      name: question['securityGroup'].key,
-      message: question['securityGroup'].question,
-      validate: amplify.inputValidation(question['securityGroup']),
-      default: defaults.mediaLive[question['securityGroup'].key],
+      type: question.securityGroup.type,
+      name: question.securityGroup.key,
+      message: question.securityGroup.question,
+      validate: amplify.inputValidation(question.securityGroup),
+      default: defaults.mediaLive[question.securityGroup.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['securityGroup'].key,
-          value: defaults.mediaLive[question['securityGroup'].key],
+          key: question.securityGroup.key,
+          value: defaults.mediaLive[question.securityGroup.key],
         });
       },
     },
     {
-      type: question['ingestType'].type,
-      name: question['ingestType'].key,
-      message: question['ingestType'].question,
-      choices: question['ingestType'].options,
-      default: defaults.mediaLive[question['ingestType'].key],
+      type: question.ingestType.type,
+      name: question.ingestType.key,
+      message: question.ingestType.question,
+      choices: question.ingestType.options,
+      default: defaults.mediaLive[question.ingestType.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['ingestType'].key,
-          value: defaults.mediaLive[question['ingestType'].key],
+          key: question.ingestType.key,
+          value: defaults.mediaLive[question.ingestType.key],
         });
       },
     },
     {
-      type: question['encodingProfile'].type,
-      name: question['encodingProfile'].key,
-      message: question['encodingProfile'].question,
-      choices: question['encodingProfile'].options,
-      default: defaults.mediaLive[question['encodingProfile'].key],
+      type: question.encodingProfile.type,
+      name: question.encodingProfile.key,
+      message: question.encodingProfile.question,
+      choices: question.encodingProfile.options,
+      default: defaults.mediaLive[question.encodingProfile.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['encodingProfile'].key,
-          value: defaults.mediaLive[question['encodingProfile'].key],
+          key: question.encodingProfile.key,
+          value: defaults.mediaLive[question.encodingProfile.key],
         });
       },
     },
     {
-      type: question['autoStart'].type,
-      name: question['autoStart'].key,
-      message: question['autoStart'].question,
-      choices: question['autoStart'].options,
-      default: defaults.mediaLive[question['autoStart'].key],
+      type: question.autoStart.type,
+      name: question.autoStart.key,
+      message: question.autoStart.question,
+      choices: question.autoStart.options,
+      default: defaults.mediaLive[question.autoStart.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['autoStart'].key,
-          value: defaults.mediaLive[question['autoStart'].key],
+          key: question.autoStart.key,
+          value: defaults.mediaLive[question.autoStart.key],
         });
       },
     },
@@ -184,16 +184,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const mp4Questions = [
     {
-      type: question['mp4URL'].type,
-      name: question['mp4URL'].key,
-      message: question['mp4URL'].question,
-      default: defaults.advanced[question['mp4URL'].key],
+      type: question.mp4URL.type,
+      name: question.mp4URL.key,
+      message: question.mp4URL.question,
+      default: defaults.advanced[question.mp4URL.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['mp4URL'].key,
-          value: defaults.advanced[question['mp4URL'].key],
+          key: question.mp4URL.key,
+          value: defaults.advanced[question.mp4URL.key],
         });
       },
     },
@@ -201,32 +201,32 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const mediaPackageQuestions = [
     {
-      type: question['endpoints'].type,
-      name: question['endpoints'].key,
-      message: question['endpoints'].question,
-      choices: question['endpoints'].options,
-      default: defaults.mediaPackage[question['endpoints'].key],
+      type: question.endpoints.type,
+      name: question.endpoints.key,
+      message: question.endpoints.question,
+      choices: question.endpoints.options,
+      default: defaults.mediaPackage[question.endpoints.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['endpoints'].key,
-          value: defaults.mediaPackage[question['endpoints'].key],
+          key: question.endpoints.key,
+          value: defaults.mediaPackage[question.endpoints.key],
         });
       },
     },
     {
-      type: question['startOverWindow'].type,
-      name: question['startOverWindow'].key,
-      message: question['startOverWindow'].question,
-      validate: amplify.inputValidation(question['startOverWindow']),
-      default: defaults.mediaPackage[question['startOverWindow'].key],
+      type: question.startOverWindow.type,
+      name: question.startOverWindow.key,
+      message: question.startOverWindow.question,
+      validate: amplify.inputValidation(question.startOverWindow),
+      default: defaults.mediaPackage[question.startOverWindow.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['startOverWindow'].key,
-          value: defaults.mediaPackage[question['startOverWindow'].key],
+          key: question.startOverWindow.key,
+          value: defaults.mediaPackage[question.startOverWindow.key],
         });
       },
     },
@@ -234,17 +234,17 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const mediaStorage = [
     {
-      type: question['storageType'].type,
-      name: question['storageType'].key,
-      message: question['storageType'].question,
-      choices: question['storageType'].options,
-      default: defaults.mediaStorage[question['storageType'].key],
+      type: question.storageType.type,
+      name: question.storageType.key,
+      message: question.storageType.question,
+      choices: question.storageType.options,
+      default: defaults.mediaStorage[question.storageType.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['storageType'].key,
-          value: defaults.mediaStorage[question['storageType'].key],
+          key: question.storageType.key,
+          value: defaults.mediaStorage[question.storageType.key],
         });
       },
     },
@@ -252,17 +252,17 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cloudFrontEnable = [
     {
-      type: question['enableDistribution'].type,
-      name: question['enableDistribution'].key,
-      message: question['enableDistribution'].question,
-      choices: question['enableDistribution'].options,
-      default: defaults.cloudFront[question['enableDistribution'].key],
+      type: question.enableDistribution.type,
+      name: question.enableDistribution.key,
+      message: question.enableDistribution.question,
+      choices: question.enableDistribution.options,
+      default: defaults.cloudFront[question.enableDistribution.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['enableDistribution'].key,
-          value: defaults.cloudFront[question['enableDistribution'].key],
+          key: question.enableDistribution.key,
+          value: defaults.cloudFront[question.enableDistribution.key],
         });
       },
     },
@@ -270,47 +270,47 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cloudFrontQuestions = [
     {
-      type: question['priceClass'].type,
-      name: question['priceClass'].key,
-      message: question['priceClass'].question,
-      choices: question['priceClass'].options,
-      default: defaults.cloudFront[question['priceClass'].key],
+      type: question.priceClass.type,
+      name: question.priceClass.key,
+      message: question.priceClass.question,
+      choices: question.priceClass.options,
+      default: defaults.cloudFront[question.priceClass.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['priceClass'].key,
-          value: defaults.cloudFront[question['priceClass'].key],
+          key: question.priceClass.key,
+          value: defaults.cloudFront[question.priceClass.key],
         });
       },
     },
     {
-      type: question['sBucketLogs'].type,
-      name: question['sBucketLogs'].key,
-      message: question['sBucketLogs'].question,
-      validate: amplify.inputValidation(question['sBucketLogs']),
-      default: defaults.cloudFront[question['sBucketLogs'].key],
+      type: question.sBucketLogs.type,
+      name: question.sBucketLogs.key,
+      message: question.sBucketLogs.question,
+      validate: amplify.inputValidation(question.sBucketLogs),
+      default: defaults.cloudFront[question.sBucketLogs.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['sBucketLogs'].key,
-          value: defaults.cloudFront[question['sBucketLogs'].key],
+          key: question.sBucketLogs.key,
+          value: defaults.cloudFront[question.sBucketLogs.key],
         });
       },
     },
     {
-      type: question['sLogPrefix'].type,
-      name: question['sLogPrefix'].key,
-      message: question['sLogPrefix'].question,
-      validate: amplify.inputValidation(question['sLogPrefix']),
-      default: defaults.cloudFront[question['sLogPrefix'].key],
+      type: question.sLogPrefix.type,
+      name: question.sLogPrefix.key,
+      message: question.sLogPrefix.question,
+      validate: amplify.inputValidation(question.sLogPrefix),
+      default: defaults.cloudFront[question.sLogPrefix.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['sLogPrefix'].key,
-          value: defaults.cloudFront[question['sLogPrefix'].key],
+          key: question.sLogPrefix.key,
+          value: defaults.cloudFront[question.sLogPrefix.key],
         });
       },
     },

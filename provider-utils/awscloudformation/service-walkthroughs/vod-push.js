@@ -29,17 +29,17 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const nameProject = [
     {
-      type: question['resourceName'].type,
-      name: question['resourceName'].key,
-      message: question['resourceName'].question,
-      validate: amplify.inputValidation(question['resourceName']),
-      default: question['resourceName'].default,
+      type: question.resourceName.type,
+      name: question.resourceName.key,
+      message: question.resourceName.question,
+      validate: amplify.inputValidation(question.resourceName),
+      default: question.resourceName.default,
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['resourceName'].key,
-          value: args.resourceName ? args.resourceName : question['resourceName'].default,
+          key: question.resourceName.key,
+          value: args.resourceName ? args.resourceName : question.resourceName.default,
         });
       },
     }];
@@ -91,16 +91,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   });
   const templateQuestion = [
     {
-      type: question['encodingTemplate'].type,
-      name: question['encodingTemplate'].key,
-      message: question['encodingTemplate'].question,
+      type: question.encodingTemplate.type,
+      name: question.encodingTemplate.key,
+      message: question.encodingTemplate.question,
       choices: availableTemplates,
       default: availableTemplates[0].value,
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['encodingTemplate'].key,
+          key: question.encodingTemplate.key,
           value: args.encodingTemplate ? args.encodingTemplate : availableTemplates[0].value,
         });
       },
@@ -116,10 +116,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       let mcClient = new aws.MediaConvert();
       const encodingTemplateName = [
         {
-          type: question['encodingTemplateName'].type,
-          name: question['encodingTemplateName'].key,
-          message: question['encodingTemplateName'].question,
-          validate: amplify.inputValidation(question['encodingTemplateName']),
+          type: question.encodingTemplateName.type,
+          name: question.encodingTemplateName.key,
+          message: question.encodingTemplateName.question,
+          validate: amplify.inputValidation(question.encodingTemplateName),
         },
       ];
       try {
@@ -160,17 +160,19 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.contentDeliveryNetwork = {};
   const cdnEnable = [
     {
-      type: question['enableCDN'].type,
-      name: question['enableCDN'].key,
-      message: question['enableCDN'].question,
-      validate: amplify.inputValidation(question['enableCDN']),
-      default: defaults.contentDeliveryNetwork[question['enableCDN'].key],
+      type: question.enableCDN.type,
+      name: question.enableCDN.key,
+      message: question.enableCDN.question,
+      validate: amplify.inputValidation(question.enableCDN),
+      default: defaults.contentDeliveryNetwork[question.enableCDN.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['enableCDN'].key,
-          value: args.enableCDN ? args.enableCDN : defaults.contentDeliveryNetwork[question['enableCDN'].key],
+          key: question.enableCDN.key,
+          value: args.enableCDN
+            ? args.enableCDN
+            : defaults.contentDeliveryNetwork[question.enableCDN.key],
         });
       },
     }];
@@ -186,16 +188,16 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cmsEnable = [
     {
-      type: question['enableCMS'].type,
-      name: question['enableCMS'].key,
-      message: question['enableCMS'].question,
-      validate: amplify.inputValidation(question['enableCMS']),
-      default: defaults.contentManagementSystem[question['enableCMS'].key],
+      type: question.enableCMS.type,
+      name: question.enableCMS.key,
+      message: question.enableCMS.question,
+      validate: amplify.inputValidation(question.enableCMS),
+      default: defaults.contentManagementSystem[question.enableCMS.key],
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['enableCMS'].key,
+          key: question.enableCMS.key,
           value: args.enableCMS ? args.enableCMS : false,
         });
       },
@@ -249,11 +251,11 @@ async function createCDN(context, props, options, aws, oldValues) {
 
   if (oldValues.contentDeliveryNetwork && oldValues.contentDeliveryNetwork.signedKey) {
     const signedURLQuestion = [{
-      type: question['modifySignedUrl'].type,
-      name: question['modifySignedUrl'].key,
-      message: question['modifySignedUrl'].question,
-      choices: question['modifySignedUrl'].options,
-      default: question['modifySignedUrl'].default,
+      type: question.modifySignedUrl.type,
+      name: question.modifySignedUrl.key,
+      message: question.modifySignedUrl.question,
+      choices: question.modifySignedUrl.options,
+      default: question.modifySignedUrl.default,
     }];
     const signedURLResponse = await inquirer.prompt(signedURLQuestion);
     if (signedURLResponse.modifySignedUrl === 'leave') {
@@ -266,16 +268,16 @@ async function createCDN(context, props, options, aws, oldValues) {
     }
   } else {
     const signedURLQuestion = [{
-      type: question['signedKey'].type,
-      name: question['signedKey'].key,
-      message: question['signedKey'].question,
-      validate: amplify.inputValidation(question['signedKey']),
-      default: question['signedKey'].default,
+      type: question.signedKey.type,
+      name: question.signedKey.key,
+      message: question.signedKey.question,
+      validate: amplify.inputValidation(question.signedKey),
+      default: question.signedKey.default,
       when(answers) {
         return headlessMode.autoAnswer({
           context,
           answers,
-          key: question['signedKey'].key,
+          key: question.signedKey.key,
           value: args.signedKey ? args.signedKey : false,
         });
       },
@@ -329,13 +331,12 @@ async function createCDN(context, props, options, aws, oldValues) {
 }
 
 async function createCMS(context, apiName, props) {
-  const { inputs } = question.video;
   const permissions = [
     {
-      type: question['permissionSchema'].type,
-      name: question['permissionSchema'].key,
-      message: question['permissionSchema'].question,
-      choices: question['permissionSchema'].options,
+      type: question.permissionSchema.type,
+      name: question.permissionSchema.key,
+      message: question.permissionSchema.question,
+      choices: question.permissionSchema.options,
       validate(answer) {
         if (answer.length < 1) {
           return 'You must choose at least one auth style';
@@ -346,16 +347,16 @@ async function createCMS(context, apiName, props) {
   ];
   const cmsEdit = [
     {
-      type: question['overrideSchema'].type,
-      name: question['overrideSchema'].key,
-      message: question['overrideSchema'].question,
-      default: question['overrideSchema'].default,
+      type: question.overrideSchema.type,
+      name: question.overrideSchema.key,
+      message: question.overrideSchema.question,
+      default: question.overrideSchema.default,
     },
     {
-      type: question['editAPI'].type,
-      name: question['editAPI'].key,
-      message: question['editAPI'].question,
-      default: question['editAPI'].default,
+      type: question.editAPI.type,
+      name: question.editAPI.key,
+      message: question.editAPI.question,
+      default: question.editAPI.default,
     }];
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
