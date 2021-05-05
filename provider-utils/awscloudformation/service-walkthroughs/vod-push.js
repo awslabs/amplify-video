@@ -326,6 +326,7 @@ async function createCDN(context, props, options, aws, oldValues) {
     cdnConfigDetails.secretPemArn = secretCreate.ARN;
     cdnConfigDetails.functionName = (projectDetails.localEnvInfo.envName)
       ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+    cdnConfigDetails.functionNameSchema = `${props.shared.resourceName}-\${env}-tokenGen`;
   }
   return cdnConfigDetails;
 }
