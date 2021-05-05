@@ -51,8 +51,9 @@ async function pushTemplates(context) {
 async function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
+  const projectDetails = context.amplify.getProjectDetails();
   if (!props) {
-    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
   }
   if (projectType === 'video-on-demand') {
     props = getVODEnvVars(context, props, resourceName);
@@ -95,7 +96,7 @@ function getVODEnvVars(context, props, resourceName) {
     delete props.shared.bucket;
     delete props.shared.bucketInput;
     delete props.shared.bucketOutput;
-    fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
+    fs.writeFileSync(`${targetDir}/video/${resourceName}/${amplifyProjectDetails.localEnvInfo.envName}-props.json`, JSON.stringify(props, null, 4));
   }
   const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
     .categories.video[resourceName];

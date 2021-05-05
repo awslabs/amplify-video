@@ -10,6 +10,7 @@ module.exports = {
     const { amplify } = context;
     const targetDir = amplify.pathManager.getBackendDirPath();
     const amplifyMeta = amplify.getProjectMeta();
+    const projectDetails = context.amplify.getProjectDetails();
 
     if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
       context.print.error(`You have no ${category} projects.`);
@@ -35,7 +36,7 @@ module.exports = {
       return;
     }
 
-    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${shared.resourceName}/props.json`));
+    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${shared.resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
 
     return buildTemplates(context, props);
   },

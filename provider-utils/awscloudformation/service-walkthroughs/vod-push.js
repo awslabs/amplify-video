@@ -50,7 +50,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     nameDict.resourceName = resourceName;
     props.shared = nameDict;
     try {
-      oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+      oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
       Object.assign(defaults, oldValues);
     } catch (err) {
       // Do nothing
@@ -307,7 +307,7 @@ async function createCDN(context, props, options, aws, oldValues) {
     const uuid = Math.random().toString(36).substring(2, 6)
                 + Math.random().toString(36).substring(2, 6);
     const secretName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-pem-${uuid}`.slice(0, 63);
-    const rPublicName = `rCloudFrontPublicKey${uuid}`.slice(0, 63);
+    const rPublicName = `rCloudFrontPublicKey${projectDetails.localEnvInfo.envName}${uuid}`.slice(0, 63);
     const publicKeyName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-publickey-${uuid}`.slice(0, 63);
     const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
     const createSecretParams = {

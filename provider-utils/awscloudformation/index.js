@@ -8,6 +8,7 @@ let serviceMetadata;
 async function addResource(context, service, options) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
   const targetDir = context.amplify.pathManager.getBackendDirPath();
+  const projectDetails = context.amplify.getProjectDetails();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
@@ -23,13 +24,14 @@ async function addResource(context, service, options) {
   if (result.parameters !== undefined) {
     await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
   }
-  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/${projectDetails.localEnvInfo.envName}-props.json`, JSON.stringify(result, null, 4));
   await buildTemplates(context, result);
 }
 
 async function updateResource(context, service, options, resourceName) {
   serviceMetadata = context.amplify.readJsonFile(`${__dirname}/../supported-services.json`)[service];
   const targetDir = context.amplify.pathManager.getBackendDirPath();
+  const projectDetails = context.amplify.getProjectDetails();
   const { serviceWalkthroughFilename, defaultValuesFilename } = serviceMetadata;
   const serviceWalkthroughSrc = `${__dirname}/service-walkthroughs/${serviceWalkthroughFilename}`;
   const { serviceQuestions } = require(serviceWalkthroughSrc);
@@ -37,7 +39,7 @@ async function updateResource(context, service, options, resourceName) {
   if (result.parameters !== undefined) {
     await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/parameters.json`, JSON.stringify(result.parameters, null, 4));
   }
-  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/props.json`, JSON.stringify(result, null, 4));
+  await fs.writeFileSync(`${targetDir}/video/${result.shared.resourceName}/${projectDetails.localEnvInfo.envName}-props.json`, JSON.stringify(result, null, 4));
   await buildTemplates(context, result);
   context.print.success(`Successfully updated ${result.shared.resourceName}`);
 }
