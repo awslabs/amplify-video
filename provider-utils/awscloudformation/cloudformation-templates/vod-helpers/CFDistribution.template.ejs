@@ -20,6 +20,9 @@ Resources:
   rCloudFrontDist:
     Type: AWS::CloudFront::Distribution
     Properties:
+      Tags:
+      - Key: amplify-video
+        Value: amplify-video
       DistributionConfig:
         DefaultCacheBehavior:
           ForwardedValues:
@@ -40,8 +43,8 @@ Resources:
           TrustedKeyGroups:
             - !Ref rCloudFrontKeyGroup
           <% } %>
-        Origins: 
-          - 
+        Origins:
+          -
             DomainName: !Ref pBucketUrl
             Id: vodS3Origin
             S3OriginConfig:

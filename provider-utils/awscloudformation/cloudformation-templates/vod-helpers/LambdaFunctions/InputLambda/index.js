@@ -64,6 +64,7 @@ async function createJob(eventObject) {
     UserMetadata: {},
     Role: process.env.MC_ROLE,
     Settings: jobSettings,
+    Tags: { 'amplify-video': 'amplify-video' },
   };
   await mcClient.createJob(jobParams).promise();
 }
