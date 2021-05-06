@@ -154,6 +154,26 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
   } else {
     props.template.name = template.encodingTemplate;
+    
+    //console.log(template.encodingTemplate)
+    // *****************************
+    // *****************************
+    const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
+    
+    //console.log(currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"])
+    
+    var outputRendition = "HLS"
+    
+    for (var outputGroups = 0; outputGroups < currentTemplate["Settings"]["OutputGroups"].length; ++outputGroups){
+      console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
+      if(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("DASH")){
+        outputRendition = "DASH"
+      }
+      
+    }
+    
+    console.log(outputRendition)
+    
     fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }
 

@@ -1,0 +1,141 @@
+{
+  "Description": "Default DASH Adaptive Bitrate",
+  "Category": "Amplify-Video",
+  "Name": "Amplify_Video_DASH",
+  "Settings": {
+    "TimecodeConfig": {
+      "Source": "ZEROBASED"
+    },
+    "OutputGroups": [
+      {
+        "Name": "DASH ISO",
+        "Outputs": [
+          {
+            "ContainerSettings": {
+              "Container": "MPD"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 1500000
+                }
+              }
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "CodingMode": "CODING_MODE_2_0",
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ContainerSettings": {
+              "Container": "MPD"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 750000
+                }
+              }
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "CodingMode": "CODING_MODE_2_0",
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ContainerSettings": {
+              "Container": "MPD"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 325000
+                }
+              }
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "CodingMode": "CODING_MODE_2_0",
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "ContainerSettings": {
+              "Container": "MPD"
+            },
+            "VideoDescription": {
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
+                  "Bitrate": 3000000
+                }
+              }
+            },
+            "AudioDescriptions": [
+              {
+                "CodecSettings": {
+                  "Codec": "AAC",
+                  "AacSettings": {
+                    "Bitrate": 96000,
+                    "CodingMode": "CODING_MODE_2_0",
+                    "SampleRate": 48000
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "OutputGroupSettings": {
+          "Type": "DASH_ISO_GROUP_SETTINGS",
+          "DashIsoGroupSettings": {
+            "SegmentLength": 30,
+            "Destination": "s3://eighttrial-prod-output-lvru6zh2/testDash/",
+            "FragmentLength": 2
+          }
+        }
+      }
+    ],
+    "Inputs": [
+      {
+        "AudioSelectors": {
+          "Audio Selector 1": {
+            "DefaultSelection": "DEFAULT"
+          }
+        },
+        "VideoSelector": {},
+        "TimecodeSource": "ZEROBASED"
+      }
+    ]
+  },
+  "AccelerationSettings": {
+    "Mode": "DISABLED"
+  },
+  "StatusUpdateInterval": "SECONDS_60",
+  "Priority": 0
+}
