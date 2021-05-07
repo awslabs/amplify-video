@@ -86,6 +86,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     });
   });
 
+  props.template.type = {}
+
   availableTemplates.push({
     name: 'Bring your own template',
     value: 'advanced',
@@ -155,12 +157,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   } else {
     props.template.name = template.encodingTemplate;
     
-    //console.log(template.encodingTemplate)
-    // *****************************
-    // *****************************
     const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
-    
-    //console.log(currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"])
     
     var outputRendition = "HLS"
     
@@ -172,7 +169,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       
     }
     
-    console.log(outputRendition)
+    
+    props.template.type = outputRendition;
+    console.log(props.template.type)
     
     fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }

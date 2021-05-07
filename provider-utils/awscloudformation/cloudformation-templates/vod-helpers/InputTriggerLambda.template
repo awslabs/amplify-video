@@ -54,6 +54,10 @@ Parameters:
     Type: String
     Description: API Endpoint URL
     Default: NONE
+  pTemplateType:
+    Type: String
+    Description: Template type
+    Default: NONE
 
 Resources:
   BucketWatcher:
@@ -78,6 +82,7 @@ Resources:
           ENV: !Ref env
           GRAPHQLID: !Ref GraphQLAPIId
           GRAPHQLEP: !Ref GraphQLEndpoint
+          TEMPLATE_TYPE: !Ref pTemplateType
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
