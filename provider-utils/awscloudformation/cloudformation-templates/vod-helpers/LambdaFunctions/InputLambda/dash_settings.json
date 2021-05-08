@@ -1,0 +1,28 @@
+{
+    "OutputGroups": [
+      {
+        "Name": "DASH ISO",
+        "Outputs": [],
+        "OutputGroupSettings": {
+          "Type": "DASH_ISO_GROUP_SETTINGS",
+          "DashIsoGroupSettings": {
+            "SegmentLength": 30,
+            "Destination": "s3:///output/",
+            "FragmentLength": 2
+          }
+        }
+      }
+    ],
+    "Inputs": [
+      {
+        "AudioSelectors": {
+          "Audio Selector 1": {
+            "DefaultSelection": "DEFAULT"
+          }
+        },
+        "VideoSelector": {},
+        "TimecodeSource": "ZEROBASED",
+        "FileInput": "s3key"
+      }
+    ]
+}

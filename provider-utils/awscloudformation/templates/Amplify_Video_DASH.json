@@ -33,7 +33,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "NameModifier": "_1500"
           },
           {
             "ContainerSettings": {
@@ -58,7 +59,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "NameModifier": "_7500"
           },
           {
             "ContainerSettings": {
@@ -83,7 +85,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "NameModifier": "_325"
           },
           {
             "ContainerSettings": {
@@ -108,7 +111,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "NameModifier": "_3000"
           }
         ],
         "OutputGroupSettings": {

@@ -3,7 +3,8 @@
 /* eslint-disable */
 const AWS = require('aws-sdk');
 /* eslint-enable */
-const jobSettings = require('./settings.json');
+const hlsJobSettings = require('./hls_settings.json');
+const dashJobSettings = require('./dash_settings.json');
 // Set the region
 
 exports.handler = async (event) => {
@@ -43,10 +44,22 @@ async function createJob(eventObject) {
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
 
-  // Set the output to have the filename (without extension) as a folder
-  jobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-  jobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-
+  // Set the output to have the filename (without extension) as a folder depending on the type of rendition
+  // this is required as the job json for HLS differs from DASH
+  const outputType = process.env.TEMPLATE_TYPE
+  
+  var jobSettings = {}
+  
+  if(outputType === "HLS"){
+    hlsJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+    hlsJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+    jobSettings = hlsJobSettings
+  } else if (outputType === "DASH") {
+    dashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+    dashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+    jobSettings = dashJobSettings
+  }
+  
   let queueARN = '';
   if (process.env.QUEUE_ARN) {
     queueARN = process.env.QUEUE_ARN;
