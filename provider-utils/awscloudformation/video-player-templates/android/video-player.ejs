@@ -1,0 +1,20 @@
+package <%= packageName %>
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ui.PlayerView
+
+class VideoPlayerActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_video_player)
+        val playerView: PlayerView = findViewById(R.id.video_view)
+        val player = SimpleExoPlayer.Builder(this@VideoPlayerActivity).build()
+        val mediaItem = MediaItem.fromUri("<%= src %>");
+
+        playerView.player = player;
+        player.setMediaItem(mediaItem)
+    }
+}
