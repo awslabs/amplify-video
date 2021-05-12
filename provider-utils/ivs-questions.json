@@ -1,49 +1,50 @@
 {
-  "video": {
-      "inputs": [
-          {
-              "key": "resourceName",
-              "question": "Provide a friendly name for your resource to be used as a label for this category in the project:",
-              "validation": {
-                  "operator": "regex",
-                  "value": "^[a-zA-Z0-9\\-]+$",
-                  "onErrorMsg": "Resource name should be alphanumeric"
-              },
-              "required": true
-          },
-          {
-            "key": "channelQuality",
-            "question": "Choose the Channel type or stream quality:",
-            "type":"list",
-            "options": [
-                {
-                    "name": "Standard (HD Stream)",
-                    "value": "STANDARD"
-                },
-                {
-                    "name": "Basic (SD Stream)",
-                    "value": "BASIC"
-                }
-            ],
-            "required": true
+    "resourceName": {
+        "key": "resourceName",
+        "question": "Provide a friendly name for your resource to be used as a label for this category in the project:",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-zA-Z0-9\\-]+$",
+            "onErrorMsg": "Resource name should be alphanumeric"
         },
-        {
-          "key": "channelLatency",
-          "question": "Choose the Video latency type:",
-          "type":"list",
-          "options": [
-              {
-                  "name": "Ultra-low latency (~5 seconds)",
-                  "value": "LOW"
-              },
-              {
-                  "name": "Standard latency (~10 seconds) ",
-                  "value": "NORMAL"
-              }
-          ],
-          "required": true
-        }
-      ],
-      "provider": "awscloudformation"
-  }
+        "required": true,
+        "default": "myivs",
+        "next": "channelQuality"
+    },
+    "channelQuality": {
+        "key": "channelQuality",
+        "question": "Choose the Channel type or stream quality:",
+        "type": "list",
+        "options": [
+            {
+                "name": "Standard (HD Stream)",
+                "value": "STANDARD",
+                "next": "channelLatency"
+            },
+            {
+                "name": "Basic (SD Stream)",
+                "value": "BASIC",
+                "next": "channelLatency"
+            }
+        ],
+        "default": "STANDARD",
+        "required": true
+    },
+    "channelLatency": {
+        "key": "channelLatency",
+        "question": "Choose the Video latency type:",
+        "type": "list",
+        "options": [
+            {
+                "name": "Ultra-low latency (~5 seconds)",
+                "value": "LOW"
+            },
+            {
+                "name": "Standard latency (~10 seconds) ",
+                "value": "NORMAL"
+            }
+        ],
+        "default": "LOW",
+        "required": true
+    }
 }
