@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
 const question = require('../../livestream-questions.json');
+const headlessMode = require('../utils/headless-mode');
 
 module.exports = {
   serviceQuestions,
@@ -20,6 +21,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   let defaults = {};
   defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   defaults.resourceName = 'mylivestream';
+
+  // TODO: find a way to use default in new question files
   try {
     const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
     Object.assign(defaults, oldValues);
@@ -27,156 +30,293 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     // Do nothing
   }
 
-  const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
 
   // question dictionaries taken by inquirer
   // project name
   const nameProject = [
     {
-      type: inputs[0].type,
-      name: inputs[0].key,
-      message: inputs[0].question,
-      validate: amplify.inputValidation(inputs[0]),
+      type: question.resourceName.type,
+      name: question.resourceName.key,
+      message: question.resourceName.question,
+      validate: amplify.inputValidation(question.resourceName),
       default: defaults.resourceName,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.resourceName.key,
+          value: args.resourceName ? args.resourceName : defaults.resourceName,
+        });
+      },
     }];
 
   // prompt for advanced options
   const advanced = [
     {
-      type: inputs[16].type,
-      name: inputs[16].key,
-      message: inputs[16].question,
-      default: defaults.advanced[inputs[16].key],
+      type: question.advancedChoice.type,
+      name: question.advancedChoice.key,
+      message: question.advancedChoice.question,
+      default: defaults.advanced[question.advancedChoice.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.advancedChoice.key,
+          value: defaults.advanced[question.advancedChoice.key],
+        });
+      },
     },
   ];
 
   // advanced options (currently only segmentation settings)
   const advancedQuestions = [
     {
-      type: inputs[1].type,
-      name: inputs[1].key,
-      message: inputs[1].question,
-      validate: amplify.inputValidation(inputs[1]),
-      default: defaults.advanced[inputs[1].key],
+      type: question.gopSize.type,
+      name: question.gopSize.key,
+      message: question.gopSize.question,
+      validate: amplify.inputValidation(question.gopSize),
+      default: defaults.advanced[question.gopSize.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.gopSize.key,
+          value: defaults.advanced[question.gopSize.key],
+        });
+      },
     },
     {
-      type: inputs[2].type,
-      name: inputs[2].key,
-      message: inputs[2].question,
-      validate: amplify.inputValidation(inputs[2]),
-      default: defaults.advanced[inputs[2].key],
+      type: question.gopPerSegment.type,
+      name: question.gopPerSegment.key,
+      message: question.gopPerSegment.question,
+      validate: amplify.inputValidation(question.gopPerSegment),
+      default: defaults.advanced[question.gopPerSegment.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.gopPerSegment.key,
+          value: defaults.advanced[question.gopPerSegment.key],
+        });
+      },
     },
     {
-      type: inputs[3].type,
-      name: inputs[3].key,
-      message: inputs[3].question,
-      validate: amplify.inputValidation(inputs[3]),
-      default: defaults.advanced[inputs[3].key],
+      type: question.segsPerPlist.type,
+      name: question.segsPerPlist.key,
+      message: question.segsPerPlist.question,
+      validate: amplify.inputValidation(question.segsPerPlist),
+      default: defaults.advanced[question.segsPerPlist.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.segsPerPlist.key,
+          value: defaults.advanced[question.segsPerPlist.key],
+        });
+      },
     },
   ];
 
   const mediaLiveQuestions = [
     {
-      type: inputs[4].type,
-      name: inputs[4].key,
-      message: inputs[4].question,
-      validate: amplify.inputValidation(inputs[4]),
-      default: defaults.mediaLive[inputs[4].key],
+      type: question.securityGroup.type,
+      name: question.securityGroup.key,
+      message: question.securityGroup.question,
+      validate: amplify.inputValidation(question.securityGroup),
+      default: defaults.mediaLive[question.securityGroup.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.securityGroup.key,
+          value: defaults.mediaLive[question.securityGroup.key],
+        });
+      },
     },
     {
-      type: inputs[5].type,
-      name: inputs[5].key,
-      message: inputs[5].question,
-      choices: inputs[5].options,
-      default: defaults.mediaLive[inputs[5].key],
+      type: question.ingestType.type,
+      name: question.ingestType.key,
+      message: question.ingestType.question,
+      choices: question.ingestType.options,
+      default: defaults.mediaLive[question.ingestType.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.ingestType.key,
+          value: defaults.mediaLive[question.ingestType.key],
+        });
+      },
     },
     {
-      type: inputs[6].type,
-      name: inputs[6].key,
-      message: inputs[6].question,
-      choices: inputs[6].options,
-      default: defaults.mediaLive[inputs[6].key],
+      type: question.encodingProfile.type,
+      name: question.encodingProfile.key,
+      message: question.encodingProfile.question,
+      choices: question.encodingProfile.options,
+      default: defaults.mediaLive[question.encodingProfile.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.encodingProfile.key,
+          value: defaults.mediaLive[question.encodingProfile.key],
+        });
+      },
     },
     {
-      type: inputs[7].type,
-      name: inputs[7].key,
-      message: inputs[7].question,
-      choices: inputs[7].options,
-      default: defaults.mediaLive[inputs[7].key],
+      type: question.autoStart.type,
+      name: question.autoStart.key,
+      message: question.autoStart.question,
+      choices: question.autoStart.options,
+      default: defaults.mediaLive[question.autoStart.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.autoStart.key,
+          value: defaults.mediaLive[question.autoStart.key],
+        });
+      },
     },
   ];
 
   const mp4Questions = [
     {
-      type: inputs[17].type,
-      name: inputs[17].key,
-      message: inputs[17].question,
-      default: defaults.advanced[inputs[17].key],
+      type: question.mp4URL.type,
+      name: question.mp4URL.key,
+      message: question.mp4URL.question,
+      default: defaults.advanced[question.mp4URL.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.mp4URL.key,
+          value: defaults.advanced[question.mp4URL.key],
+        });
+      },
     },
   ];
 
   const mediaPackageQuestions = [
     {
-      type: inputs[8].type,
-      name: inputs[8].key,
-      message: inputs[8].question,
-      choices: inputs[8].options,
-      default: defaults.mediaPackage[inputs[8].key],
+      type: question.endpoints.type,
+      name: question.endpoints.key,
+      message: question.endpoints.question,
+      choices: question.endpoints.options,
+      default: defaults.mediaPackage[question.endpoints.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.endpoints.key,
+          value: defaults.mediaPackage[question.endpoints.key],
+        });
+      },
     },
     {
-      type: inputs[9].type,
-      name: inputs[9].key,
-      message: inputs[9].question,
-      validate: amplify.inputValidation(inputs[9]),
-      default: defaults.mediaPackage[inputs[9].key],
+      type: question.startOverWindow.type,
+      name: question.startOverWindow.key,
+      message: question.startOverWindow.question,
+      validate: amplify.inputValidation(question.startOverWindow),
+      default: defaults.mediaPackage[question.startOverWindow.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.startOverWindow.key,
+          value: defaults.mediaPackage[question.startOverWindow.key],
+        });
+      },
     },
   ];
 
   const mediaStorage = [
     {
-      type: inputs[15].type,
-      name: inputs[15].key,
-      message: inputs[15].question,
-      choices: inputs[15].options,
-      default: defaults.mediaStorage[inputs[15].key],
+      type: question.storageType.type,
+      name: question.storageType.key,
+      message: question.storageType.question,
+      choices: question.storageType.options,
+      default: defaults.mediaStorage[question.storageType.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.storageType.key,
+          value: defaults.mediaStorage[question.storageType.key],
+        });
+      },
     },
   ];
 
   const cloudFrontEnable = [
     {
-      type: inputs[11].type,
-      name: inputs[11].key,
-      message: inputs[11].question,
-      choices: inputs[11].options,
-      default: defaults.cloudFront[inputs[11].key],
+      type: question.enableDistribution.type,
+      name: question.enableDistribution.key,
+      message: question.enableDistribution.question,
+      choices: question.enableDistribution.options,
+      default: defaults.cloudFront[question.enableDistribution.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.enableDistribution.key,
+          value: defaults.cloudFront[question.enableDistribution.key],
+        });
+      },
     },
   ];
 
   const cloudFrontQuestions = [
     {
-      type: inputs[12].type,
-      name: inputs[12].key,
-      message: inputs[12].question,
-      choices: inputs[12].options,
-      default: defaults.cloudFront[inputs[12].key],
+      type: question.priceClass.type,
+      name: question.priceClass.key,
+      message: question.priceClass.question,
+      choices: question.priceClass.options,
+      default: defaults.cloudFront[question.priceClass.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.priceClass.key,
+          value: defaults.cloudFront[question.priceClass.key],
+        });
+      },
     },
     {
-      type: inputs[13].type,
-      name: inputs[13].key,
-      message: inputs[13].question,
-      validate: amplify.inputValidation(inputs[13]),
-      default: defaults.cloudFront[inputs[13].key],
+      type: question.sBucketLogs.type,
+      name: question.sBucketLogs.key,
+      message: question.sBucketLogs.question,
+      validate: amplify.inputValidation(question.sBucketLogs),
+      default: defaults.cloudFront[question.sBucketLogs.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.sBucketLogs.key,
+          value: defaults.cloudFront[question.sBucketLogs.key],
+        });
+      },
     },
     {
-      type: inputs[14].type,
-      name: inputs[14].key,
-      message: inputs[14].question,
-      validate: amplify.inputValidation(inputs[14]),
-      default: defaults.cloudFront[inputs[14].key],
+      type: question.sLogPrefix.type,
+      name: question.sLogPrefix.key,
+      message: question.sLogPrefix.question,
+      validate: amplify.inputValidation(question.sLogPrefix),
+      default: defaults.cloudFront[question.sLogPrefix.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.sLogPrefix.key,
+          value: defaults.cloudFront[question.sLogPrefix.key],
+        });
+      },
     },
   ];
   if (resourceName) {
-    resource.name = resourceName;
+    resource.resourceName = resourceName;
   } else {
     resource = await inquirer.prompt(nameProject);
   }

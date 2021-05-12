@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
 const question = require('../../ivs-questions.json');
+const headlessMode = require('../utils/headless-mode');
 
 module.exports = {
   serviceQuestions,
@@ -16,14 +17,24 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const props = {};
   let nameDict = {};
 
-  const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
+
   const nameProject = [
     {
-      type: inputs[0].type,
-      name: inputs[0].key,
-      message: inputs[0].question,
-      validate: amplify.inputValidation(inputs[0]),
-      default: 'mylivestream',
+      type: question.resourceName.type,
+      name: question.resourceName.key,
+      message: question.resourceName.question,
+      validate: amplify.inputValidation(question.resourceName),
+      default: question.resourceName.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.resourceName.key,
+          value: args.resourceName ? args.resourceName : question.resourceName.default,
+        });
+      },
     },
   ];
 
@@ -37,18 +48,34 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
   const createChannel = [
     {
-      type: inputs[1].type,
-      name: inputs[1].key,
-      message: inputs[1].question,
-      choices: inputs[1].options,
-      default: 'STANDARD',
+      type: question.channelQuality.type,
+      name: question.channelQuality.key,
+      message: question.channelQuality.question,
+      choices: question.channelQuality.options,
+      default: question.channelQuality.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.channelQuality.key,
+          value: args.channelQuality ? args.channelQuality : question.channelQuality.default,
+        });
+      },
     },
     {
-      type: inputs[2].type,
-      name: inputs[2].key,
-      message: inputs[2].question,
-      choices: inputs[2].options,
-      default: 'LOW',
+      type: question.channelLatency.type,
+      name: question.channelLatency.key,
+      message: question.channelLatency.question,
+      choices: question.channelLatency.options,
+      default: question.channelLatency.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.channelLatency.key,
+          value: args.channelLatency ? args.channelLatency : question.channelLatency.default,
+        });
+      },
     },
   ];
 

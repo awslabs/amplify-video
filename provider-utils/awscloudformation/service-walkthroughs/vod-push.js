@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
 const { generateKeyPairSync } = require('crypto');
+const headlessMode = require('../utils/headless-mode');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
 const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
@@ -23,19 +24,30 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   let nameDict = {};
   let aws;
 
-  const { inputs } = question.video;
+  const { payload } = context.parameters.options;
+  const args = payload ? JSON.parse(payload) : {};
+
   const nameProject = [
     {
-      type: inputs[0].type,
-      name: inputs[0].key,
-      message: inputs[0].question,
-      validate: amplify.inputValidation(inputs[0]),
-      default: 'myvodstreams',
+      type: question.resourceName.type,
+      name: question.resourceName.key,
+      message: question.resourceName.question,
+      validate: amplify.inputValidation(question.resourceName),
+      default: question.resourceName.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.resourceName.key,
+          value: args.resourceName ? args.resourceName : question.resourceName.default,
+        });
+      },
     }];
 
   if (resourceName) {
     nameDict.resourceName = resourceName;
     props.shared = nameDict;
+    // TODO: find a way of using default values from new question
     try {
       oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
       Object.assign(defaults, oldValues);
@@ -79,10 +91,19 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   });
   const templateQuestion = [
     {
-      type: inputs[1].type,
-      name: inputs[1].key,
-      message: inputs[1].question,
+      type: question.encodingTemplate.type,
+      name: question.encodingTemplate.key,
+      message: question.encodingTemplate.question,
       choices: availableTemplates,
+      default: availableTemplates[0].value,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.encodingTemplate.key,
+          value: args.encodingTemplate ? args.encodingTemplate : availableTemplates[0].value,
+        });
+      },
     },
   ];
   const template = await inquirer.prompt(templateQuestion);
@@ -95,10 +116,10 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       let mcClient = new aws.MediaConvert();
       const encodingTemplateName = [
         {
-          type: inputs[2].type,
-          name: inputs[2].key,
-          message: inputs[2].question,
-          validate: amplify.inputValidation(inputs[2]),
+          type: question.encodingTemplateName.type,
+          name: question.encodingTemplateName.key,
+          message: question.encodingTemplateName.question,
+          validate: amplify.inputValidation(question.encodingTemplateName),
         },
       ];
       try {
@@ -139,11 +160,21 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.contentDeliveryNetwork = {};
   const cdnEnable = [
     {
-      type: inputs[3].type,
-      name: inputs[3].key,
-      message: inputs[3].question,
-      validate: amplify.inputValidation(inputs[3]),
-      default: defaults.contentDeliveryNetwork[inputs[3].key],
+      type: question.enableCDN.type,
+      name: question.enableCDN.key,
+      message: question.enableCDN.question,
+      validate: amplify.inputValidation(question.enableCDN),
+      default: defaults.contentDeliveryNetwork[question.enableCDN.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.enableCDN.key,
+          value: args.enableCDN
+            ? args.enableCDN
+            : defaults.contentDeliveryNetwork[question.enableCDN.key],
+        });
+      },
     }];
 
   const cdnResponse = await inquirer.prompt(cdnEnable);
@@ -157,11 +188,19 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const cmsEnable = [
     {
-      type: inputs[4].type,
-      name: inputs[4].key,
-      message: inputs[4].question,
-      validate: amplify.inputValidation(inputs[4]),
-      default: defaults.contentManagementSystem[inputs[4].key],
+      type: question.enableCMS.type,
+      name: question.enableCMS.key,
+      message: question.enableCMS.question,
+      validate: amplify.inputValidation(question.enableCMS),
+      default: defaults.contentManagementSystem[question.enableCMS.key],
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.enableCMS.key,
+          value: args.enableCMS ? args.enableCMS : false,
+        });
+      },
     }];
 
   const cmsResponse = await inquirer.prompt(cmsEnable);
@@ -204,18 +243,19 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 }
 
 async function createCDN(context, props, options, aws, oldValues) {
-  const { inputs } = question.video;
+  const { payload } = context.parameters.options;
   const { amplify } = context;
+  const args = payload ? JSON.parse(payload) : {};
   const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
 
   if (oldValues.contentDeliveryNetwork && oldValues.contentDeliveryNetwork.signedKey) {
     const signedURLQuestion = [{
-      type: inputs[7].type,
-      name: inputs[7].key,
-      message: inputs[7].question,
-      choices: inputs[7].options,
-      default: 'leave',
+      type: question.modifySignedUrl.type,
+      name: question.modifySignedUrl.key,
+      message: question.modifySignedUrl.question,
+      choices: question.modifySignedUrl.options,
+      default: question.modifySignedUrl.default,
     }];
     const signedURLResponse = await inquirer.prompt(signedURLQuestion);
     if (signedURLResponse.modifySignedUrl === 'leave') {
@@ -228,11 +268,19 @@ async function createCDN(context, props, options, aws, oldValues) {
     }
   } else {
     const signedURLQuestion = [{
-      type: inputs[9].type,
-      name: inputs[9].key,
-      message: inputs[9].question,
-      validate: amplify.inputValidation(inputs[9]),
-      default: true,
+      type: question.signedKey.type,
+      name: question.signedKey.key,
+      message: question.signedKey.question,
+      validate: amplify.inputValidation(question.signedKey),
+      default: question.signedKey.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.signedKey.key,
+          value: args.signedKey ? args.signedKey : false,
+        });
+      },
     }];
     const signedURLResponse = await inquirer.prompt(signedURLQuestion);
 
@@ -284,13 +332,12 @@ async function createCDN(context, props, options, aws, oldValues) {
 }
 
 async function createCMS(context, apiName, props) {
-  const { inputs } = question.video;
   const permissions = [
     {
-      type: inputs[11].type,
-      name: inputs[11].key,
-      message: inputs[11].question,
-      choices: inputs[11].options,
+      type: question.permissionSchema.type,
+      name: question.permissionSchema.key,
+      message: question.permissionSchema.question,
+      choices: question.permissionSchema.options,
       validate(answer) {
         if (answer.length < 1) {
           return 'You must choose at least one auth style';
@@ -301,16 +348,16 @@ async function createCMS(context, apiName, props) {
   ];
   const cmsEdit = [
     {
-      type: inputs[10].type,
-      name: inputs[10].key,
-      message: inputs[10].question,
-      default: true,
+      type: question.overrideSchema.type,
+      name: question.overrideSchema.key,
+      message: question.overrideSchema.question,
+      default: question.overrideSchema.default,
     },
     {
-      type: inputs[6].type,
-      name: inputs[6].key,
-      message: inputs[6].question,
-      default: true,
+      type: question.editAPI.type,
+      name: question.editAPI.key,
+      message: question.editAPI.question,
+      default: question.editAPI.default,
     }];
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));

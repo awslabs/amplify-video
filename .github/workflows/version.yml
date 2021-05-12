@@ -1,0 +1,22 @@
+name: Version Pull Request
+on:
+  push:
+    branches:
+      - release/**
+    paths:
+      - 'package.json'
+jobs:
+  createPullRequest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create Pull Request
+        uses: thomaseizinger/create-pull-request@1.0.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          title: '[Version Release] New version Release'
+          body: >
+            This PR is auto-generated.
+          reviewers: wizage
+          head: ${{ github.ref }}
+          base: master

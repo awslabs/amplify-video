@@ -4,10 +4,10 @@ const aws = require('aws-sdk');
 var globalPem;
 /* eslint-enable */
 
-exports.handler = async (event) => {
+async function handler(event) {
   const response = await signPath(event.source.id);
   return response;
-};
+}
 
 async function sign(pathURL) {
   const epoch = Math.floor(new Date(new Date().getTime() + (3600 * 1000)).getTime() / 1000);
@@ -42,3 +42,8 @@ async function signPath(id) {
 
   return urlParams;
 }
+
+module.exports = {
+  signPath,
+  handler,
+};
