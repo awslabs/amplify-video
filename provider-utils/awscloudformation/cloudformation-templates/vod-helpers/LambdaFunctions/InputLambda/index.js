@@ -5,6 +5,7 @@ const AWS = require('aws-sdk');
 /* eslint-enable */
 const hlsJobSettings = require('./hls_settings.json');
 const dashJobSettings = require('./dash_settings.json');
+const hlsdashJobSettings = require('./hls_dash_settings.json');
 // Set the region
 
 exports.handler = async (event) => {
@@ -43,6 +44,8 @@ async function createJob(eventObject) {
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
+  const hlsRendition = "hls"
+  const dashRendition = "dash"
 
   // Set the output to have the filename (without extension) as a folder depending on the type of rendition
   // this is required as the job json for HLS differs from DASH
@@ -50,15 +53,35 @@ async function createJob(eventObject) {
   
   var jobSettings = {}
   
-  if(outputType === "HLS"){
-    hlsJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-    hlsJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-    jobSettings = hlsJobSettings
-  } else if (outputType === "DASH") {
-    dashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
-    dashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-    jobSettings = dashJobSettings
+  var outputTypeList = outputType.split(",")
+  
+  
+  if(outputTypeList.length === 1){
+    if(outputTypeList[0] === "HLS"){
+      hlsJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      hlsJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+      jobSettings = hlsJobSettings
+    } else if (outputTypeList[0] === "DASH") {
+      dashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
+      dashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+      jobSettings = dashJobSettings
+    }  
+  } else {
+      console.log(hlsdashJobSettings)
+    
+      hlsdashJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;
+      hlsdashJobSettings.OutputGroups[1].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;
+      
+      hlsdashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+      
+      jobSettings = hlsdashJobSettings  
+      
+      console.log("output settings are")
+      console.log(hlsdashJobSettings.OutputGroups[0].OutputGroupSettings)
+      console.log(hlsdashJobSettings.OutputGroups[1].OutputGroupSettings)
   }
+  
+  
   
   let queueARN = '';
   if (process.env.QUEUE_ARN) {

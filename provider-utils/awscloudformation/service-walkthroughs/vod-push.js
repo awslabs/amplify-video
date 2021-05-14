@@ -67,7 +67,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   }
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
-
+  
+  
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`, { recursive: true });
   }
@@ -110,6 +111,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     },
   ];
   const template = await inquirer.prompt(templateQuestion);
+
+	var outputRendition = []
 
   if (template.encodingTemplate === 'advanced') {
     let jobTemplate = {};
@@ -157,32 +160,30 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       //determine the outputRendition of the template (HLS or DASH)
       const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${advTemplate.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
     
-      var outputRendition = ""
+      for(counter = 0; counter < currentTemplate["Settings"]["OutputGroups"].length; counter++ ){
+       	if(currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"].includes("DASH")){
+          outputRendition.push("DASH") 
+        } else if (currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"].includes("HLS")){
+          outputRendition.push("HLS") 
+        }	
+     }
       
-      for (var outputGroups = 0; outputGroups < currentTemplate["Settings"]["OutputGroups"].length; ++outputGroups){
-        //console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
-        if(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("DASH")){
-          outputRendition = "DASH"
-        } else if (currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("HLS")){
-          outputRendition= "HLS"
-        }
-      }
+      props.template.type = outputRendition;
+      
     }
   } else {
     props.template.name = template.encodingTemplate;
     
     const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
-    
-    var outputRendition = ""
-    
-    for (var outputGroups = 0; outputGroups < currentTemplate["Settings"]["OutputGroups"].length; ++outputGroups){
-      //console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
-      if(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("DASH")){
-        outputRendition = "DASH"
-      } else if (currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("HLS")){
-        outputRendition= "HLS"
-      }
-    }
+   
+     for(counter = 0; counter < currentTemplate["Settings"]["OutputGroups"].length; counter++ ){
+       	if(currentTemplate["Settings"]["OutputGroups"][counter]["OutputGroupSettings"]["Type"].includes("DASH")){
+          outputRendition.push("DASH") 
+        } else if (currentTemplate["Settings"]["OutputGroups"][counter]["OutputGroupSettings"]["Type"].includes("HLS")){
+          outputRendition.push("HLS") 
+        }	
+     }
+     
     
     props.template.type = outputRendition;
     
