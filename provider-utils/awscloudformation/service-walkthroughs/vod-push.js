@@ -153,25 +153,38 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       } catch (e) {
         context.print.error(e.message);
       }
+      
+      //determine the outputRendition of the template (HLS or DASH)
+      const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${advTemplate.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
+    
+      var outputRendition = ""
+      
+      for (var outputGroups = 0; outputGroups < currentTemplate["Settings"]["OutputGroups"].length; ++outputGroups){
+        //console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
+        if(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("DASH")){
+          outputRendition = "DASH"
+        } else if (currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("HLS")){
+          outputRendition= "HLS"
+        }
+      }
     }
   } else {
     props.template.name = template.encodingTemplate;
     
     const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
     
-    var outputRendition = "HLS"
+    var outputRendition = ""
     
     for (var outputGroups = 0; outputGroups < currentTemplate["Settings"]["OutputGroups"].length; ++outputGroups){
-      console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
+      //console.log(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"])
       if(currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("DASH")){
         outputRendition = "DASH"
+      } else if (currentTemplate["Settings"]["OutputGroups"][outputGroups]["OutputGroupSettings"]["Type"].includes("HLS")){
+        outputRendition= "HLS"
       }
-      
     }
     
-    
     props.template.type = outputRendition;
-    console.log(props.template.type)
     
     fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }
