@@ -67,10 +67,39 @@ async function createJob(eventObject) {
       jobSettings = dashJobSettings
     }  
   } else {
-      console.log(hlsdashJobSettings)
-    
-      hlsdashJobSettings.OutputGroups[1].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;
-      hlsdashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;
+      for(var counter = 0; counter < outputTypeList.length; counter++){
+        
+        if(outputTypeList[counter] === "HLS"){
+          
+          //iterate through the outputGroups and set the appropriate output file paths
+          var outputGroupsLengths = hlsdashJobSettings.OutputGroups.length
+          
+          for(var outputGroupsLengthsCounter = 0; outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++){
+            
+            if(hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes("HLS")){
+              hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;    
+            }
+            
+          }
+          
+          
+        }
+        
+        if(outputTypeList[counter] === "DASH"){
+          
+           //iterate through the outputGroups and set the appropriate output file paths
+          var outputGroupsLengths = hlsdashJobSettings.OutputGroups.length
+          
+          for(var outputGroupsLengthsCounter = 0; outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++){
+            
+            if(hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes("DASH")){
+              hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;     
+            }
+            
+          }
+        }
+        
+      }
       
       hlsdashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
       
