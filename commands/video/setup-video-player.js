@@ -35,6 +35,6 @@ module.exports = {
       return;
     }
 
-    return playerController.setupPlayer(context, props.resourceName);
+    return playerController.setupVideoPlayer(context, props.resourceName);
   },
 };

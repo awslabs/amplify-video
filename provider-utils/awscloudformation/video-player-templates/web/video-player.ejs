@@ -1,4 +1,4 @@
-<% if (framework === 'react') { %>
+<% if (framework === 'react') { -%>
 import React from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
@@ -25,8 +25,8 @@ export default class VideoPlayer extends React.Component {
     );
   }
 }
-<% } %>
-<% if (framework === 'vue') { %>
+<% } -%>
+<% if (framework === 'vue') { -%>
 <template>
   <div>
       <video ref="videoPlayer" class="video-js"></video>
@@ -65,8 +65,8 @@ export default {
   }
 }
 </script>
-<% } %>
-<% if (framework === 'angular') { %>
+<% } -%>
+<% if (framework === 'angular') { -%>
   import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
   import videojs from 'video.js';
   
@@ -112,8 +112,8 @@ export default {
       }
     }
   }
-<% } %>
-<% if (framework === 'ember') { %>
+<% } -%>
+<% if (framework === 'ember') { -%>
 import Ember from 'ember';
 import videojs from 'video.js';
 
@@ -139,4 +139,4 @@ export default Ember.Component.extend({
     });
   },
 });
-<% } %>
+<% } -%>

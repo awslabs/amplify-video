@@ -1,0 +1,14 @@
+struct VideoPlayer: UIViewRepresentable{
+    func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<VideoPlayer>) {
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        return PlayerUIView(frame: .zero)
+    }
+}
+
+struct ContentView: View {
+    var body: some View {
+        VideoPlayer()
+    }
+}

@@ -1,6 +1,6 @@
 {
   "name": "amplify-category-video",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Plugin for Amplify to add support for live streaming. Made for Unicorn Trivia Workshop",
   "main": "index.js",
   "scripts": {
@@ -36,6 +36,8 @@
     "mime-types": "^2.1.21",
     "ora": "^4.0.3",
     "sha1": "^1.1.1",
+    "xcode": "^3.0.1",
+    "xml2js": "^0.4.23",
     "yaml": "^1.7.2"
   },
   "devDependencies": {
