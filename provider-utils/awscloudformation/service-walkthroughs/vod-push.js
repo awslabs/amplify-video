@@ -174,6 +174,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   } else {
     props.template.name = template.encodingTemplate;
     
+    
     const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
    
      for(counter = 0; counter < currentTemplate["Settings"]["OutputGroups"].length; counter++ ){

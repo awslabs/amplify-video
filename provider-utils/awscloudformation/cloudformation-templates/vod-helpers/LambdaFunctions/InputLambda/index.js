@@ -69,16 +69,12 @@ async function createJob(eventObject) {
   } else {
       console.log(hlsdashJobSettings)
     
-      hlsdashJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;
-      hlsdashJobSettings.OutputGroups[1].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;
+      hlsdashJobSettings.OutputGroups[1].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;
+      hlsdashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;
       
       hlsdashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
       
       jobSettings = hlsdashJobSettings  
-      
-      console.log("output settings are")
-      console.log(hlsdashJobSettings.OutputGroups[0].OutputGroupSettings)
-      console.log(hlsdashJobSettings.OutputGroups[1].OutputGroupSettings)
   }
   
   
