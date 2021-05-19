@@ -66,8 +66,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   }
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
-  
-  
+
+
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`, { recursive: true });
   }
@@ -86,7 +86,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     });
   });
 
-  props.template.type = {}
+  props.template.type = {};
 
   availableTemplates.push({
     name: 'Bring your own template',
@@ -111,7 +111,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   ];
   const template = await inquirer.prompt(templateQuestion);
 
-	var outputRendition = []
+  const outputRendition = [];
 
   if (template.encodingTemplate === 'advanced') {
     let jobTemplate = {};
@@ -155,38 +155,37 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       } catch (e) {
         context.print.error(e.message);
       }
-      
-      //determine the outputRendition of the template (HLS or DASH)
-      const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${advTemplate.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
-    
-      for(counter = 0; counter < currentTemplate["Settings"]["OutputGroups"].length; counter++ ){
-       	if(currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"].includes("DASH")){
-          outputRendition.push("DASH") 
-        } else if (currentTemplate["Settings"]["OutputGroups"][0]["OutputGroupSettings"]["Type"].includes("HLS")){
-          outputRendition.push("HLS") 
-        }	
-     }
-      
+
+      // determine the outputRendition of the template (HLS or DASH)
+      const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${advTemplate.encodingTemplate}`, { encoding: 'utf8', flag: 'r' }));
+
+      for (let counter = 0; counter < currentTemplate.Settings.OutputGroups.length; counter++) {
+        if (currentTemplate.Settings.OutputGroups[0].OutputGroupSettings.Type.includes('DASH')) {
+          outputRendition.push('DASH');
+        } else if (currentTemplate.Settings.OutputGroups[0].OutputGroupSettings.Type.includes('HLS')) {
+          outputRendition.push('HLS');
+        }
+      }
+
       props.template.type = outputRendition;
-      
     }
   } else {
     props.template.name = template.encodingTemplate;
-    
-    
-    const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, {encoding:'utf8', flag:'r'}));
-   
-     for(counter = 0; counter < currentTemplate["Settings"]["OutputGroups"].length; counter++ ){
-       	if(currentTemplate["Settings"]["OutputGroups"][counter]["OutputGroupSettings"]["Type"].includes("DASH")){
-          outputRendition.push("DASH") 
-        } else if (currentTemplate["Settings"]["OutputGroups"][counter]["OutputGroupSettings"]["Type"].includes("HLS")){
-          outputRendition.push("HLS") 
-        }	
-     }
-     
-    
+
+
+    const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, { encoding: 'utf8', flag: 'r' }));
+
+    for (let counter = 0; counter < currentTemplate.Settings.OutputGroups.length; counter++) {
+      if (currentTemplate.Settings.OutputGroups[counter].OutputGroupSettings.Type.includes('DASH')) {
+        outputRendition.push('DASH');
+      } else if (currentTemplate.Settings.OutputGroups[counter].OutputGroupSettings.Type.includes('HLS')) {
+        outputRendition.push('HLS');
+      }
+    }
+
+
     props.template.type = outputRendition;
-    
+
     fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }
 

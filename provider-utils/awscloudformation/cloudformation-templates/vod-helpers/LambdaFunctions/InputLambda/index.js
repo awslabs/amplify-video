@@ -44,70 +44,61 @@ async function createJob(eventObject) {
   const FileName = AddedKey.split('.').slice(0, -1).join('.');
   const Bucket = eventObject.bucket.name;
   const outputBucketName = process.env.OUTPUT_BUCKET;
-  const hlsRendition = "hls"
-  const dashRendition = "dash"
+  const hlsRendition = 'hls';
+  const dashRendition = 'dash';
 
-  // Set the output to have the filename (without extension) as a folder depending on the type of rendition
-  // this is required as the job json for HLS differs from DASH
-  const outputType = process.env.TEMPLATE_TYPE
-  
-  var jobSettings = {}
-  
-  var outputTypeList = outputType.split(",")
-  
-  
-  if(outputTypeList.length === 1){
-    if(outputTypeList[0] === "HLS"){
+  // Set the output to have the filename (without extension) as a folder depending
+  // on the type of rendition this is required as the job json for HLS differs from DASH
+  const outputType = process.env.TEMPLATE_TYPE;
+
+  let jobSettings = {};
+
+  const outputTypeList = outputType.split(',');
+
+
+  if (outputTypeList.length === 1) {
+    if (outputTypeList[0] === 'HLS') {
       hlsJobSettings.OutputGroups[0].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       hlsJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-      jobSettings = hlsJobSettings
-    } else if (outputTypeList[0] === "DASH") {
+      jobSettings = hlsJobSettings;
+    } else if (outputTypeList[0] === 'DASH') {
       dashJobSettings.OutputGroups[0].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/`;
       dashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-      jobSettings = dashJobSettings
-    }  
+      jobSettings = dashJobSettings;
+    }
   } else {
-      for(var counter = 0; counter < outputTypeList.length; counter++){
-        
-        if(outputTypeList[counter] === "HLS"){
-          
-          //iterate through the outputGroups and set the appropriate output file paths
-          var outputGroupsLengths = hlsdashJobSettings.OutputGroups.length
-          
-          for(var outputGroupsLengthsCounter = 0; outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++){
-            
-            if(hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes("HLS")){
-              hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;    
-            }
-            
-          }
-          
-          
-        }
-        
-        if(outputTypeList[counter] === "DASH"){
-          
-           //iterate through the outputGroups and set the appropriate output file paths
-          var outputGroupsLengths = hlsdashJobSettings.OutputGroups.length
-          
-          for(var outputGroupsLengthsCounter = 0; outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++){
-            
-            if(hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes("DASH")){
-              hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;     
-            }
-            
+    for (let counter = 0; counter < outputTypeList.length; counter++) {
+      if (outputTypeList[counter] === 'HLS') {
+        // iterate through the outputGroups and set the appropriate output file paths
+        const outputGroupsLengths = hlsdashJobSettings.OutputGroups.length;
+
+        for (let outputGroupsLengthsCounter = 0;
+          outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++) {
+          if (hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes('HLS')) {
+            hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.HlsGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${hlsRendition}/`;
           }
         }
-        
       }
-      
-      hlsdashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
-      
-      jobSettings = hlsdashJobSettings  
+
+      if (outputTypeList[counter] === 'DASH') {
+        // iterate through the outputGroups and set the appropriate output file paths
+        const outputGroupsLengths = hlsdashJobSettings.OutputGroups.length;
+
+        for (let outputGroupsLengthsCounter = 0;
+          outputGroupsLengthsCounter < outputGroupsLengths; outputGroupsLengthsCounter++) {
+          if (hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.Type.includes('DASH')) {
+            hlsdashJobSettings.OutputGroups[outputGroupsLengthsCounter].OutputGroupSettings.DashIsoGroupSettings.Destination = `s3://${outputBucketName}/${FileName}/${dashRendition}/`;
+          }
+        }
+      }
+    }
+
+    hlsdashJobSettings.Inputs[0].FileInput = `s3://${Bucket}/${decodeURIComponent(AddedKey.replace(/\+/g, ' '))}`;
+
+    jobSettings = hlsdashJobSettings;
   }
-  
-  
-  
+
+
   let queueARN = '';
   if (process.env.QUEUE_ARN) {
     queueARN = process.env.QUEUE_ARN;
