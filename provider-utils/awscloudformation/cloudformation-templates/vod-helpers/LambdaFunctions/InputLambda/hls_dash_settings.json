@@ -6,7 +6,7 @@
         "OutputGroupSettings": {
           "Type": "DASH_ISO_GROUP_SETTINGS",
           "DashIsoGroupSettings": {
-            "SegmentLength": 30,
+            "SegmentLength": 15,
             "Destination": "s3:///output/",
             "FragmentLength": 2
           }

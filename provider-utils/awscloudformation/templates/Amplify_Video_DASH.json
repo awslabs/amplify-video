@@ -18,22 +18,25 @@
               "CodecSettings": {
                 "Codec": "H_264",
                 "H264Settings": {
+                  "Bitrate": 3000000
+                }
+              }
+            },
+            "NameModifier": "_3000"
+          },
+          {
+            "ContainerSettings": {
+              "Container": "MPD"
+            },
+            "VideoDescription": {
+              "Height": 540,
+              "CodecSettings": {
+                "Codec": "H_264",
+                "H264Settings": {
                   "Bitrate": 1500000
                 }
               }
             },
-            "AudioDescriptions": [
-              {
-                "CodecSettings": {
-                  "Codec": "AAC",
-                  "AacSettings": {
-                    "Bitrate": 96000,
-                    "CodingMode": "CODING_MODE_2_0",
-                    "SampleRate": 48000
-                  }
-                }
-              }
-            ],
             "NameModifier": "_1500"
           },
           {
@@ -41,6 +44,7 @@
               "Container": "MPD"
             },
             "VideoDescription": {
+              "Height": 432,
               "CodecSettings": {
                 "Codec": "H_264",
                 "H264Settings": {
@@ -48,25 +52,14 @@
                 }
               }
             },
-            "AudioDescriptions": [
-              {
-                "CodecSettings": {
-                  "Codec": "AAC",
-                  "AacSettings": {
-                    "Bitrate": 96000,
-                    "CodingMode": "CODING_MODE_2_0",
-                    "SampleRate": 48000
-                  }
-                }
-              }
-            ],
-            "NameModifier": "_7500"
+            "NameModifier": "_750"
           },
           {
             "ContainerSettings": {
               "Container": "MPD"
             },
             "VideoDescription": {
+              "Height": 360,
               "CodecSettings": {
                 "Codec": "H_264",
                 "H264Settings": {
@@ -74,34 +67,15 @@
                 }
               }
             },
-            "AudioDescriptions": [
-              {
-                "CodecSettings": {
-                  "Codec": "AAC",
-                  "AacSettings": {
-                    "Bitrate": 96000,
-                    "CodingMode": "CODING_MODE_2_0",
-                    "SampleRate": 48000
-                  }
-                }
-              }
-            ],
             "NameModifier": "_325"
           },
           {
             "ContainerSettings": {
               "Container": "MPD"
             },
-            "VideoDescription": {
-              "CodecSettings": {
-                "Codec": "H_264",
-                "H264Settings": {
-                  "Bitrate": 3000000
-                }
-              }
-            },
             "AudioDescriptions": [
               {
+                "AudioSourceName": "Audio Selector 1",
                 "CodecSettings": {
                   "Codec": "AAC",
                   "AacSettings": {
@@ -111,16 +85,17 @@
                   }
                 }
               }
-            ],
-            "NameModifier": "_3000"
+            ]
           }
         ],
         "OutputGroupSettings": {
           "Type": "DASH_ISO_GROUP_SETTINGS",
           "DashIsoGroupSettings": {
-            "SegmentLength": 30,
-            "Destination": "s3://eighttrial-prod-output-lvru6zh2/testDash/",
-            "FragmentLength": 2
+            "SegmentLength": 15,
+            "Destination": "s3://outputDash/",
+            "FragmentLength": 2,
+            "SegmentControl": "SINGLE_FILE",
+            "HbbtvCompliance": "HBBTV_1_5"
           }
         }
       }
