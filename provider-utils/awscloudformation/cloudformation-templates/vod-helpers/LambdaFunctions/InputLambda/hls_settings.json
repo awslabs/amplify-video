@@ -1,0 +1,51 @@
+{
+    "OutputGroups": [
+            {
+            "Name": "Apple HLS",
+            "Outputs": [],
+            "OutputGroupSettings": {
+                "Type": "HLS_GROUP_SETTINGS",
+                "HlsGroupSettings": {
+                "ManifestDurationFormat": "INTEGER",
+                "SegmentLength": 3,
+                "TimedMetadataId3Period": 10,
+                "CaptionLanguageSetting": "OMIT",
+                "Destination": "s3:///output/",
+                "TimedMetadataId3Frame": "PRIV",
+                "CodecSpecification": "RFC_4281",
+                "OutputSelection": "MANIFESTS_AND_SEGMENTS",
+                "ProgramDateTimePeriod": 600,
+                "MinSegmentLength": 0,
+                "DirectoryStructure": "SINGLE_DIRECTORY",
+                "ProgramDateTime": "EXCLUDE",
+                "SegmentControl": "SEGMENTED_FILES",
+                "ManifestCompression": "NONE",
+                "ClientCache": "ENABLED",
+                "StreamInfResolution": "INCLUDE"
+                }
+            }
+            }
+        ],
+        "AdAvailOffset": 0,
+        "Inputs": [
+            {
+            "AudioSelectors": {
+                "Audio Selector 1": {
+                "Offset": 0,
+                "DefaultSelection": "DEFAULT",
+                "ProgramSelection": 1
+                }
+            },
+            "VideoSelector": {
+                "ColorSpace": "FOLLOW"
+            },
+            "FilterEnable": "AUTO",
+            "PsiControl": "USE_PSI",
+            "FilterStrength": 0,
+            "DeblockFilter": "DISABLED",
+            "DenoiseFilter": "DISABLED",
+            "TimecodeSource": "ZEROBASED",
+            "FileInput": "s3key"
+            }
+        ]
+}

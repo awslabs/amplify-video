@@ -56,6 +56,7 @@ Parameters:
     Type: String
     Description: Boolean to enable/disable cloudfront
     Default: <%= props.contentDeliveryNetwork.enableDistribution %>
+  
 
 Conditions:
   HasEnvironmentParameter:
@@ -158,6 +159,7 @@ Resources:
         pOutputS3: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
         pOutputS3Arn: !GetAtt rS3OutputBucket.Outputs.oOutputBucketArn
         pMediaConvertTemplate: !GetAtt rMediaConvertTemplate.Outputs.oJobArn
+        pTemplateType:  <%= props.template.type %>
         pFunctionHash: "<%= props.hashes.InputLambda %>"
 <% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
         GraphQLAPIId: !Ref GraphQLAPIId
