@@ -2,11 +2,33 @@
 import React from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-
+<% if (channelLatency === 'LOW') { -%>
+// eslint-disable-next-line no-undef
+registerIVSTech(videojs);
+<% } -%>
 
 export default class VideoPlayer extends React.Component {
   componentDidMount() {
     this.player = videojs(this.videoNode, this.props);
+    this.player.ready(() => {
+      console.log('ready');
+<% if (channelLatency === 'LOW') { -%>
+      this.player.src(this.props.src);
+      const ivsPlayer = this.player.getIVSPlayer();
+      const PlayerState = this.player.getIVSEvents().PlayerState;
+        ivsPlayer.addEventListener(PlayerState.PLAYING, () => {
+            console.log("Player State - PLAYING");
+            setTimeout(() => {
+                console.log(
+                    `This stream is ${
+                        ivsPlayer.isLiveLowLatency() ? "" : "not "
+                    }playing in ultra low latency mode`
+                );
+                console.log(`Stream Latency: ${ivsPlayer.getLiveLatency()}s`);
+            }, 5000);
+        });
+<% } -%>
+    })
   }
 
   componentWillUnmount() {
@@ -36,6 +58,10 @@ export default class VideoPlayer extends React.Component {
 <script>
 import 'video.js/dist/video-js.css'
 import videojs from 'video.js';
+<% if (channelLatency === 'LOW') { -%>
+// eslint-disable-next-line no-undef
+registerIVSTech(videojs);
+<% } -%>
 
 
 export default {
@@ -54,11 +80,28 @@ export default {
       }
   },
   mounted() {
-      this.player = videojs(this.$refs.videoPlayer, this.options, function onPlayerReady() {
+      const options = this.options;
+      this.player = videojs(this.$refs.videoPlayer, options, function onPlayerReady() {
           console.log('onPlayerReady', this);
+<% if (channelLatency === 'LOW') { -%>
+          this.src(options.src);
+          const ivsPlayer = this.getIVSPlayer();
+          const PlayerState = this.getIVSEvents().PlayerState;
+          ivsPlayer.addEventListener(PlayerState.PLAYING, () => {
+              console.log("Player State - PLAYING");
+              setTimeout(() => {
+                  console.log(
+                      `This stream is ${
+                          ivsPlayer.isLiveLowLatency() ? "" : "not "
+                      }playing in ultra low latency mode`
+                  );
+                  console.log(`Stream Latency: ${ivsPlayer.getLiveLatency()}s`);
+              }, 5000);
+          });
+<% } -%>
       })
   },
-  beforeDestroy() {
+  beforeUnmount() {
       if (this.player) {
           this.player.dispose()
       }
@@ -67,55 +110,58 @@ export default {
 </script>
 <% } -%>
 <% if (framework === 'angular') { -%>
-  import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-  import videojs from 'video.js';
+import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import videojs from 'video.js';
+<% if (channelLatency === 'LOW') { -%>
+// @ts-ignore
+registerIVSTech(videojs);
+<% } -%>
   
-  @Component({
-    selector: 'video-player',
-    template: `
-      <video #target class="video-js" controls muted playsinline preload="none"></video>
-    `,
-    styleUrls: [
-      './video-player.component.scss'
-    ],
-    encapsulation: ViewEncapsulation.None,
-  })
-  export class VideoPlayerComponent implements OnInit, OnDestroy {
-    @ViewChild('target', {static: true}) target: ElementRef;
-    // see options: https://github.com/videojs/video.js/blob/maintutorial-options.html
-    @Input() options: {
-        fluid: boolean,
-        aspectRatio: string,
-        autoplay: boolean,
-        sources: {
-            src: string,
-            type: string,
-        }[],
-    };
-    player: videojs.Player;
-  
-    constructor(
-      private elementRef: ElementRef,
-    ) { }
-  
-    ngOnInit() {
-      // instantiate Video.js
-      this.player = videojs(this.target.nativeElement, this.options, function onPlayerReady() {
-        console.log('onPlayerReady', this);
-      });
-    }
-  
-    ngOnDestroy() {
-      // destroy player
-      if (this.player) {
-        this.player.dispose();
-      }
+@Component({
+  selector: 'video-player',
+  template: `
+    <video #target class="video-js" controls muted playsinline preload="none"></video>
+  `,
+  styleUrls: [
+    './video-player.component.scss'
+  ],
+  encapsulation: ViewEncapsulation.None,
+})
+export class VideoPlayerComponent implements OnInit, OnDestroy {
+  @ViewChild('target', {static: true}) target: ElementRef | undefined;
+  // see options: https://github.com/videojs/video.js/blob/maintutorial-options.html
+  @Input() options: any;
+  player: videojs.Player | undefined = undefined;
+
+  constructor(
+    private elementRef: ElementRef,
+  ) { }
+
+  ngOnInit() {
+    // instantiate Video.js
+    this.player = videojs(this.target?.nativeElement, this.options, () => {
+      console.log('onPlayerReady', this);
+<% if (channelLatency === 'LOW') { -%>
+      this.player?.src(this.options.src);
+<% } -%>
+    });
+  }
+
+  ngOnDestroy() {
+    // destroy player
+    if (this.player) {
+      this.player.dispose();
     }
   }
+}
 <% } -%>
 <% if (framework === 'ember') { -%>
 import Ember from 'ember';
 import videojs from 'video.js';
+<% if (channelLatency === 'LOW') { -%>
+// eslint-disable-next-line no-undef
+registerIVSTech(videojs);
+<% } -%>
 
 export default Ember.Component.extend({
   tagName: 'video',
@@ -124,15 +170,35 @@ export default Ember.Component.extend({
 
   didInsertElement() {
     this._super(...arguments);
-    const { controls, autoplay, src, type, tech } = this;
+    const { controls, autoplay, src<% if (channelLatency === 'LOW') { -%>, type<% } -%> } = this;
     const player = videojs(this.element, {
       controls,
       autoplay,
       preload: 'auto',
+<% if (channelLatency === 'LOW') { -%>
+      techOrder: ['AmazonIVS'],
+<% } -%>
     });
 
     player.ready(() => {
-      player.src({ src, type }, tech);
+<% if (channelLatency === 'LOW') { -%>
+      player.src(src);
+      const ivsPlayer = player.getIVSPlayer();
+      const PlayerState = player.getIVSEvents().PlayerState;
+      ivsPlayer.addEventListener(PlayerState.PLAYING, () => {
+          console.log("Player State - PLAYING");
+          setTimeout(() => {
+              console.log(
+                  `This stream is ${
+                      ivsPlayer.isLiveLowLatency() ? "" : "not "
+                  }playing in ultra low latency mode`
+              );
+              console.log(`Stream Latency: ${ivsPlayer.getLiveLatency()}s`);
+          }, 5000);
+      });
+<% } else { -%>
+      player.src({ src, type });
+<% } -%>
       this.one('willDestroyElement', function () {
         player.dispose();
       });

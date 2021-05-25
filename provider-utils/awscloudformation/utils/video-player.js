@@ -106,8 +106,13 @@ async function setupWebProjects(context, resourceName) {
   const projectRootPath = amplify.pathManager.searchProjectRootPath();
   const props = {
     framework,
+    channelLatency: null,
   };
 
+  if (serviceType === 'ivs') {
+    const { channelLatency } = amplify.readJsonFile(`${amplify.pathManager.getBackendDirPath()}/video/${resourceName}/props.json`).channel;
+    props.channelLatency = channelLatency;
+  }
   const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/video-player.ejs`, { encoding: 'utf-8' });
   const appendVideoTemplate = ejs.render(videoTemplate, props);
   const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/${framework}-video-component.ejs`, { encoding: 'utf-8' });
@@ -149,4 +154,8 @@ async function setupWebProjects(context, resourceName) {
     context.print.blue(chalk`{underline Copy and paste the following snippet of code:}`);
   }
   context.print.info(appendVideoComponentTemplate);
+  if (framework === 'ember') {
+    context.print.blue(chalk`{underline Add the following statement in your ember-cli-build.js:}`);
+    context.print.info("app.import('node_modules/video.js/dist/video-js.css');");
+  }
 }

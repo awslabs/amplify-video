@@ -1,29 +1,56 @@
 <head>
-    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
-  
-    <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
-    <!-- <script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script> -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.4/video-js.css" rel="stylesheet">
 </head>
   
 <body>
-  <video
-    id="my-video"
-    class="video-js"
-    controls
-    preload="auto"
-    width="640"
-    height="264"
-    data-setup="{}"
-  >
-    <source src="<%= src %>" type="application/x-mpegURL" />
-    <p class="vjs-no-js">
-      To view this video please enable JavaScript, and consider upgrading to a
-      web browser that
-      <a href="https://videojs.com/html5-video-support/" target="_blank"
-        >supports HTML5 video</a
-      >
-    </p>
-  </video>
+  <div class="video-container">
+      <video id="amazon-ivs-videojs" class="video-js vjs-4-3 vjs-big-play-centered" controls autoplay playsinline></video>
+  </div>
+  <style>
+      body {
+          margin: 0;
+      }
+    
+      .video-container {
+          width: 640px;
+          height: 480px;
+          margin: 15px;
+      }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.4/video.min.js"></script>
+<% if (channelLatency === 'LOW') { -%>
+  <script src="https://player.live-video.net/1.3.1/amazon-ivs-videojs-tech.min.js"></script>
+  <script>
+    (function play() {
+        // Get playback URL from Amazon IVS API
+        var PLAYBACK_URL = '<%= src %>';
+        
+        // Register Amazon IVS as playback technology for Video.js
+        registerIVSTech(videojs);
 
-  <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
+        // Initialize player
+        var player = videojs('amazon-ivs-videojs', {
+           techOrder: ["AmazonIVS"]
+        }, () => {
+           console.log('Player is ready to use!');
+           // Play stream
+           player.src(PLAYBACK_URL);
+        });
+    })();
+  </script>
+<% } else { -%>
+  <script>
+    (function play() {
+        // Get playback URL from Amazon IVS API
+        var PLAYBACK_URL = '<%= src %>';
+        
+        // Initialize player
+        var player = videojs('amazon-ivs-videojs', {}, () => {
+           console.log('Player is ready to use!');
+           // Play stream
+           player.src(PLAYBACK_URL);
+        });
+    })();
+  </script>
+<% } -%>
 </body>

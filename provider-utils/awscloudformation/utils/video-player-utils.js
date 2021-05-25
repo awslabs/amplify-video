@@ -20,9 +20,7 @@ module.exports = {
 
 function getProjectConfig(context) {
   const projectConfigFilePath = context.amplify.pathManager.getProjectConfigFilePath();
-  let projectConfig = fs.readFileSync(projectConfigFilePath, { encoding: 'utf-8' });
-  projectConfig = JSON.parse(projectConfig);
-  return projectConfig;
+  return context.amplify.readJsonFile(projectConfigFilePath);
 }
 
 async function parseAndroidManifest(path) {
@@ -199,8 +197,7 @@ async function installIosDependencies(context) {
 
 function checkNpmDependencies(context, dependency) {
   const projectRootPath = context.amplify.pathManager.searchProjectRootPath();
-  const packageJSONFile = fs.readFileSync(`${projectRootPath}/package.json`, { encoding: 'utf-8' });
-  const packageJSON = JSON.parse(packageJSONFile);
+  const packageJSON = context.amplify.readJsonFile(`${projectRootPath}/package.json`);
   if (!packageJSON.dependencies[dependency]) {
     return false;
   }
