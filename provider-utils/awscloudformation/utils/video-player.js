@@ -110,8 +110,14 @@ async function setupWebProjects(context, resourceName) {
   };
 
   if (serviceType === 'ivs') {
+    const indexPath = videoPlayerUtils.getProjectIndexHTMLPath(context);
     const { channelLatency } = amplify.readJsonFile(`${amplify.pathManager.getBackendDirPath()}/video/${resourceName}/props.json`).channel;
+
     props.channelLatency = channelLatency;
+    context.print.info('Adding Amazon Interactive Video Service (IVS) Player for Web...');
+    if (!videoPlayerUtils.includesHTML(indexPath, 'body', 'amazon-ivs-videojs-tech.min.js')) {
+      videoPlayerUtils.insertAdjacentHTML(indexPath, 'body', 'beforeend', '<script src="https://player.live-video.net/1.3.1/amazon-ivs-videojs-tech.min.js"></script>');
+    }
   }
   const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/web/video-player.ejs`, { encoding: 'utf-8' });
   const appendVideoTemplate = ejs.render(videoTemplate, props);

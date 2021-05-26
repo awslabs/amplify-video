@@ -3,6 +3,7 @@ const ora = require('ora');
 const ejs = require('ejs');
 const inquirer = require('inquirer');
 const xmlParser = require('xml2js');
+const { parse } = require('node-html-parser');
 const { exec } = require('./headless-mode');
 
 module.exports = {
@@ -16,11 +17,47 @@ module.exports = {
   parseAndroidManifest,
   isGradleDependencyInstalled,
   appendGradleDependency,
+  includesHTML,
+  insertAdjacentHTML,
+  getProjectIndexHTMLPath,
+};
+
+const FRAMEWORK_DATA = {
+  react: {
+    extension: 'jsx',
+    static: 'public',
+  },
+  angular: {
+    extension: 'ts',
+    static: 'src',
+  },
+  vue: {
+    extension: 'vue',
+    static: 'public',
+  },
+  ember: {
+    extension: 'js',
+    static: 'app',
+  },
+  ionic: {
+    extension: 'ts',
+    static: 'src',
+  },
+  ios: {
+    extension: 'swift',
+  },
 };
 
 function getProjectConfig(context) {
   const projectConfigFilePath = context.amplify.pathManager.getProjectConfigFilePath();
   return context.amplify.readJsonFile(projectConfigFilePath);
+}
+
+function getProjectIndexHTMLPath(context) {
+  const { amplify } = context;
+  const { framework } = getProjectConfig(context)[getProjectConfig(context).frontend];
+  const rootPath = amplify.pathManager.searchProjectRootPath();
+  return `${rootPath}/${FRAMEWORK_DATA[framework].static}/index.html`;
 }
 
 async function parseAndroidManifest(path) {
@@ -44,21 +81,7 @@ function appendGradleDependency(buildGradlePath, dependency) {
 }
 
 function fileExtension(framework) {
-  switch (framework) {
-    case 'react':
-      return 'jsx';
-    case 'vue':
-      return 'vue';
-    case 'angular':
-      return 'ts';
-    case 'ember':
-      return 'js';
-    case 'ionic':
-      return 'ts';
-    case 'ios':
-      return 'swift';
-    default:
-  }
+  return FRAMEWORK_DATA[framework].extension;
 }
 
 function getServiceUrl(amplifyVideoMeta) {
@@ -76,6 +99,18 @@ function getServiceUrl(amplifyVideoMeta) {
       return output.oVODOutputS3;
     default:
   }
+}
+
+function includesHTML(sourcePath, selector, text) {
+  const root = parse(fs.readFileSync(sourcePath), { comment: true });
+  return root.querySelector(selector).toString().includes(text);
+}
+
+function insertAdjacentHTML(sourcePath, selector, position, text) {
+  const root = parse(fs.readFileSync(sourcePath), { comment: true });
+  const element = root.querySelector(selector);
+  element.insertAdjacentHTML(position, `\t${text}\n`);
+  fs.writeFileSync(sourcePath, root.toString(), { encoding: 'utf-8' });
 }
 
 function genIosSourcesAndHeaders(context, props, extension) {
