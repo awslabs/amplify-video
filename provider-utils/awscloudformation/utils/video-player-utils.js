@@ -227,9 +227,9 @@ async function installIosDependencies(context, dependency) {
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');
     } else {
-      if (dependency.podVersion) { // 8.4
+      if (dependency.podVersion) {
         addPodEntry(pod, props.podTarget, dependency.platformVersion,
-          dependency.podName, dependency.podVersion); // '3.3.0');
+          dependency.podName, dependency.podVersion);
       } else {
         addPodEntry(pod, props.podTarget, '', dependency.podName, '');
       }
