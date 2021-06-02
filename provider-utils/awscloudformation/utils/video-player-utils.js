@@ -10,7 +10,7 @@ module.exports = {
   getProjectConfig,
   fileExtension,
   getServiceUrl,
-  isVLCKitInstalled,
+  isDependencyInstalled,
   installIosDependencies,
   checkNpmDependencies,
   genIosSourcesAndHeaders,
@@ -127,7 +127,7 @@ function genIosSourcesAndHeaders(context, props, extension) {
   }
 }
 
-function isVLCKitInstalled(podfile, projectName) {
+function isDependencyInstalled(podfile, projectName, dependencyKey) {
   if (podfile.target_definitions[0].children) {
     const { children } = podfile.target_definitions[0];
     if (children.length > 0) {
@@ -136,9 +136,17 @@ function isVLCKitInstalled(podfile, projectName) {
           if (!child.dependencies) {
             return false;
           }
-          return child.dependencies.some(dependency => dependency.MobileVLCKit);
+          return child.dependencies.includes(dependencyKey)
+          || child.dependencies.some(dependency => dependency[dependencyKey]);
         }
-        return false;
+        if (!child.children) return false;
+        return child.children.some((subChildren) => {
+          if (!subChildren.dependencies) {
+            return false;
+          }
+          return subChildren.dependencies.includes(dependencyKey)
+          || child.dependencies.some(dependency => dependency[dependencyKey]);
+        });
       });
     }
   }
@@ -156,17 +164,18 @@ function addPodEntry(
   podName,
   podVersion,
 ) {
-  const platform = `platform :ios, '${platformVersion}'`;
-  const pod = `pod '${podName}', '~>${podVersion}'`;
+  const pod = podVersion ? `pod '${podName}', '~>${podVersion}'` : `pod '${podName}'`;
   const { line, indentation } = linesToAddEntry;
 
   function getLineToAdd(newEntry, offset) {
     const spaces = Array(offset + 1).join(' ');
     return spaces + newEntry;
   }
-
   podLines.splice(line, 0, getLineToAdd(pod, indentation));
-  podLines.splice(line, 0, getLineToAdd(platform, indentation));
+  if (platformVersion) {
+    const platform = `platform :ios, '${platformVersion}'`;
+    podLines.splice(line, 0, getLineToAdd(platform, indentation));
+  }
 }
 
 function listTargets(podLines) {
@@ -192,7 +201,7 @@ function savePodFile(podfilePath, podLines) {
   fs.writeFileSync(podfilePath, newPodfile);
 }
 
-async function installIosDependencies(context) {
+async function installIosDependencies(context, dependency) {
   const { amplify } = context;
   const projectRootPath = amplify.pathManager.searchProjectRootPath();
 
@@ -211,16 +220,21 @@ async function installIosDependencies(context) {
       },
     ];
     const props = await inquirer.prompt(chooseTarget);
-    if (isVLCKitInstalled(podFileData, props.podTarget.target)) {
-      context.print.info('Podfile already contains MobileVLCKit');
+    if (isDependencyInstalled(podFileData, props.podTarget.target, dependency.podName)) {
+      context.print.info(`Podfile already contains ${dependency.podName}`);
       const spinner = ora('Installing dependencies...');
       spinner.start();
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');
     } else {
-      addPodEntry(pod, props.podTarget, '8.4', 'MobileVLCKit', '3.3.0');
+      if (dependency.podVersion) { // 8.4
+        addPodEntry(pod, props.podTarget, dependency.platformVersion,
+          dependency.podName, dependency.podVersion); // '3.3.0');
+      } else {
+        addPodEntry(pod, props.podTarget, '', dependency.podName, '');
+      }
       savePodFile(`${projectRootPath}/Podfile`, pod);
-      const spinner = ora('Installing MobileVLCKit with CocoaPods...');
+      const spinner = ora(`Installing ${dependency.podName} with CocoaPods...`);
       spinner.start();
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');

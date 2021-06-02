@@ -65,10 +65,19 @@ async function setupIosProject(context, resourceName) {
   const framework = videoPlayerUtils.getProjectConfig(context).frontend;
   const pbxprojPath = `${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}.xcodeproj/project.pbxproj`;
   const pbxproj = xcode.project(pbxprojPath);
+  const dependency = {};
   const props = {};
 
-  await videoPlayerUtils.installIosDependencies(context);
-
+  if (serviceType === 'ivs') {
+    dependency.podName = 'AmazonIVSPlayer';
+    await videoPlayerUtils.installIosDependencies(context, dependency);
+    props.serviceType = serviceType;
+  } else {
+    dependency.podName = 'MobileVLCKit';
+    dependency.podVersion = '3.3.0';
+    dependency.platformVersion = '8.4';
+    await videoPlayerUtils.installIosDependencies(context, dependency);
+  }
   props.src = videoPlayerUtils.getServiceUrl({ serviceType, output });
   props.creationDate = new Date();
   props.projectName = videoPlayerUtils.getProjectConfig(context).projectName;
@@ -76,23 +85,22 @@ async function setupIosProject(context, resourceName) {
   const videoTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/ios/video-player.ejs`, { encoding: 'utf-8' });
   const appendVideoTemplate = ejs.render(videoTemplate, props);
   const videoComponentTemplate = fs.readFileSync(`${__dirname}/../video-player-templates/ios/${framework}-video-component.ejs`, { encoding: 'utf-8' });
-
-  ['h', 'cpp', 'hpp'].map(extension => videoPlayerUtils.genIosSourcesAndHeaders(context, props, extension));
-
-  fs.writeFileSync(`${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
   const parser = pbxproj.parseSync();
   const [hash] = Object.entries(parser.hash.project.objects.PBXGroup).find(
     ([, group]) => group.path === videoPlayerUtils.getProjectConfig(context).projectName,
   );
 
+  fs.writeFileSync(`${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
   pbxproj.addSourceFile(`VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, {}, hash);
-  pbxproj.addSourceFile('empty.cpp', {}, hash);
-  pbxproj.addHeaderFile('empty.hpp', {}, hash);
-  pbxproj.addHeaderFile(`${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, {}, hash);
-  pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Debug');
-  pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Release');
+  if (serviceType !== 'ivs') {
+    ['h', 'cpp', 'hpp'].map(extension => videoPlayerUtils.genIosSourcesAndHeaders(context, props, extension));
+    pbxproj.addSourceFile('empty.cpp', {}, hash);
+    pbxproj.addHeaderFile('empty.hpp', {}, hash);
+    pbxproj.addHeaderFile(`${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, {}, hash);
+    pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Debug');
+    pbxproj.addBuildProperty('SWIFT_OBJC_BRIDGING_HEADER', `${videoPlayerUtils.getProjectConfig(context).projectName}/${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, 'Release');
+  }
   fs.writeFileSync(pbxprojPath, pbxproj.writeSync());
-
   context.print.blue(chalk`{underline Import and add the following ${framework} component to your ContentView:}`);
   context.print.info(videoComponentTemplate);
 }
