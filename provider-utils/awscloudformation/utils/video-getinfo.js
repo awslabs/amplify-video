@@ -32,7 +32,6 @@ async function getInfoVideoAll(context) {
 async function generateAWSExportsVideo(context) {
   const projectConfig = context.amplify.getProjectConfig();
   const projectMeta = context.amplify.getProjectMeta();
-  const projectDetails = context.amplify.getProjectDetails();
   const targetDir = context.amplify.pathManager.getBackendDirPath();
   const props = {};
 

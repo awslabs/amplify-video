@@ -10,10 +10,6 @@ module.exports = {
     const { amplify } = context;
     const amplifyMeta = amplify.getProjectMeta();
     const targetDir = amplify.pathManager.getBackendDirPath();
-    const projectDetails = context.amplify.getProjectDetails();
-    const newEnvName = projectDetails.localEnvInfo.envName;
-    const resourceFilesBaseDir = `${targetDir}/video/${shared.resourceName}/`;
-    const resourceFilesList = fs.readdirSync(resourceFilesBaseDir);
 
     if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
       context.print.error(`You have no ${category} projects.`);
