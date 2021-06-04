@@ -46,7 +46,7 @@ async function createConfig(context, projectConfig, projectName) {
     generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
   } else if (projectConfig.serviceType === 'ivs') {
     const targetDir = context.amplify.pathManager.getBackendDirPath();
-    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/${projectDetails.localEnvInfo.envName}-props.json`));
+    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/props.json`));
     generateINIIVS(projectName, profileDir, props);
     generateServiceIVS(profileDir, projectConfig.output);
   }

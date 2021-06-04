@@ -31,8 +31,11 @@ async function getInfoVideoAll(context) {
 
 async function generateAWSExportsVideo(context) {
   const projectConfig = context.amplify.getProjectConfig();
-  const amplifyMeta = context.amplify.getProjectMeta();
+  const projectMeta = context.amplify.getProjectMeta();
+  const projectDetails = context.amplify.getProjectDetails();
+  const targetDir = context.amplify.pathManager.getBackendDirPath();
   const props = {};
+
   let filePath = '';
 
   if (projectConfig.frontend === 'ios') {
@@ -46,13 +49,15 @@ async function generateAWSExportsVideo(context) {
     filePath = './aws-video-exports.json';
   }
 
-  if ('video' in amplifyMeta && Object.keys(amplifyMeta.video).length !== 0) {
-    Object.values(amplifyMeta.video).forEach((project) => {
+  if ('video' in projectMeta && Object.keys(projectMeta.video).length !== 0) {
+    Object.values(projectMeta.video).forEach((project) => {
+      const videoConfig = JSON.parse(fs.readFileSync(`${targetDir}/video/${project}/props.json`));
       if ('output' in project) {
         const { output } = project;
         if (project.serviceType === 'video-on-demand') {
           props.awsInputVideo = output.oVODInputS3;
           props.awsOutputVideo = output.oVodOutputUrl;
+          props.protectedURLS = videoConfig.signedKey;
         } else if (project.serviceType === 'livestream') {
           if (output.oPrimaryHlsEgress) {
             props.awsOutputLiveHLS = output.oPrimaryHlsEgress;

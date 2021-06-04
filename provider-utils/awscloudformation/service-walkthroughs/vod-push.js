@@ -10,6 +10,7 @@ const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
 
 module.exports = {
   serviceQuestions,
+  createCDNEnvVars,
 };
 
 async function serviceQuestions(context, options, defaultValuesFilename, resourceName) {
@@ -49,7 +50,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.shared = nameDict;
     // TODO: find a way of using default values from new question
     try {
-      oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
+      oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
       Object.assign(defaults, oldValues);
     } catch (err) {
       // Do nothing
@@ -279,7 +280,6 @@ async function createCDN(context, props, options, aws, oldValues) {
   const { payload } = context.parameters.options;
   const { amplify } = context;
   const args = payload ? JSON.parse(payload) : {};
-  const projectDetails = amplify.getProjectDetails();
   const cdnConfigDetails = {};
 
   if (oldValues.contentDeliveryNetwork && oldValues.contentDeliveryNetwork.signedKey) {
@@ -321,47 +321,54 @@ async function createCDN(context, props, options, aws, oldValues) {
   }
 
   if (cdnConfigDetails.signedKey) {
-    const { publicKey, privateKey } = generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-      },
-    });
-
-    if (!aws) {
-      const provider = getAWSConfig(context, options);
-      aws = await provider.getConfiguredAWSClient(context);
-    }
-    const uuid = Math.random().toString(36).substring(2, 6)
-                + Math.random().toString(36).substring(2, 6);
-    const secretName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-pem-${uuid}`.slice(0, 63);
-    const rPublicName = `rCloudFrontPublicKey${projectDetails.localEnvInfo.envName}${uuid}`.slice(0, 63);
-    const publicKeyName = `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-publickey-${uuid}`.slice(0, 63);
-    const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
-    const createSecretParams = {
-      Name: secretName,
-      SecretBinary: privateKey,
-    };
-    const secretCreate = await smClient.createSecret(createSecretParams).promise();
-    cdnConfigDetails.publicKey = publicKey.replace(/\n/g, '\\n');
-    // Note: This is NOT best pratices for CloudFormation but their is
-    // a bug with CloudFront's new Key Groups that doesn't allow
-    // us to rotate them so we are temporary doing a hard rotate
-    // Ref: ISSUE - TBD
-    cdnConfigDetails.rPublicName = rPublicName;
-    cdnConfigDetails.publicKeyName = publicKeyName;
-    cdnConfigDetails.secretPem = secretCreate.Name;
-    cdnConfigDetails.secretPemArn = secretCreate.ARN;
-    cdnConfigDetails.functionName = (projectDetails.localEnvInfo.envName)
-      ? `${props.shared.resourceName}-${projectDetails.localEnvInfo.envName}-tokenGen` : `${props.shared.resourceName}-tokenGen`;
+    await createCDNEnvVars(context, options, props.shared.resourceName, aws);
     cdnConfigDetails.functionNameSchema = `${props.shared.resourceName}-\${env}-tokenGen`;
   }
+
   return cdnConfigDetails;
+}
+
+async function createCDNEnvVars(context, options, resourceName, aws) {
+  const { amplify } = context;
+  const projectDetails = amplify.getProjectDetails();
+  const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+      type: 'spki',
+      format: 'pem',
+    },
+    privateKeyEncoding: {
+      type: 'pkcs8',
+      format: 'pem',
+    },
+  });
+
+  if (!aws) {
+    const provider = getAWSConfig(context, options);
+    aws = await provider.getConfiguredAWSClient(context);
+  }
+  const uuid = Math.random().toString(36).substring(2, 6)
+              + Math.random().toString(36).substring(2, 6);
+  const secretName = `${resourceName}-${projectDetails.localEnvInfo.envName}-pem-${uuid}`.slice(0, 63);
+  const rPublicName = `rCloudFrontPublicKey${projectDetails.localEnvInfo.envName}${uuid}`.slice(0, 63);
+  const publicKeyName = `${resourceName}-${projectDetails.localEnvInfo.envName}-publickey-${uuid}`.slice(0, 63);
+  const smClient = new aws.SecretsManager({ apiVersion: '2017-10-17' });
+  const createSecretParams = {
+    Name: secretName,
+    SecretBinary: privateKey,
+  };
+  const secretCreate = await smClient.createSecret(createSecretParams).promise();
+  const cdnEnvConfigDetails = {};
+  cdnEnvConfigDetails.publicKey = publicKey.replace(/\n/g, '\\n');
+  // Note: This is NOT best pratices for CloudFormation but their is
+  // a bug with CloudFront's new Key Groups that doesn't allow
+  // us to rotate them so we are temporary doing a hard rotate
+  // Ref: ISSUE - TBD
+  cdnEnvConfigDetails.rPublicName = rPublicName;
+  cdnEnvConfigDetails.publicKeyName = publicKeyName;
+  cdnEnvConfigDetails.secretPem = secretCreate.Name;
+  cdnEnvConfigDetails.secretPemArn = secretCreate.ARN;
+  amplify.saveEnvResourceParameters(context, 'video', resourceName, cdnEnvConfigDetails);
 }
 
 async function createCMS(context, apiName, props) {
