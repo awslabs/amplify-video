@@ -51,8 +51,57 @@ async function pushTemplates(context) {
 async function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
+  const projectDetails = context.amplify.getProjectDetails();
+
+  const newEnvName = projectDetails.localEnvInfo.envName;
+  const resourceFilesBaseDir = `${targetDir}/video/${resourceName}/`;
+  const resourceFilesList = fs.readdirSync(resourceFilesBaseDir);
+
+
+  // Check if env-specific props file already exists
+  const hasOwnEnvProps = resourceFilesList.includes(`${newEnvName}-props.json`);
+
+  // Check if ANY props file exist for a different env in this project  || returns array
+  const hasAnyEnvProps = resourceFilesList.find(fileName => fileName.includes('-props.json'));
+
+  // If this env doesn't have its own props AND there is an existing amplify-video resource
+  if (!hasOwnEnvProps && hasAnyEnvProps) {
+    // take the first props file you find and copy that!
+    const propsFilenameToCopy = resourceFilesList.filter(propsFileName => propsFileName.includes('-props.json'))[0];
+
+    // extract substring for the existing env's name we're going to copy over
+    const envNameToReplace = propsFilenameToCopy.substr(0, propsFilenameToCopy.indexOf('-'));
+
+    // read JSON from the existing env's props file
+    const existingPropsToMutate = JSON.parse(fs.readFileSync(`${resourceFilesBaseDir}/${propsFilenameToCopy}`));
+
+    const searchAndReplaceProps = () => {
+      const newPropsObj = {};
+      // eslint-disable-next-line no-restricted-syntax
+      for (const [key, value] of Object.entries(existingPropsToMutate.contentDeliveryNetwork)) {
+        // look for any string values that contain existing env's name
+        if (typeof value === 'string' && value.includes(`${envNameToReplace}`)) {
+          // replace with new env name
+          const newValue = value.replace(new RegExp(envNameToReplace, 'g'), `${newEnvName}`);
+          newPropsObj[key] = newValue;
+        } else {
+          // copy existing values that do not match replacement conditions aka "generic props"
+          newPropsObj[key] = value;
+        }
+      }
+      return newPropsObj;
+    };
+
+    // merge new props and existing generic props
+    const newPropsToSave = Object.assign(
+      existingPropsToMutate, { contentDeliveryNetwork: searchAndReplaceProps() },
+    );
+
+    fs.writeFileSync(`${resourceFilesBaseDir}/${newEnvName}-props.json`, JSON.stringify(newPropsToSave, null, 4));
+  }
+
   if (!props) {
-    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
   }
   if (projectType === 'video-on-demand') {
     props = getVODEnvVars(context, props, resourceName);
@@ -95,7 +144,7 @@ function getVODEnvVars(context, props, resourceName) {
     delete props.shared.bucket;
     delete props.shared.bucketInput;
     delete props.shared.bucketOutput;
-    fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
+    fs.writeFileSync(`${targetDir}/video/${resourceName}/${amplifyProjectDetails.localEnvInfo.envName}-props.json`, JSON.stringify(props, null, 4));
   }
   const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
     .categories.video[resourceName];

@@ -19,6 +19,7 @@ async function setupOBS(context, resourceName) {
 async function createConfig(context, projectConfig, projectName) {
   // check for obs installation!
   let profileDir = '';
+  const projectDetails = context.amplify.getProjectDetails();
   if (process.platform === 'darwin') {
     profileDir = `${process.env.HOME}/Library/Application Support/obs-studio/basic/profiles/`;
   } else if (process.platform === 'win32') {
@@ -45,7 +46,7 @@ async function createConfig(context, projectConfig, projectName) {
     generateServiceLive(profileDir, projectConfig.output.oMediaLivePrimaryIngestUrl);
   } else if (projectConfig.serviceType === 'ivs') {
     const targetDir = context.amplify.pathManager.getBackendDirPath();
-    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/props.json`));
+    const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/${projectDetails.localEnvInfo.envName}-props.json`));
     generateINIIVS(projectName, profileDir, props);
     generateServiceIVS(profileDir, projectConfig.output);
   }

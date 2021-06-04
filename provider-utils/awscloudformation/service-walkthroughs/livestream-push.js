@@ -13,6 +13,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   let resource = {};
   const targetDir = amplify.pathManager.getBackendDirPath();
+  const projectDetails = context.amplify.getProjectDetails();
   let advancedAnswers = {};
   let mediaLiveAnswers = {};
   let mediaPackageAnswers;
@@ -24,7 +25,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   // TODO: find a way to use default in new question files
   try {
-    const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+    const oldValues = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
     Object.assign(defaults, oldValues);
   } catch (err) {
     // Do nothing

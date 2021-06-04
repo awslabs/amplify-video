@@ -36,3 +36,4 @@ Resources:
       name: !Ref pProjectName
       type: !Ref pQuality
       latencyMode: !Ref pLatencyMode
+      tags: {"amplify-video" : "amplify-video"}
