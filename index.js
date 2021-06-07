@@ -31,6 +31,16 @@ async function onAmplifyCategoryOutputChange(context) {
 async function createNewEnv(context, resourceName) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
+  const { teamProviderInfo, localEnvInfo } = context.exeInfo;
+  const { envName } = localEnvInfo;
+  if (teamProviderInfo
+    && teamProviderInfo[envName]
+    && teamProviderInfo[envName].categories
+    && teamProviderInfo[envName].categories[category]
+    && teamProviderInfo[envName].categories[category][resourceName]
+    && teamProviderInfo[envName].categories[category][resourceName].secretPem) {
+    return;
+  }
   const targetDir = amplify.pathManager.getBackendDirPath();
   const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
   const options = amplifyMeta.video[resourceName];
@@ -49,7 +59,7 @@ async function initEnv(context) {
   if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
     return;
   }
-  amplifyMeta[category].forEach((resourceName) => {
+  Object.keys(amplifyMeta[category]).forEach((resourceName) => {
     projectEnvCreate.push(createNewEnv(context, resourceName));
   });
   await Promise.all(projectEnvCreate);

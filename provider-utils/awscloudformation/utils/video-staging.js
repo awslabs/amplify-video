@@ -98,11 +98,11 @@ function getVODEnvVars(context, props, resourceName) {
     delete props.shared.bucketOutput;
     fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
   }
-  const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+  let envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
     .categories.video[resourceName];
 
   if (props.contentDeliveryNetwork && props.contentDeliveryNetwork.signedKey) {
-    if (props.publicKey) {
+    if (props.contentDeliveryNetwork.publicKey) {
       // Migrate to env CDN vars
       const envSave = {
         publicKey: props.contentDeliveryNetwork.publicKey,
@@ -112,6 +112,9 @@ function getVODEnvVars(context, props, resourceName) {
         secretPemArn: props.contentDeliveryNetwork.secretPemArn,
       };
       amplify.saveEnvResourceParameters(context, 'video', resourceName, envSave);
+      amplifyProjectDetails = amplify.getProjectDetails();
+      envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+        .categories.video[resourceName];
       delete props.contentDeliveryNetwork.publicKey;
       delete props.contentDeliveryNetwork.rPublicName;
       delete props.contentDeliveryNetwork.publicKeyName;
@@ -134,7 +137,6 @@ function getVODEnvVars(context, props, resourceName) {
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
     bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
   };
-  console.log(props);
   return props;
 }
 
