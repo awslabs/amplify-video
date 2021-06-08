@@ -1,5 +1,0 @@
-{
-    "authRoleName": {
-        "Ref": "AuthRoleName"
-    }
-}
