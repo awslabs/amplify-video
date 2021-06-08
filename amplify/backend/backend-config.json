@@ -1,0 +1,14 @@
+{
+  "video": {
+    "stdLow": {
+      "service": "video",
+      "serviceType": "ivs",
+      "providerPlugin": "awscloudformation"
+    },
+    "vodTest": {
+      "service": "video",
+      "serviceType": "video-on-demand",
+      "providerPlugin": "awscloudformation"
+    }
+  }
+}

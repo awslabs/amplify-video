@@ -1,0 +1,10 @@
+{
+    "shared": {
+        "resourceName": "stdLow",
+        "bucket": "amplify-amplifyvideoproject-dev-170015-deployment"
+    },
+    "channel": {
+        "channelQuality": "STANDARD",
+        "channelLatency": "LOW"
+    }
+}

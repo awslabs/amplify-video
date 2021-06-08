@@ -1,0 +1,21 @@
+{
+    "shared": {
+        "resourceName": "vodTest"
+    },
+    "template": {
+        "type": [
+            "DASH"
+        ],
+        "name": "Amplify_Video_DASH.json"
+    },
+    "contentDeliveryNetwork": {
+        "signedKey": true,
+        "functionNameSchema": "vodTest-${env}-tokenGen",
+        "enableDistribution": true
+    },
+    "parameters": {
+        "authRoleName": {
+            "Ref": "AuthRoleName"
+        }
+    }
+}
