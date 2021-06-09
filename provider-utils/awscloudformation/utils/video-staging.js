@@ -51,57 +51,9 @@ async function pushTemplates(context) {
 async function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
-  const projectDetails = context.amplify.getProjectDetails();
-
-  const newEnvName = projectDetails.localEnvInfo.envName;
-  const resourceFilesBaseDir = `${targetDir}/video/${resourceName}/`;
-  const resourceFilesList = fs.readdirSync(resourceFilesBaseDir);
-
-
-  // Check if env-specific props file already exists
-  const hasOwnEnvProps = resourceFilesList.includes(`${newEnvName}-props.json`);
-
-  // Check if ANY props file exist for a different env in this project  || returns array
-  const hasAnyEnvProps = resourceFilesList.find(fileName => fileName.includes('-props.json'));
-
-  // If this env doesn't have its own props AND there is an existing amplify-video resource
-  if (!hasOwnEnvProps && hasAnyEnvProps) {
-    // take the first props file you find and copy that!
-    const propsFilenameToCopy = resourceFilesList.filter(propsFileName => propsFileName.includes('-props.json'))[0];
-
-    // extract substring for the existing env's name we're going to copy over
-    const envNameToReplace = propsFilenameToCopy.substr(0, propsFilenameToCopy.indexOf('-'));
-
-    // read JSON from the existing env's props file
-    const existingPropsToMutate = JSON.parse(fs.readFileSync(`${resourceFilesBaseDir}/${propsFilenameToCopy}`));
-
-    const searchAndReplaceProps = () => {
-      const newPropsObj = {};
-      // eslint-disable-next-line no-restricted-syntax
-      for (const [key, value] of Object.entries(existingPropsToMutate.contentDeliveryNetwork)) {
-        // look for any string values that contain existing env's name
-        if (typeof value === 'string' && value.includes(`${envNameToReplace}`)) {
-          // replace with new env name
-          const newValue = value.replace(new RegExp(envNameToReplace, 'g'), `${newEnvName}`);
-          newPropsObj[key] = newValue;
-        } else {
-          // copy existing values that do not match replacement conditions aka "generic props"
-          newPropsObj[key] = value;
-        }
-      }
-      return newPropsObj;
-    };
-
-    // merge new props and existing generic props
-    const newPropsToSave = Object.assign(
-      existingPropsToMutate, { contentDeliveryNetwork: searchAndReplaceProps() },
-    );
-
-    fs.writeFileSync(`${resourceFilesBaseDir}/${newEnvName}-props.json`, JSON.stringify(newPropsToSave, null, 4));
-  }
 
   if (!props) {
-    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/${projectDetails.localEnvInfo.envName}-props.json`));
+    props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
   }
   if (projectType === 'video-on-demand') {
     props = getVODEnvVars(context, props, resourceName);
@@ -144,18 +96,47 @@ function getVODEnvVars(context, props, resourceName) {
     delete props.shared.bucket;
     delete props.shared.bucketInput;
     delete props.shared.bucketOutput;
-    fs.writeFileSync(`${targetDir}/video/${resourceName}/${amplifyProjectDetails.localEnvInfo.envName}-props.json`, JSON.stringify(props, null, 4));
+    fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
   }
-  const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+  let envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
     .categories.video[resourceName];
 
-  // Merge props with env variables
+  if (props.contentDeliveryNetwork && props.contentDeliveryNetwork.signedKey) {
+    if (props.contentDeliveryNetwork.publicKey) {
+      // Migrate to env CDN vars
+      const envSave = {
+        publicKey: props.contentDeliveryNetwork.publicKey,
+        rPublicName: props.contentDeliveryNetwork.rPublicName,
+        publicKeyName: props.contentDeliveryNetwork.publicKeyName,
+        secretPem: props.contentDeliveryNetwork.secretPem,
+        secretPemArn: props.contentDeliveryNetwork.secretPemArn,
+      };
+      amplify.saveEnvResourceParameters(context, 'video', resourceName, envSave);
+      amplifyProjectDetails = amplify.getProjectDetails();
+      envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+        .categories.video[resourceName];
+      delete props.contentDeliveryNetwork.publicKey;
+      delete props.contentDeliveryNetwork.rPublicName;
+      delete props.contentDeliveryNetwork.publicKeyName;
+      delete props.contentDeliveryNetwork.secretPem;
+      delete props.contentDeliveryNetwork.secretPemArn;
+      fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
+    }
+    const cdnEnv = {
+      publicKey: envVars.publicKey,
+      rPublicName: envVars.rPublicName,
+      publicKeyName: envVars.publicKeyName,
+      secretPem: envVars.secretPem,
+      secretPemArn: envVars.secretPemArn,
+    };
+
+    Object.assign(props.contentDeliveryNetwork, cdnEnv);
+  }
   props.env = {
     bucket: projectBucket,
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
     bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
   };
-
   return props;
 }
 
