@@ -1,6 +1,8 @@
 const category = 'video';
 const path = require('path');
+const fs = require('fs-extra');
 const { pushTemplates } = require('./provider-utils/awscloudformation/utils/video-staging');
+const { createCDNEnvVars } = require('./provider-utils/awscloudformation/service-walkthroughs/vod-push');
 
 
 async function add(context, providerName, service) {
@@ -26,14 +28,41 @@ async function onAmplifyCategoryOutputChange(context) {
   await infoController.getInfoVideoAll(context);
 }
 
+async function createNewEnv(context, resourceName) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const { teamProviderInfo, localEnvInfo } = context.exeInfo;
+  const { envName } = localEnvInfo;
+  if (teamProviderInfo
+    && teamProviderInfo[envName]
+    && teamProviderInfo[envName].categories
+    && teamProviderInfo[envName].categories[category]
+    && teamProviderInfo[envName].categories[category][resourceName]
+    && teamProviderInfo[envName].categories[category][resourceName].secretPem) {
+    return;
+  }
+  const targetDir = amplify.pathManager.getBackendDirPath();
+  const props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
+  const options = amplifyMeta.video[resourceName];
+  if (options.serviceType === 'video-on-demand') {
+    if (props.contentDeliveryNetwork && props.contentDeliveryNetwork.signedKey) {
+      await createCDNEnvVars(context, options, resourceName);
+    }
+  }
+}
+
 async function initEnv(context) {
   const { amplify } = context;
   const amplifyMeta = amplify.getProjectMeta();
+  const projectEnvCreate = [];
 
   if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
     return;
   }
-
+  Object.keys(amplifyMeta[category]).forEach((resourceName) => {
+    projectEnvCreate.push(createNewEnv(context, resourceName));
+  });
+  await Promise.all(projectEnvCreate);
   await pushTemplates(context);
 }
 

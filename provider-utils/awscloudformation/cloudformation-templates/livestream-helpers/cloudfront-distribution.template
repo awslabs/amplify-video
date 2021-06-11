@@ -166,6 +166,10 @@
     "rDistribution" : {
       "Type": "AWS::CloudFront::Distribution",
       "Properties": {
+        "Tags" : [{
+          "Key" : "amplify-video",
+          "Value" : "amplify-video"
+        }],
         "DistributionConfig": {
           "Origins": [
             {

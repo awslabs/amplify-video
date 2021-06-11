@@ -51,6 +51,7 @@ async function pushTemplates(context) {
 async function build(context, resourceName, projectType, props) {
   const { amplify } = context;
   const targetDir = amplify.pathManager.getBackendDirPath();
+
   if (!props) {
     props = JSON.parse(fs.readFileSync(`${targetDir}/video/${resourceName}/props.json`));
   }
@@ -97,16 +98,45 @@ function getVODEnvVars(context, props, resourceName) {
     delete props.shared.bucketOutput;
     fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
   }
-  const envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+  let envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
     .categories.video[resourceName];
 
-  // Merge props with env variables
+  if (props.contentDeliveryNetwork && props.contentDeliveryNetwork.signedKey) {
+    if (props.contentDeliveryNetwork.publicKey) {
+      // Migrate to env CDN vars
+      const envSave = {
+        publicKey: props.contentDeliveryNetwork.publicKey,
+        rPublicName: props.contentDeliveryNetwork.rPublicName,
+        publicKeyName: props.contentDeliveryNetwork.publicKeyName,
+        secretPem: props.contentDeliveryNetwork.secretPem,
+        secretPemArn: props.contentDeliveryNetwork.secretPemArn,
+      };
+      amplify.saveEnvResourceParameters(context, 'video', resourceName, envSave);
+      amplifyProjectDetails = amplify.getProjectDetails();
+      envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+        .categories.video[resourceName];
+      delete props.contentDeliveryNetwork.publicKey;
+      delete props.contentDeliveryNetwork.rPublicName;
+      delete props.contentDeliveryNetwork.publicKeyName;
+      delete props.contentDeliveryNetwork.secretPem;
+      delete props.contentDeliveryNetwork.secretPemArn;
+      fs.writeFileSync(`${targetDir}/video/${resourceName}/props.json`, JSON.stringify(props, null, 4));
+    }
+    const cdnEnv = {
+      publicKey: envVars.publicKey,
+      rPublicName: envVars.rPublicName,
+      publicKeyName: envVars.publicKeyName,
+      secretPem: envVars.secretPem,
+      secretPemArn: envVars.secretPemArn,
+    };
+
+    Object.assign(props.contentDeliveryNetwork, cdnEnv);
+  }
   props.env = {
     bucket: projectBucket,
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
     bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
   };
-
   return props;
 }
 
