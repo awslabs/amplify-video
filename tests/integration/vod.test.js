@@ -4,6 +4,7 @@ const AWS = require('aws-sdk');
 const axios = require('axios');
 const request = require('supertest');
 const CloudFrontTokenGen = require('../../provider-utils/awscloudformation/cloudformation-templates/vod-helpers/LambdaFunctions/CloudFrontTokenGen/index.js');
+const { env } = require('process');
 
 AWS.config.update({region:'us-west-2'});
 
@@ -12,7 +13,8 @@ describe('VOD Tests', () => {
   let domainName;
   let projectProps;
   let projectPaths;
-  let teamProviderPath;
+  let teamProvider;
+  let envName;
   let projectNames;
   const fsOptions = {
     encoding: 'utf8', flag: 'r',
@@ -25,6 +27,14 @@ describe('VOD Tests', () => {
     }
     const files = glob.sync(directoryPath);
     const backendConfig = JSON.parse(fs.readFileSync(files[0], fsOptions));
+
+    let teamProviderPath = `${__dirname}/../../amplify/team-provider-info.json`;
+    if (process.env.NODE_ENV !== 'test' && process.env.AMP_PATH) {
+      teamProviderPath = `${__dirname}/../../${process.env.AMP_PATH}/amplify/team-provider-info.json`;
+    }
+    teamProvider = JSON.parse(fs.readFileSync(teamProviderPath, fsOptions));
+    envName = [Object.keys(teamProvider)[0]];
+
     projectNames = Object.entries(backendConfig.video ? backendConfig.video : {})
       .filter(([, value]) => value.serviceType === 'video-on-demand')
       .map(([project]) => project);
@@ -34,13 +44,21 @@ describe('VOD Tests', () => {
       }
       return `${__dirname}/../../amplify/backend/video/${projectName}/props.json`;
     });
-    projectProps = projectPaths
-      .map(projectPath => JSON.parse(fs.readFileSync(projectPath, fsOptions)));
-
-    teamProviderPath = `${__dirname}/../../amplify/team-provider-info.json`;
-    if (process.env.NODE_ENV !== 'test' && process.env.AMP_PATH) {
-      teamProviderPath = `${__dirname}/../../${process.env.AMP_PATH}/amplify/team-provider-info.json`;
-    }
+    projectProps = projectPaths.map((projectPath) => { 
+      const props = JSON.parse(fs.readFileSync(projectPath, fsOptions));
+      const { resourceName } = props.shared;
+      if( teamProvider
+        && teamProvider[envName]
+        && teamProvider[envName].categories
+        && teamProvider[envName].categories.video
+        && teamProvider[envName].categories.video[resourceName]
+        && teamProvider[envName].categories.video[resourceName].secretPem){
+          const cdnEnv = teamProvider[envName].categories.video[resourceName];
+          Object.assign(props.contentDeliveryNetwork, cdnEnv);
+        }
+      return props;
+    });
+    
   });
 
   test('Upload file to input bucket', async () => {
@@ -49,11 +67,10 @@ describe('VOD Tests', () => {
       return;
     }
     const s3 = new AWS.S3();
-    const teamProvider = JSON.parse(fs.readFileSync(teamProviderPath, fsOptions));
     const res = await axios.get('http://a0.awsstatic.com/main/images/logos/aws_logo.png', { responseType: 'arraybuffer' });
 
     Promise.all(projectNames.map(async project => await s3.putObject({
-      Bucket: `${project.toLowerCase()}-${Object.keys(teamProvider)[0]}-output-${teamProvider[Object.keys(teamProvider)[0]].categories.video[project].s3UUID}`,
+      Bucket: `${project.toLowerCase()}-${envName}-output-${teamProvider[envName].categories.video[project].s3UUID}`,
       Key: 'test/test.png',
       ContentType: res.headers['content-type'],
       ContentLength: res.headers['content-length'],
@@ -80,7 +97,7 @@ describe('VOD Tests', () => {
           .map(key => key)[0];
         const keyGroups = await cloudfront.listKeyGroups().promise();
         const keyGroup = keyGroups.KeyGroupList.Items
-          .filter(item => item.KeyGroup.KeyGroupConfig.Name === project.contentDeliveryNetwork.functionName.replace('tokenGen', 'KeyGroup'))
+          .filter(item => item.KeyGroup.KeyGroupConfig.Name === `${project.shared.resourceName}-${envName}-KeyGroup`)
           .map(group => group)[0];
         const cloudFrontDistributions = await cloudfront.listDistributionsByKeyGroup({
           KeyGroupId: keyGroup.KeyGroup.Id,

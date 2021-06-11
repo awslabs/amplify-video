@@ -23,3 +23,5 @@ chrome-user-data
 *.swp
 *.swo
 *._*
+src/
+amplify/

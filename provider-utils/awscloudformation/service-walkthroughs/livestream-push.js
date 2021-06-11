@@ -324,7 +324,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // main question control flow
   const answers = {};
 
-  answers.resourceName = resource.name;
+  answers.resourceName = resource.resourceName;
 
   const advancedEnable = await inquirer.prompt(advanced);
   if (advancedEnable.advancedChoice === false) {

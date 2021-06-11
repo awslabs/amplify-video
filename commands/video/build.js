@@ -8,8 +8,8 @@ module.exports = {
   name: subcommand,
   run: async (context) => {
     const { amplify } = context;
-    const targetDir = amplify.pathManager.getBackendDirPath();
     const amplifyMeta = amplify.getProjectMeta();
+    const targetDir = amplify.pathManager.getBackendDirPath();
 
     if (!(category in amplifyMeta) || Object.keys(amplifyMeta[category]).length === 0) {
       context.print.error(`You have no ${category} projects.`);
