@@ -8,7 +8,7 @@
      "provider":"awscloudformation"
   },
   "ivs":{
-   "alias":"Amazon Interactive Video Service Live Stream (Beta)",
+   "alias":"Amazon Interactive Video Service Live Stream",
    "serviceWalkthroughFilename":"ivs-push.js",
    "cfnFilename":"ivs-workflow-template.yaml.ejs",
    "stackFolder":"ivs-helpers",

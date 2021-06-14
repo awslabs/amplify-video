@@ -49,8 +49,9 @@ async function generateAWSExportsVideo(context) {
   }
 
   if ('video' in projectMeta && Object.keys(projectMeta.video).length !== 0) {
-    Object.values(projectMeta.video).forEach((project) => {
-      const videoConfig = JSON.parse(fs.readFileSync(`${targetDir}/video/${project}/props.json`));
+    Object.entries(projectMeta.video).forEach( (videoMeta) => {
+      const [projectName, project] = videoMeta;
+      const videoConfig = JSON.parse(fs.readFileSync(`${targetDir}/video/${projectName}/props.json`));
       if ('output' in project) {
         const { output } = project;
         if (project.serviceType === 'video-on-demand') {
