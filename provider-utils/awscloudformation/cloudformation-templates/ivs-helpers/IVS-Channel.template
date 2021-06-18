@@ -6,34 +6,39 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
-  pFunctionArn:
-    Type: String
-    Description: Name of function
-    Default: arn-default
   pLatencyMode:
     Type: String
     Description: Latency Mode for IVS-Channel
-    Default: <%= props.channel.channelLatency %>
+    Default: LOW
   pQuality:
     Type: String
     Description: Quality of channel
-    Default: <%= props.channel.channelQuality %>
+    Default: BASIC
 Outputs:
   oVideoChannelArn:
-    Value: !GetAtt rIVSChannel.arn
+    Value: !Ref rIVSChannel
   oVideoOutput:
-    Value: !GetAtt rIVSChannel.playbackUrl
+    Value: !GetAtt rIVSChannel.PlaybackUrl
   oVideoInputURL:
-    Value: !GetAtt rIVSChannel.ingestURL
+    Value: !GetAtt rIVSChannel.IngestEndpoint
   oVideoInputKey:
-    Value: !GetAtt rIVSChannel.streamKeyValue
+    Value: !GetAtt rStreamKey.Value
 
 Resources:
   rIVSChannel:
-    Type: "Custom::StarfruitChannel"
+    Type: AWS::IVS::Channel
     Properties:
-      ServiceToken: !Ref pFunctionArn
-      name: !Ref pProjectName
-      type: !Ref pQuality
-      latencyMode: !Ref pLatencyMode
-      tags: {"amplify-video" : "amplify-video"}
+      Name: !Ref pProjectName
+      Type: !Ref pQuality
+      LatencyMode: !Ref pLatencyMode
+      Tags: 
+        - Key: "amplify-video"
+          Value: "amplify-video"
+
+  rStreamKey:
+    Type: AWS::IVS::StreamKey
+    Properties:
+      ChannelArn: !Ref rIVSChannel
+      Tags: 
+        - Key: "amplify-video"
+          Value: "amplify-video"
