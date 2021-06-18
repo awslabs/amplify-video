@@ -189,6 +189,50 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
     fs.copySync(`${pluginDir}/templates/${template.encodingTemplate}`, `${targetDir}/video/${props.shared.resourceName}/mediaconvert-job-temp.json`);
   }
+  
+  //**********************
+  const snsQuestion = [
+    {
+      type: question.createSnsTopic.type,
+      name: question.createSnsTopic.key,
+      message: question.createSnsTopic.question,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.createSnsTopic.key,
+          value: args.createSnsTopic ? args.createSnsTopic : defaults.snsTopic[question.createSnsTopic.key]
+        });
+      },
+    },
+  ];
+  const sns = await inquirer.prompt(snsQuestion);
+  props.sns = {};
+  props.sns.createTopic = sns.createSnsTopic;
+  
+  if(sns.createSnsTopic){
+    
+    const snsFunctionQuestion = [
+    {
+      type: question.enableSnsFunction.type,
+      name: question.enableSnsFunction.key,
+      message: question.enableSnsFunction.question,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.enableSnsFunction.key,
+          value: args.enableSnsFunction ? args.enableSnsFunction : defaults.snsTopic[question.enableSnsFunction.key]
+        });
+      },
+    },
+  ];
+  
+  const sns = await inquirer.prompt(snsFunctionQuestion);
+  props.sns.snsFunction = sns.enableSnsFunction;
+    
+  }
+  
 
   // prompt for cdn
   props.contentDeliveryNetwork = {};

@@ -55,10 +55,6 @@ Parameters:
 <% if (props.contentDeliveryNetwork.signedKey) { -%>
   publicKey:
     Type: String
-<<<<<<< HEAD
-    Description: Boolean to enable/disable cloudfront
-    Default: <%= props.contentDeliveryNetwork.enableDistribution %>
-=======
     Description: NOT USED ALREADY INSERTED W/ AMPLIFY VIDEO
   rPublicName:
     Type: String
@@ -73,7 +69,11 @@ Parameters:
     Type: String
     Description: Name of SM for Private Signed URL
 <% } -%>
->>>>>>> f1600b0865e6c5b7b122857cc3e4f4e477fc1afc
+  pSnsTopicName:
+    Type: String
+    Description: Name of the SNS topic for MediaConvert status events
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: AmplifyMediaConvertStatusEvents
   
 
 Conditions:
@@ -98,6 +98,7 @@ Outputs:
 <% } -%>
 
 Resources:
+  
   rS3InputBucket:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -250,3 +251,37 @@ Resources:
               - '-'
               - - !Ref pProjectName
                 - 'cfTrigger'
+  
+
+<% if (props.sns.createTopic) { -%>  
+  rSnsInvokeLambdaSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/SnsSetup.template"
+      Parameters:
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pFunctionHash: "<%= props.hashes.MediaConvertStatusLambda %>"
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'MediaconvertStatusLambda'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'MediaconvertStatusLambda'
+        pSnsTopicName: !Ref pSnsTopicName
+        
+<% }  -%>        
+        
+        
+        
+
+
+
+
+    

@@ -9,7 +9,7 @@
         },
         "required": true,
         "default": "myvodservice",
-        "next": "enableCDN"
+        "next": "createSnsTopic"
     },
     "encodingTemplate": {
         "key": "encodingTemplate",
@@ -17,7 +17,7 @@
         "type":"list",
         "required": true,
         "default": "System-Ott_Hls_Ts_Avc_Aac",
-        "next": "enableCDN"
+        "next": "createSnsTopic"
     },
     "encodingTemplateName": {
       "key": "encodingTemplateName",
@@ -28,7 +28,30 @@
           "onErrorMsg": "Resource name should be alphanumeric, should not begin with System-, or contain $&,:;?<>`\"#%{}/|^~"
       },
       "required": true,
-      "next": "enableCDN"
+      "next": "createSnsTopic"
+    },
+    "createSnsTopic": {
+        "key" : "createSnsTopic",
+        "type": "confirm",
+        "question" : "Do you want to get notifications on the video processing job?",
+        "required" : true,
+        "options" : [
+            {
+                "value" : "true",
+                "next" : "enableSnsFunction"
+            },
+            {
+                "value": "false",
+                "next" : "enableCDN"
+            }
+            ]
+    },
+    "enableSnsFunction" : {
+        "key" : "enableSnsFunction",
+        "type" : "confirm",
+        "question" : "Do you want a custom function executed for notifications?",
+        "required" : true,
+        "next": "enableCDN"
     },
     "enableCDN": {
         "key": "enableCDN",

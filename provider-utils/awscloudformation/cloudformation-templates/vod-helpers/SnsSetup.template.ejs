@@ -1,0 +1,130 @@
+Description: 
+  "MediaConvert notifications sent to SNS and then forwarded to Lambda"
+
+Parameters:
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: amazonbooth
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: vod-helpers
+  pFunctionName:
+    Type: String
+    Description: Name of function
+    Default: arn-default
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
+  pSnsTopicName:
+    Type: String
+    Description: FunctionHash
+    Default: default
+
+
+Resources:
+
+  MediaConvertNotificationsSNS:
+    Type: AWS::SNS::Topic
+    
+  MediaConvertEventsRule:
+    Type: AWS::Events::Rule
+    Properties:
+        Description: "Event rule for MediaConvert"
+        EventPattern: 
+            source:
+              - aws.mediaconvert
+            detail-type:
+              - "MediaConvert Job State Change"
+        State: ENABLED
+        Targets:
+            - Arn: !Ref MediaConvertNotificationsSNS
+              Id: MediaConvertNotificationsSNS
+
+  rMediaConvertNotificationsSNSPolicy:
+    Type: 'AWS::SNS::TopicPolicy'
+    Properties:
+      Topics:
+        - !Ref MediaConvertNotificationsSNS
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Sid: "1"
+            Action: 'sns:Publish'
+            Resource: !Ref MediaConvertNotificationsSNS
+            Principal:
+              AWS: '*'
+            Condition:
+              ArnLike:
+                AWS:SourceArn: !Sub 'arn:aws:*:*:${AWS::AccountId}:*'
+          - Effect: Allow
+            Sid: "2"
+            Action: "sns:Publish"
+            Principal:
+              Service : 'events.amazonaws.com'
+            Resource: !Ref MediaConvertNotificationsSNS
+<% if (props.sns.snsFunction) { -%>
+  rMediaconvertStatusLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref pFunctionName
+      Description: Invoked on MediaConvert status events 
+      Handler: index.handler
+      Role: !GetAtt rMediaconvertStatusLambdaRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref pS3
+        S3Key: !Sub
+          - vod-helpers/MediaConvertStatusLambda-${hash}.zip
+          - { hash: !Ref pFunctionHash }
+
+  rMediaconvertStatusLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        -
+          PolicyName: !Sub "${AWS::AccountId}-mediaconvert-status-processing-role"
+          PolicyDocument:
+            Statement:
+               -
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*
+            
+  rSNSLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref rMediaconvertStatusLambda
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:* 
+      
+  rSNSLambdaSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: lambda
+      Endpoint: !GetAtt rMediaconvertStatusLambda.Arn
+      TopicArn: !Ref MediaConvertNotificationsSNS
+      
+<% } -%>
