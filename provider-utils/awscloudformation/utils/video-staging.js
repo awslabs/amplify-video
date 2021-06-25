@@ -159,6 +159,9 @@ async function generateLambdaHashes(context, props, projectType) {
   const buildDir = `${targetDir}/video/${props.shared.resourceName}/build/${serviceMetadata.stackFolder}/LambdaFunctions`;
   const buildHashes = [];
   const customHashes = [];
+  if (!fs.existsSync(buildDir)) {
+    return;
+  }
   const lambdas = fs.readdirSync(buildDir);
   const hashes = { };
   lambdas.forEach((lambda) => {
