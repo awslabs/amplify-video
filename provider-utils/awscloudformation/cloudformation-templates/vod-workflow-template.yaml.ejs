@@ -69,11 +69,13 @@ Parameters:
     Type: String
     Description: Name of SM for Private Signed URL
 <% } -%>
+<% if (props.sns.createTopic) { -%>  
   pSnsTopicName:
     Type: String
     Description: Name of the SNS topic for MediaConvert status events
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: AmplifyMediaConvertStatusEvents
+<% }  -%>
   
 
 Conditions:
@@ -276,12 +278,4 @@ Resources:
                 - 'MediaconvertStatusLambda'
         pSnsTopicName: !Ref pSnsTopicName
         
-<% }  -%>        
-        
-        
-        
-
-
-
-
-    
+<% }  -%>
