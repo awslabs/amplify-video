@@ -8,5 +8,9 @@
   "contentManagementSystem": {
     "enableCMS":true,
     "overrideSchema":true
+  },
+  "snsTopic":{
+    "createSnsTopic" : false,
+    "enableSnsFunction" : false
   }
 }
