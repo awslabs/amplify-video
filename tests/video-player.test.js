@@ -1,3 +1,4 @@
+const fs = require('fs');
 const videoPlayerUtils = require('../provider-utils/awscloudformation/utils/video-player-utils');
 
 const mocks = {
@@ -11,7 +12,9 @@ const mocks = {
             name: 'iOSVideoPlayer',
             uses_frameworks: { linkage: 'dynamic', packaging: 'framework' },
             platform: { ios: '8.4' },
-            dependencies: [{ MobileVLCKit: ['~>3.3.0'] }],
+            dependencies: [
+              { MobileVLCKit: ['~>3.3.0'] }, 
+              'AmazonIVS'],
           },
         ],
       },
@@ -31,20 +34,39 @@ const mocks = {
       },
     ],
   },
+  podfile_simple_dep: {
+    target_definitions: [
+      {
+        name: 'Pods',
+        abstract: true,
+        children: [
+          {
+            name: 'iOSVideoPlayer',
+            uses_frameworks: { linkage: 'dynamic', packaging: 'framework' },
+            platform: { ios: '8.4' },
+            dependencies: ['AmazonIVS'],
+          },
+        ],
+      },
+    ],
+  },
 
 };
 
 describe('isVLCKitInstalled', () => {
-  test('Should return true if VLCKit is installed', () => {
-    expect(videoPlayerUtils.isVLCKitInstalled(mocks.podfile, 'iOSVideoPlayer')).toBe(true);
+  test('Should return true if dependency is installed', () => {
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile, 'iOSVideoPlayer', 'AmazonIVS')).toBe(true);
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile, 'iOSVideoPlayer', 'MobileVLCKit')).toBe(true);
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile_simple_dep, 'iOSVideoPlayer', 'AmazonIVS')).toBe(true);
   });
 
   test('Should return false if project name does not exist', () => {
-    expect(videoPlayerUtils.isVLCKitInstalled(mocks.podfile, 'anotherProjectName')).toBe(false);
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile, 'anotherProjectName', 'MobileVLCKit')).toBe(false);
   });
 
   test('Should return false dependencies array does not exist', () => {
-    expect(videoPlayerUtils.isVLCKitInstalled(mocks.podfile_no_dep, 'iOSVideoPlayer')).toBe(false);
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile_no_dep, 'iOSVideoPlayer', 'MobileVLCKit')).toBe(false);
+    expect(videoPlayerUtils.isDependencyInstalled(mocks.podfile_simple_dep, 'iOSVideoPlayer', 'MobileVLCKit')).toBe(false);
   });
 });
 
@@ -55,6 +77,7 @@ describe('checkNpmDependencies', () => {
         pathManager: {
           searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
         },
+        readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
       },
     };
     expect(videoPlayerUtils.checkNpmDependencies(context, 'video.js')).toBe(true);
@@ -66,6 +89,7 @@ describe('checkNpmDependencies', () => {
         pathManager: {
           searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
         },
+        readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
       },
     };
     expect(videoPlayerUtils.checkNpmDependencies(context, 'random_lib')).toBe(false);
@@ -146,3 +170,19 @@ describe('fileExtension', () => {
     expect(videoPlayerUtils.fileExtension('ios')).toBe('swift');
   });
 });
+
+describe('getProjectIndexHTMLPath', () => {
+  const context = {
+    amplify: {
+      pathManager: {
+        searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
+        getProjectConfigFilePath: jest.fn(() => `${__dirname}/../__mocks__/project-config.json`)
+      },
+      readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
+    },
+  };
+  test('Should return correct static path including index.html', () => {
+    expect(videoPlayerUtils.getProjectIndexHTMLPath(context))
+      .toBe(`${__dirname}/../__mocks__/public/index.html`);
+  })
+})

@@ -6,14 +6,24 @@
 //
 
 import SwiftUI
+<% if (serviceType === 'ivs') { -%>
+import AmazonIVSPlayer
+<% } -%>
 
-class PlayerUIView: UIView, VLCMediaPlayerDelegate {
-  private let mediaPlayer = VLCMediaPlayer()
+class PlayerUIView: <%= serviceType === 'ivs' ? 'IVSPlayerView' : 'UIView, VLCMediaPlayerDelegate' -%>{
+  private let mediaPlayer =  <%= serviceType === 'ivs' ? 'IVSPlayer()' : 'VLCMediaPlayer()' -%>
     
   override init(frame: CGRect) {
     super.init(frame: frame)
 
     let url = URL(string: "<%= src %>")! //replace your resource here
+<% if (serviceType === 'ivs') { -%>
+    let notificationCenter = NotificationCenter.default
+    notificationCenter.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
+    mediaPlayer.delegate = self
+    self.player = mediaPlayer
+    mediaPlayer.load(url)
+<% } else { -%>
     let gesture = UITapGestureRecognizer(target: self, action: #selector(PlayerUIView.movieViewTapped(_:)))
     self.addGestureRecognizer(gesture)
     
@@ -22,7 +32,7 @@ class PlayerUIView: UIView, VLCMediaPlayerDelegate {
     mediaPlayer.delegate = self
     mediaPlayer.drawable = self
     mediaPlayer.play()
-    
+<% } -%>    
   }
 
   required init?(coder: NSCoder) {
@@ -32,21 +42,34 @@ class PlayerUIView: UIView, VLCMediaPlayerDelegate {
   override func layoutSubviews() {
     super.layoutSubviews()
   }
-    
-    @objc func movieViewTapped(_ sender: UITapGestureRecognizer) {
 
-        if mediaPlayer.isPlaying {
-            mediaPlayer.pause()
-
-            let remaining = mediaPlayer.remainingTime
-            let time = mediaPlayer.time
-
-            print("Paused at \(time?.stringValue ?? "nil") with \(remaining?.stringValue ?? "nil") time remaining")
-        }
-        else {
-            mediaPlayer.play()
-            print("Playing")
-        }
-        
-    }
+<% if (serviceType === 'ivs') { -%>
+  @objc func appMovedToBackground() {
+    print("App moved to background!")
+    mediaPlayer.pause()
+  }
+<% } else { -%>
+  @objc func movieViewTapped(_ sender: UITapGestureRecognizer) {
+      if mediaPlayer.isPlaying {
+          mediaPlayer.pause()
+          let remaining = mediaPlayer.remainingTime
+          let time = mediaPlayer.time
+          print("Paused at \(time?.stringValue ?? "nil") with \(remaining?.stringValue ?? "nil") time remaining")
+      } else {
+          mediaPlayer.play()
+          print("Playing")
+      }
+  }
+<% } -%>
 }
+
+<% if (serviceType === 'ivs') { -%>
+extension PlayerUIView: IVSPlayer.Delegate {
+  func player(_ player: IVSPlayer, didChangeState state: IVSPlayer.State) {
+      if state == .ready {
+          print("player ready")
+          player.play()
+      }
+  }
+}
+<% } -%>  
