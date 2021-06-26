@@ -1,3 +1,4 @@
+const fs = require('fs');
 const videoPlayerUtils = require('../provider-utils/awscloudformation/utils/video-player-utils');
 
 const mocks = {
@@ -55,6 +56,7 @@ describe('checkNpmDependencies', () => {
         pathManager: {
           searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
         },
+        readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
       },
     };
     expect(videoPlayerUtils.checkNpmDependencies(context, 'video.js')).toBe(true);
@@ -66,6 +68,7 @@ describe('checkNpmDependencies', () => {
         pathManager: {
           searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
         },
+        readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
       },
     };
     expect(videoPlayerUtils.checkNpmDependencies(context, 'random_lib')).toBe(false);
@@ -146,3 +149,19 @@ describe('fileExtension', () => {
     expect(videoPlayerUtils.fileExtension('ios')).toBe('swift');
   });
 });
+
+describe('getProjectIndexHTMLPath', () => {
+  const context = {
+    amplify: {
+      pathManager: {
+        searchProjectRootPath: jest.fn(() => `${__dirname}/../__mocks__`),
+        getProjectConfigFilePath: jest.fn(() => `${__dirname}/../__mocks__/project-config.json`)
+      },
+      readJsonFile: jest.fn((data) => JSON.parse(fs.readFileSync(data))),
+    },
+  };
+  test('Should return correct static path including index.html', () => {
+    expect(videoPlayerUtils.getProjectIndexHTMLPath(context))
+      .toBe(`${__dirname}/../__mocks__/public/index.html`);
+  })
+})

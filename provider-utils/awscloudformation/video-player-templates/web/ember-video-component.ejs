@@ -2,5 +2,7 @@
     autoplay=true 
     controls=true
     src='<%= src %>'
+<% if (channelLatency !== 'LOW') { -%>
     type='application/x-mpegURL'
+<% } -%>
 }}
