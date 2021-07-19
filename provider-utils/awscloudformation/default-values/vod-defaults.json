@@ -1,6 +1,6 @@
 {
   "encoder": {
-    "encodingTemplate": "System-Ott_Hls_Ts_Avc_Aac"
+    "encodingTemplate": "Amplify_Video_HLS.json"
   },
   "contentDeliveryNetwork": {
     "enableDistribution": true

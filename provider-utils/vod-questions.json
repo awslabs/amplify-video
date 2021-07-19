@@ -16,7 +16,11 @@
         "question": "Select a system-provided encoding template, specify an already-created template name: ",
         "type":"list",
         "required": true,
+<<<<<<< HEAD
         "default": "System-Ott_Hls_Ts_Avc_Aac",
+=======
+        "default": "Amplify_Video_HLS.json",
+>>>>>>> f71f7604165419f16ed052a74f4e0edd4f719a55
         "next": "createSnsTopic"
     },
     "encodingTemplateName": {

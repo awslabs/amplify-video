@@ -99,7 +99,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       name: question.encodingTemplate.key,
       message: question.encodingTemplate.question,
       choices: availableTemplates,
-      default: availableTemplates[0].value,
+      default: question.encodingTemplate.default,
       when(answers) {
         return headlessMode.autoAnswer({
           context,
