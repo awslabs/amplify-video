@@ -20,7 +20,7 @@ async function getInfoVideoAll(context) {
         }
         if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(context, project.output);
-        } 
+        }
       }
     });
     await generateAWSExportsVideo(context);
