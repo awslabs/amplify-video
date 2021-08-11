@@ -261,9 +261,14 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/SnsSetup.template"
       Parameters:
+        env: !Ref env
         pS3: !Ref pS3
         pSourceFolder: !Ref pSourceFolder
         pFunctionHash: "<%= props.hashes.MediaConvertStatusLambda %>"
+        <% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+        GraphQLAPIId: !Ref GraphQLAPIId
+        GraphQLEndpoint: !Ref GraphQLEndpoint
+        <% } -%>
         pFunctionName:
           !If
             - HasEnvironmentParameter
