@@ -1,0 +1,11 @@
+{
+    "version": 1,
+    "serviceConfiguration": {
+      "serviceName": "AppSync",
+      "apiName": "myNewHeadlessApi",
+      "transformSchema": "type Todo @model {\r\n  id: ID!\r\n  name: String!\r\n  description: String\r\n}",
+      "defaultAuthType": {
+        "mode": "AMAZON_COGNITO_USER_POOLS"
+      }
+    }
+}

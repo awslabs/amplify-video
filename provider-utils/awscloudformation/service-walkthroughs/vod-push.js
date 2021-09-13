@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+import { validateAddApiRequest, validateUpdateApiRequest } from 'amplify-util-headless-input';
 const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
@@ -288,11 +289,11 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   if (cmsResponse.enableCMS) {
     let apiName = getAPIName(context);
     if (apiName === '') {
-      context.print.warning('Video On Demand only supports GraphQL right now.');
-      context.print.warning('If you want to only use API for CMS then choose the default ToDo and don\'t edit it until later.');
-      const apiPlugin = amplify.getPluginInstance(context, 'api');
-      context.input.command = 'add';
-      await apiPlugin.executeAmplifyCommand(context);
+      const headlessPayload = fs.readFileSync(`${pluginDir}/templates/test.json`, { encoding: 'utf8', flag: 'r' });
+      const pluginInfo = context.pluginPlatform.plugins['api'][0];
+      const {getCfnApiArtifactHandler} = require(`${pluginInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`)
+      const validateFake = await validateAddApiRequest(headlessPayload);
+      await getCfnApiArtifactHandler(context).createArtifacts(validateFake);
       apiName = getAPIName(context);
     } else {
       context.print.info(`Using ${apiName} to manage API`);
