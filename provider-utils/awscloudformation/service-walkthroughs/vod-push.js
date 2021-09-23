@@ -1,5 +1,4 @@
 const inquirer = require('inquirer');
-import { validateAddApiRequest, validateUpdateApiRequest } from 'amplify-util-headless-input';
 const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
@@ -8,6 +7,7 @@ const headlessMode = require('../utils/headless-mode');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
 const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
+const { setupAPI } = require('./api-push');
 
 module.exports = {
   serviceQuestions,
@@ -289,17 +289,13 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   if (cmsResponse.enableCMS) {
     let apiName = getAPIName(context);
     if (apiName === '') {
-      const headlessPayload = fs.readFileSync(`${pluginDir}/templates/test.json`, { encoding: 'utf8', flag: 'r' });
-      const pluginInfo = context.pluginPlatform.plugins['api'][0];
-      const {getCfnApiArtifactHandler} = require(`${pluginInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`)
-      const validateFake = await validateAddApiRequest(headlessPayload);
-      await getCfnApiArtifactHandler(context).createArtifacts(validateFake);
+      await setupAPI(context, options, 'vod' );
       apiName = getAPIName(context);
     } else {
       context.print.info(`Using ${apiName} to manage API`);
     }
 
-    await createCMS(context, apiName, props);
+    //await createCMS(context, apiName, props);
     props.parameters.GraphQLAPIId = {
       'Fn::GetAtt': [
         `api${apiName}`,
