@@ -26,8 +26,13 @@ module.exports = {
     
     let props;
     if (context.parameters.options.default) {
-      props = {resourceName:chooseProject[0].default};
-    } else{
+      if (typeof context.parameters.options.default === "boolean"){
+        props = { resourceName: chooseProject[0].default };
+      } else {
+        props = { resourceName: context.parameters.options.default };
+      }
+      console.log(props);
+    } else {
       props = await inquirer.prompt(chooseProject);
     }
 
