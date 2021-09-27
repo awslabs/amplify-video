@@ -265,10 +265,10 @@ Resources:
         pS3: !Ref pS3
         pSourceFolder: !Ref pSourceFolder
         pFunctionHash: "<%= props.hashes.MediaConvertStatusLambda %>"
-        <% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
         GraphQLAPIId: !Ref GraphQLAPIId
         GraphQLEndpoint: !Ref GraphQLEndpoint
-        <% } -%>
+<% } -%>
         pFunctionName:
           !If
             - HasEnvironmentParameter
