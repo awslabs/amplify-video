@@ -2,6 +2,10 @@ Description:
   "MediaConvert notifications sent to SNS and then forwarded to Lambda"
 
 Parameters:
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
   pS3:
     Type: String
     Description: Store template and lambda package
