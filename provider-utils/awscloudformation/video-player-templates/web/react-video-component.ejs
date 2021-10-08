@@ -1,8 +1,13 @@
 <VideoPlayer 
     autoplay
     controls
+<% if (channelLatency === 'LOW') { -%>
+    src={'<%= src %>'}
+    techOrder={["AmazonIVS"]}
+<% } else { -%>
     sources={[{
       src: '<%= src %>',
       type: 'application/x-mpegURL'
     }]}
+<% } -%>
 />

@@ -17,12 +17,17 @@ export default {
 			videoOptions: {
 				autoplay: true,
 				controls: true,
+<% if (channelLatency === 'LOW') { -%>
+				techOrder: ["AmazonIVS"],
+                src: "<%= src %>"
+<% } else { -%>
 				sources: [
 					{
 						src: "<%= src %>",
 						type: "application/x-mpegURL"
 					}
 				]
+<% } -%>
 			}
 		};
 	}
