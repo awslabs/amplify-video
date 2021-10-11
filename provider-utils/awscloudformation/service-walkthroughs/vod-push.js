@@ -601,7 +601,6 @@ async function generateGroupOptions(context) {
 }
 
 async function addPolicyToGroupRoles(context, props) {
-  context.print.info(props.permissions)
   const userPoolGroupFile = path.join(
     context.amplify.pathManager.getBackendDirPath(),
     'auth',
@@ -632,8 +631,7 @@ async function addPolicyToGroupRoles(context, props) {
             userGroup.customPolicies = [];
           }
 
-          const policy = generateIAMGroupPolicy(resourceName, userGroup.groupName, props.shared.bucketInput);
-          context.print.info(policy)
+          const policy = generateIAMGroupPolicy(resourceName, userGroup.groupName, props.shared.bucket);
           if (!userGroup.customPolicies.some(
             existingPolicy => existingPolicy.PolicyName === policy.PolicyName,
           )) {
