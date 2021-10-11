@@ -6,11 +6,17 @@ Parameters:
     Description: ProjectName
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: DefaultName
-<% if (props.permissions && props.permissions.permissionSchema.includes('any')) { %>
+<% if (props.permissions &&( props.permissions.permissionSchema.includes('any') || props.permissions.selectedGroups)) { %>
   pPolicyName:
     Type: String
     Description: Policy name for allowing uploads from all auth users
     Default: S3UploadPolicy\
+<% } -%>
+<% if (props.permissions && props.permissions.selectedGroups) { %>
+  UserPoolId:
+    Type: String
+    Description: UserPool id to grant permission to groups
+    Default: NONE
 <% } -%>
   authRoleName:
     Type: String
@@ -30,13 +36,23 @@ Resources:
            AllowedOrigins: ['*']
            ExposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'ETag']
            MaxAge: '3000'
-<% if (props.permissions && props.permissions.permissionSchema.includes('any')) { %>
+<% if (props.permissions && (props.permissions.permissionSchema.includes('any') || props.permissions.selectedGroups)) { %>
   UploadPolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: !Ref pPolicyName
       Roles: 
+<% if (props.permissions && props.permissions.permissionSchema.includes('any')) { %>
         - !Ref authRoleName
+<% } -%>
+<% if (props.permissions && props.permissions.selectedGroups) { %>
+<% props.permissions.selectedGroups.forEach(group => { -%>
+        - !Join
+          - ''
+          - - !Ref UserPoolId
+            - '-<%= group %>GroupRole'
+<% }) -%>        
+<% } -%>
       PolicyDocument:
         Version: '2012-10-17'
         Statement:

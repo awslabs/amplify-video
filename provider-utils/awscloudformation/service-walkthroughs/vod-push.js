@@ -284,6 +284,21 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       Ref: 'AuthRoleName',
     },
   };
+  
+  let authName = getAuthName(context);
+  if (!authName) {
+    context.print.warning('You have no auth projects.');
+  }
+  else {
+    props.parameters.UserPoolId = {
+      'Fn::GetAtt': [
+        `auth${authName}`,
+        'Outputs.UserPoolId',
+      ],
+    };
+
+  }
+
 
   if (cmsResponse.enableCMS) {
     let apiName = getAPIName(context);
@@ -299,6 +314,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
 
     await createCMS(context, apiName, props);
+
     props.parameters.GraphQLAPIId = {
       'Fn::GetAtt': [
         `api${apiName}`,
@@ -472,7 +488,6 @@ async function createCMS(context, apiName, props) {
 
     const selectGroupsResponse = await inquirer.prompt(selectGroups);
     props.permissions = { ...props.permissions, selectedGroups: selectGroupsResponse.selectGroups };
-    addPolicyToGroupRoles(context, props);
   }
 
   if (fs.existsSync(`${resourceDir}/schema.graphql`)) {
@@ -565,6 +580,20 @@ function getAPIName(context) {
   }
   return apiName;
 }
+function getAuthName(context) {
+  const { amplifyMeta } = context.amplify.getProjectDetails();
+  let authName = '';
+
+  if (amplifyMeta.auth) {
+    const categoryResources = amplifyMeta.auth;
+    Object.keys(categoryResources).forEach((resource) => {
+      if (categoryResources[resource].service === 'Cognito') {
+        authName = resource;
+      }
+    });
+  }
+  return authName;
+}
 
 async function generateGroupOptions(context) {
   const userPoolGroupFile = path.join(
@@ -600,74 +629,3 @@ async function generateGroupOptions(context) {
   return groupOptions
 }
 
-async function addPolicyToGroupRoles(context, props) {
-  const userPoolGroupFile = path.join(
-    context.amplify.pathManager.getBackendDirPath(),
-    'auth',
-    'userPoolGroups',
-    'user-pool-group-precedence.json',
-  );
-
-  const amplifyMeta = context.amplify.getProjectMeta();
-
-  if (!('auth' in amplifyMeta) || Object.keys(amplifyMeta.auth).length === 0) {
-    context.print.error('You have no auth projects. Moving on.');
-    return;
-  }
-
-  let resourceName = '';
-
-  Object.keys(amplifyMeta.auth).forEach((authCategory) => {
-    if (amplifyMeta.auth[authCategory].service === 'Cognito') {
-      resourceName = authCategory;
-    }
-  });
-  if (fs.existsSync(userPoolGroupFile)) {
-    const userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
-    if (userPoolGroup.length > 0) {
-      userPoolGroup.forEach((userGroup) => {
-        if (props.permissions.selectedGroups.includes(userGroup.groupName)) {
-          if (!('customPolicies' in userGroup)) {
-            userGroup.customPolicies = [];
-          }
-
-          const policy = generateIAMGroupPolicy(resourceName, userGroup.groupName, props.shared.bucket);
-          if (!userGroup.customPolicies.some(
-            existingPolicy => existingPolicy.PolicyName === policy.PolicyName,
-          )) {
-            userGroup.customPolicies.push(policy);
-          }
-          return;
-        }
-      });
-    }
-    updateUserPoolGroups(context, userPoolGroup);
-  }
-}
-
-function updateUserPoolGroups(context, userPoolGroupList) {
-  if (userPoolGroupList && userPoolGroupList.length > 0) {
-    const userPoolGroupFile = path.join(
-      context.amplify.pathManager.getBackendDirPath(),
-      'auth',
-      'userPoolGroups',
-      'user-pool-group-precedence.json',
-    );
-
-    const userPoolGroupParams = path.join(context.amplify.pathManager.getBackendDirPath(), 'auth', 'userPoolGroups', 'parameters.json');
-
-    /* eslint-disable */
-    const groupParams = {
-      AuthRoleArn: {
-        'Fn::GetAtt': ['AuthRole', 'Arn'],
-      },
-      UnauthRoleArn: {
-        'Fn::GetAtt': ['UnauthRole', 'Arn'],
-      },
-    };
-    /* eslint-enable */
-
-    fs.outputFileSync(userPoolGroupParams, JSON.stringify(groupParams, null, 4));
-    fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupList, null, 4));
-  }
-}
