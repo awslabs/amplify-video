@@ -284,7 +284,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       Ref: 'AuthRoleName',
     },
   };
-  
+
   let authName = getAuthName(context);
   if (!authName) {
     context.print.warning('You have no auth projects.');
@@ -442,6 +442,16 @@ async function createCMS(context, apiName, props) {
       },
     },
   ];
+
+  if ((await getUserPoolGroups(context)).length > 0) {
+    permissions[0].choices.unshift({
+      "name": "Users in specific groups can upload videos",
+      "value": "selectGroups",
+      "next": "selectGroups",
+      "checked": true,
+      "ignore": true
+    })
+  }
   const cmsEdit = [
     {
       type: question.overrideSchema.type,
@@ -595,7 +605,8 @@ function getAuthName(context) {
   return authName;
 }
 
-async function generateGroupOptions(context) {
+
+async function getUserPoolGroups(context) {
   const userPoolGroupFile = path.join(
     context.amplify.pathManager.getBackendDirPath(),
     'auth',
@@ -605,26 +616,31 @@ async function generateGroupOptions(context) {
 
   const amplifyMeta = context.amplify.getProjectMeta();
 
-  if (!('auth' in amplifyMeta) || Object.keys(amplifyMeta.auth).length === 0) {
-    context.print.error('You have no auth projects. Moving on.');
-    return;
+  let userPoolGroup = []
+
+  if (('auth' in amplifyMeta) && Object.keys(amplifyMeta.auth).length > 0) {
+    if (fs.existsSync(userPoolGroupFile)) {
+      userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
+    }
   }
+  return userPoolGroup
+}
+
+async function generateGroupOptions(context) {
+  const userPoolGroup = await getUserPoolGroups(context, true)
 
   let groupOptions = []
 
-  if (fs.existsSync(userPoolGroupFile)) {
-    const userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
-    if (userPoolGroup.length === 0) {
-      context.print.error('You have no cognito groups');
-    } else {
-      userPoolGroup.forEach((userGroup) => {
-        groupOptions.push({
-          "name": userGroup.groupName,
-          "value": userGroup.groupName,
-          "ignore": true
-        })
-      });
-    }
+  if (userPoolGroup.length === 0) {
+    context.print.error('You have no cognito groups');
+  } else {
+    userPoolGroup.forEach((userGroup) => {
+      groupOptions.push({
+        "name": userGroup.groupName,
+        "value": userGroup.groupName,
+        "ignore": true
+      })
+    });
   }
   return groupOptions
 }

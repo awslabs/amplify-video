@@ -198,14 +198,7 @@
 		"key": "permissionSchema",
 		"question": "Define your permission schema",
 		"type": "checkbox",
-		"options": [
-			{
-				"name": "Users in specific groups can upload videos",
-				"value": "selectGroups",
-				"next": "selectGroups",
-				"checked": true,
-				"ignore": true
-			},
+		"options": [			
 			{
 				"name": "Authenticated users that are not part of any groups can upload videos",
 				"value": "any",
