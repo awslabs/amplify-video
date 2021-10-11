@@ -1,16 +1,6 @@
-function generateIAMAdmin(resourceName, bucketName) {
-  const admin = {
-    groupName: 'Admin',
-    precedence: 1,
-    customPolicies: [],
-  };
-  admin.customPolicies.push(generateIAMAdminPolicy(resourceName, bucketName));
-  return admin;
-}
-
-function generateIAMAdminPolicy(resourceName, bucketName) {
-  const adminPolicy = {
-    PolicyName: `${resourceName}-admin-group-policy`,
+function generateIAMGroupPolicy(resourceName, groupName, bucketName) {
+  const groupPolicy = {
+    PolicyName: `${resourceName}-vod-${groupName.toLowerCase()}-group-policy`,
     PolicyDocument: {
       Version: '2012-10-17',
       Statement: [
@@ -26,10 +16,9 @@ function generateIAMAdminPolicy(resourceName, bucketName) {
       ],
     },
   };
-  return adminPolicy;
+  return groupPolicy;
 }
 
 module.exports = {
-  generateIAMAdmin,
-  generateIAMAdminPolicy,
+  generateIAMGroupPolicy,
 };

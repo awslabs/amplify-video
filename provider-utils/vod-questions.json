@@ -194,23 +194,30 @@
         ],
         "default": true
     },
-    "permissionSchema": {
-        "key": "permissionSchema",
-        "question": "Define your permission schema",
-        "type": "checkbox",
-        "options": [
-            {
-                "name": "Admins can only upload videos",
-                "value": "admin",
-                "checked": true,
-                "ignore": true
-            },
-            {
-                "name": "Any authenticated user can upload videos",
-                "value": "any",
-                "ignore": true
-            }
-        ],
-        "next": "overrideSchema"
-    }
+	"permissionSchema": {
+		"key": "permissionSchema",
+		"question": "Define your permission schema",
+		"type": "checkbox",
+		"options": [
+			{
+				"name": "Users in specific groups can upload videos",
+				"value": "selectGroups",
+				"next": "selectGroups",
+				"checked": true,
+				"ignore": true
+			},
+			{
+				"name": "Authenticated users that are not part of any groups can upload videos",
+				"value": "any",
+				"next": "overrideSchema",
+				"ignore": true
+			}
+		]
+	},
+	"selectGroups": {
+		"key": "selectGroups",
+		"question": "Select groups that you want to give permission to upload videos",
+		"type": "checkbox",
+		"next": "overrideSchema"
+	}
 }
