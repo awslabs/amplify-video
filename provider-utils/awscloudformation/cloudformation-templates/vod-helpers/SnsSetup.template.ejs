@@ -26,8 +26,16 @@ Parameters:
     Default: default
   pSnsTopicName:
     Type: String
-    Description: FunctionHash
+    Description: Topic Name
     Default: default
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+  GraphQLAPIId: 
+    Type: String
+    Description: GraphQL API Id
+  GraphQLEndpoint:
+    Type: String
+    Description: GraphQL endpoint
+<% } -%>
 
 
 Resources:
@@ -87,6 +95,12 @@ Resources:
         S3Key: !Sub
           - vod-helpers/MediaConvertStatusLambda-${hash}.zip
           - { hash: !Ref pFunctionHash }
+<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
+      Environment:
+        Variables:
+          GraphQLAPIId: !Ref GraphQLAPIId
+          GraphQLEP: !Ref GraphQLEndpoint
+<% } -%>
 
   rMediaconvertStatusLambdaRole:
     Type: AWS::IAM::Role
