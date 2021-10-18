@@ -93,7 +93,7 @@ async function setupIosProject(context, resourceName) {
   fs.writeFileSync(`${projectRootPath}/${videoPlayerUtils.getProjectConfig(context).projectName}/VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
   pbxproj.addSourceFile(`VideoPlayer.${videoPlayerUtils.fileExtension(framework)}`, {}, hash);
   if (serviceType !== 'ivs') {
-    ['h', 'cpp', 'hpp'].map(extension => videoPlayerUtils.genIosSourcesAndHeaders(context, props, extension));
+    ['h', 'cpp', 'hpp'].map((extension) => videoPlayerUtils.genIosSourcesAndHeaders(context, props, extension));
     pbxproj.addSourceFile('empty.cpp', {}, hash);
     pbxproj.addHeaderFile('empty.hpp', {}, hash);
     pbxproj.addHeaderFile(`${videoPlayerUtils.getProjectConfig(context).projectName}-Bridging-Header.h`, {}, hash);

@@ -93,7 +93,6 @@ async function generateAWSExportsVideo(context) {
   }
 }
 
-
 async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();
   if ('output' in amplifyMeta.video[resourceName]) {

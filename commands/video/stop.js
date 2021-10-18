@@ -13,7 +13,7 @@ module.exports = {
       context.print.error(`You have no ${category} projects.`);
       return;
     }
-    const filteredProjects = Object.keys(amplifyMeta[category]).filter(project => amplifyMeta[category][project].serviceType === 'livestream');
+    const filteredProjects = Object.keys(amplifyMeta[category]).filter((project) => amplifyMeta[category][project].serviceType === 'livestream');
     if (filteredProjects.length === 0) {
       context.print.error('You have no livestreaming projects.');
       return;

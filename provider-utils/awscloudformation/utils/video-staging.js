@@ -264,7 +264,6 @@ async function syncHelperCF(context, props, projectType) {
   await Promise.all(nodeInstallsPromise);
 }
 
-
 function handleEJS(props, src, dest, targetDir) {
   /*
   Special case for selecting the template. Don't want to polute the props
