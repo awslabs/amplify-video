@@ -76,7 +76,7 @@ function appendGradleDependency(buildGradlePath, dependency) {
     buildGradlePath,
     fs
       .readFileSync(buildGradlePath, 'utf8')
-      .replace(/[^ \t]dependencies {(\r\n|\n)/, match => `${match}\timplementation '${dependency}'\n`),
+      .replace(/[^ \t]dependencies {(\r\n|\n)/, (match) => `${match}\timplementation '${dependency}'\n`),
   );
 }
 
@@ -137,7 +137,7 @@ function isDependencyInstalled(podfile, projectName, dependencyKey) {
             return false;
           }
           return child.dependencies.includes(dependencyKey)
-          || child.dependencies.some(dependency => dependency[dependencyKey]);
+          || child.dependencies.some((dependency) => dependency[dependencyKey]);
         }
         if (!child.children) return false;
         return child.children.some((subChildren) => {
@@ -145,7 +145,7 @@ function isDependencyInstalled(podfile, projectName, dependencyKey) {
             return false;
           }
           return subChildren.dependencies.includes(dependencyKey)
-          || child.dependencies.some(dependency => dependency[dependencyKey]);
+          || child.dependencies.some((dependency) => dependency[dependencyKey]);
         });
       });
     }
