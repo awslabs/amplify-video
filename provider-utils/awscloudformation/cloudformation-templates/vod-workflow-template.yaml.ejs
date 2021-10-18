@@ -23,6 +23,12 @@ Parameters:
     Description: API Endpoint URL
     Default: NONE
 <% } -%>
+<% if (props.parameters && props.parameters.UserPoolId) { -%>
+  UserPoolId:
+    Type: String
+    Description: UserPool Id
+    Default: NONE
+<% } -%>
   s3UUID:
     Type: String
     Description: NOT USED ALREADY INSERTED W/ AMPLIFY VIDEO
@@ -107,8 +113,11 @@ Resources:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/S3InputBucket.template"
       Parameters:
         authRoleName: !Ref authRoleName
-        <% if (props.permissions && props.permissions.permissionSchema.includes('any')) { %>
+        <% if (props.permissions && (props.permissions.permissionSchema.includes('any') || props.permissions.selectedGroups)) { %>
         pPolicyName: !Sub "${AWS::StackName}-s3UploadPermissions"
+        <% } %>
+        <% if (props.permissions && props.permissions.selectedGroups) { %>
+        UserPoolId: !Ref UserPoolId
         <% } %>
         pBucketName: !Ref pS3InputName
   rS3OutputBucket:

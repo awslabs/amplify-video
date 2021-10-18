@@ -6,11 +6,10 @@ type VodAsset @model (subscriptions: {level: public})
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
     {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
 <% } -%>
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-<% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% if (locals.permissions && locals.permissions.selectedGroups) { -%>
+  <% locals.permissions.selectedGroups.forEach(group => { -%>
+    {allow: groups, groups:["<%= group %>"], operations: [create, update, delete, read]},
+  <% }) -%>
 <% } -%>
     {allow: private, operations: [read]}
   ]
@@ -31,11 +30,10 @@ type VideoObject @model
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
     {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
 <% } -%>
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-<% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% if (locals.permissions && locals.permissions.selectedGroups) { -%>
+  <% locals.permissions.selectedGroups.forEach(group => { -%>
+    {allow: groups, groups:["<%= group %>"], operations: [create, update, delete, read]},
+  <% }) -%>
 <% } -%>
     {allow: private, operations: [read]}
   ]

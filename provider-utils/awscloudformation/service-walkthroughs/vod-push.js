@@ -6,7 +6,7 @@ const { generateKeyPairSync } = require('crypto');
 const headlessMode = require('../utils/headless-mode');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
-const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
+const { generateIAMGroupPolicy } = require('./vod-roles');
 
 module.exports = {
   serviceQuestions,
@@ -61,7 +61,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     nameDict = await inquirer.prompt(nameProject);
     props.shared = nameDict;
     const uuid = Math.random().toString(36).substring(2, 6)
-                + Math.random().toString(36).substring(2, 6);
+      + Math.random().toString(36).substring(2, 6);
     props.shared.bucketInput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-input-${uuid}`.slice(0, 63);
     props.shared.bucketOutput = `${nameDict.resourceName.toLowerCase()}-${projectDetails.localEnvInfo.envName}-output-${uuid}`.slice(0, 63);
   }
@@ -285,6 +285,21 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     },
   };
 
+  let authName = getAuthName(context);
+  if (!authName) {
+    context.print.warning('You have no auth projects.');
+  }
+  else {
+    props.parameters.UserPoolId = {
+      'Fn::GetAtt': [
+        `auth${authName}`,
+        'Outputs.UserPoolId',
+      ],
+    };
+
+  }
+
+
   if (cmsResponse.enableCMS) {
     let apiName = getAPIName(context);
     if (apiName === '') {
@@ -299,6 +314,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     }
 
     await createCMS(context, apiName, props);
+
     props.parameters.GraphQLAPIId = {
       'Fn::GetAtt': [
         `api${apiName}`,
@@ -388,7 +404,7 @@ async function createCDNEnvVars(context, options, resourceName, aws) {
     aws = await provider.getConfiguredAWSClient(context);
   }
   const uuid = Math.random().toString(36).substring(2, 6)
-              + Math.random().toString(36).substring(2, 6);
+    + Math.random().toString(36).substring(2, 6);
   const secretName = `${resourceName}-${projectDetails.localEnvInfo.envName}-pem-${uuid}`.slice(0, 63);
   const rPublicName = `rCloudFrontPublicKey${projectDetails.localEnvInfo.envName}${uuid}`.slice(0, 63);
   const publicKeyName = `${resourceName}-${projectDetails.localEnvInfo.envName}-publickey-${uuid}`.slice(0, 63);
@@ -426,6 +442,16 @@ async function createCMS(context, apiName, props) {
       },
     },
   ];
+
+  if ((await getUserPoolGroups(context)).length > 0) {
+    permissions[0].choices.unshift({
+      "name": "Users in specific groups can upload videos",
+      "value": "selectGroups",
+      "next": "selectGroups",
+      "checked": true,
+      "ignore": true
+    })
+  }
   const cmsEdit = [
     {
       type: question.overrideSchema.type,
@@ -452,6 +478,27 @@ async function createCMS(context, apiName, props) {
   }
   const permissionsResponse = await inquirer.prompt(permissions);
   props.permissions = permissionsResponse;
+
+  if (props.permissions.permissionSchema.includes('selectGroups')) {
+
+    const selectGroups = [
+      {
+        type: question.selectGroups.type,
+        name: question.selectGroups.key,
+        message: question.selectGroups.question,
+        choices: await generateGroupOptions(context),
+        validate(answer) {
+          if (answer.length < 1) {
+            return 'You must choose at least one group';
+          }
+          return true;
+        },
+      },
+    ];
+
+    const selectGroupsResponse = await inquirer.prompt(selectGroups);
+    props.permissions = { ...props.permissions, selectedGroups: selectGroupsResponse.selectGroups };
+  }
 
   if (fs.existsSync(`${resourceDir}/schema.graphql`)) {
     const currentSchema = fs.readFileSync(`${resourceDir}/schema.graphql`);
@@ -480,9 +527,7 @@ async function createCMS(context, apiName, props) {
     }
     // TODO: Add check if they switched schemas
   }
-  if (props.permissions.permissionSchema.includes('admin')) {
-    authGroupHack(context, props.shared.bucketInput);
-  }
+
   createDependency(context, props, apiName);
 }
 
@@ -545,8 +590,23 @@ function getAPIName(context) {
   }
   return apiName;
 }
+function getAuthName(context) {
+  const { amplifyMeta } = context.amplify.getProjectDetails();
+  let authName = '';
 
-async function authGroupHack(context, bucketName) {
+  if (amplifyMeta.auth) {
+    const categoryResources = amplifyMeta.auth;
+    Object.keys(categoryResources).forEach((resource) => {
+      if (categoryResources[resource].service === 'Cognito') {
+        authName = resource;
+      }
+    });
+  }
+  return authName;
+}
+
+
+async function getUserPoolGroups(context) {
   const userPoolGroupFile = path.join(
     context.amplify.pathManager.getBackendDirPath(),
     'auth',
@@ -556,86 +616,32 @@ async function authGroupHack(context, bucketName) {
 
   const amplifyMeta = context.amplify.getProjectMeta();
 
-  if (!('auth' in amplifyMeta) || Object.keys(amplifyMeta.auth).length === 0) {
-    context.print.error('You have no auth projects. Moving on.');
-    return;
+  let userPoolGroup = []
+
+  if (('auth' in amplifyMeta) && Object.keys(amplifyMeta.auth).length > 0) {
+    if (fs.existsSync(userPoolGroupFile)) {
+      userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
+    }
   }
+  return userPoolGroup
+}
 
-  let resourceName = '';
+async function generateGroupOptions(context) {
+  const userPoolGroup = await getUserPoolGroups(context, true)
 
-  Object.keys(amplifyMeta.auth).forEach((authCategory) => {
-    if (amplifyMeta.auth[authCategory].service === 'Cognito') {
-      resourceName = authCategory;
-    }
-  });
+  let groupOptions = []
 
-  if (fs.existsSync(userPoolGroupFile)) {
-    const userPoolGroup = JSON.parse(fs.readFileSync(userPoolGroupFile));
-    if (userPoolGroup.length === 0) {
-      userPoolGroup.push(generateIAMAdmin(resourceName, bucketName));
-    } else {
-      userPoolGroup.forEach((userGroup, index) => {
-        if (userGroup.groupName === 'Admin') {
-          if (!('customPolicies' in userGroup)) {
-            userGroup.customPolicies = [];
-          }
-
-          const policy = generateIAMAdminPolicy(resourceName, bucketName);
-          if (!userGroup.customPolicies.some(
-            existingPolicy => existingPolicy.PolicyName === policy.PolicyName,
-          )) {
-            userGroup.customPolicies.push(policy);
-          }
-          return;
-        }
-        if (userPoolGroup.length === index + 1) {
-          userPoolGroup.push(generateIAMAdmin(resourceName, bucketName));
-        }
-      });
-    }
-    updateUserPoolGroups(context, userPoolGroup);
+  if (userPoolGroup.length === 0) {
+    context.print.error('You have no cognito groups');
   } else {
-    const admin = generateIAMAdmin(resourceName, bucketName);
-    const userPoolGroupList = [admin];
-    updateUserPoolGroups(context, userPoolGroupList);
-    context.amplify.updateamplifyMetaAfterResourceAdd('auth', 'userPoolGroups', {
-      service: 'Cognito-UserPool-Groups',
-      providerPlugin: 'awscloudformation',
-      dependsOn: [
-        {
-          category: 'auth',
-          resourceName,
-          attributes: ['UserPoolId', 'AppClientIDWeb', 'AppClientID', 'IdentityPoolId'],
-        },
-      ],
+    userPoolGroup.forEach((userGroup) => {
+      groupOptions.push({
+        "name": userGroup.groupName,
+        "value": userGroup.groupName,
+        "ignore": true
+      })
     });
   }
+  return groupOptions
 }
 
-
-function updateUserPoolGroups(context, userPoolGroupList) {
-  if (userPoolGroupList && userPoolGroupList.length > 0) {
-    const userPoolGroupFile = path.join(
-      context.amplify.pathManager.getBackendDirPath(),
-      'auth',
-      'userPoolGroups',
-      'user-pool-group-precedence.json',
-    );
-
-    const userPoolGroupParams = path.join(context.amplify.pathManager.getBackendDirPath(), 'auth', 'userPoolGroups', 'parameters.json');
-
-    /* eslint-disable */
-    const groupParams = {
-      AuthRoleArn: {
-        'Fn::GetAtt': ['AuthRole', 'Arn'],
-      },
-      UnauthRoleArn: {
-        'Fn::GetAtt': ['UnauthRole', 'Arn'],
-      },
-    };
-    /* eslint-enable */
-
-    fs.outputFileSync(userPoolGroupParams, JSON.stringify(groupParams, null, 4));
-    fs.outputFileSync(userPoolGroupFile, JSON.stringify(userPoolGroupList, null, 4));
-  }
-}
