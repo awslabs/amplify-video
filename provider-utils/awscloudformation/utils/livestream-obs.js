@@ -89,7 +89,7 @@ function generateServiceLive(directory, primaryURL) {
   const setup = {
     settings: {
       key: primaryKey[3],
-      server: `rtmps://${primaryURL}`,
+      server: primaryURL,
     },
     type: 'rtmp_custom',
   };
