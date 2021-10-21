@@ -212,5 +212,57 @@
 		"question": "Select groups that you want to give permission to upload videos",
 		"type": "checkbox",
 		"next": "overrideSchema"
-	}
+	},
+    "customUrl": {
+        "key": "customUrl",
+        "type": "confirm",
+        "question": "Do you want to define a custom url for your CloudFront? (Beta)",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "customDomain"
+            },
+            {
+                "value": "false",
+                "next": "customDomain",
+                "ignore": true
+            }
+        ],
+        "default": true
+    },
+    "customDomain": {
+        "key": "customDomain",
+        "question": "Provide your hosted zone domain name (e.g. mydomain.com):",
+        "validation": {
+            "operator": "regex",
+            "value": "^((?!-))(xn--)?[a-z0-9][a-z0-9-_]{0,61}[a-z0-9]{0,1}\\.(xn--)?([a-z0-9\\-]{1,61}|[a-z0-9-]{1,30}\\.[a-z]{2,})$",
+            "onErrorMsg": "domain name is not valid"
+        },
+        "required": true,
+        "next": "customRecord"
+    },
+    "customRecord": {
+        "key": "customRecord",
+        "question": "Provide only your sub domain record name (Please note that env and your hosted zone domain will be added automatically):",
+        "validation": {
+            "operator": "regex",
+            "value": "^[a-zA-Z0-9]+$",
+            "onErrorMsg": "record name is not valid"
+        },
+        "default": "vod",
+        "required": true,
+        "next": "certificate"
+    },
+    "certificate": {
+        "key": "certificate",
+        "question": "Provide the ARN of a valid SSL certificate for the above domain from the Certificate Manager in US East (N. Virginia) Region (us-east-1):",
+        "validation": {
+            "operator": "regex",
+            "value": "^arn:aws:acm:us-east-1:\\d+:\\w+\/\\S+",
+            "onErrorMsg": "ACM ARN is not valid"
+        },
+        "required": true,
+        "next": "createSnsTopic"
+    }
 }

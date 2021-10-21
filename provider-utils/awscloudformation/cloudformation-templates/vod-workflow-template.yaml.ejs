@@ -82,6 +82,17 @@ Parameters:
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: AmplifyMediaConvertStatusEvents
 <% }  -%>
+<% if (props.contentDeliveryNetwork.customUrl) { %>
+  customDomain:
+    Type: String
+    Description: Hosted Zone
+  customAlias:
+    Type: String
+    Description: Recond Name
+  certificateArn:
+    Type: String
+    Description: ACM Certificate Arn
+<% }  -%>
   
 
 Conditions:
@@ -96,12 +107,18 @@ Outputs:
     Description: Amplify Video hosts transcoded video content in this bucket
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputBucketName
 <% if (props.contentDeliveryNetwork.enableDistribution) { -%>
+<% if (props.contentDeliveryNetwork.customUrl) { -%>
   oVodOutputUrl:
-    Description: Amplify Video CloudFront Url
-    Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+    Description: Amplify Video CloudFront Alis Url
+    Value: !Ref customAlias
 <% } else { -%>
   oVodOutputUrl:
     Description: Amplify Video CloudFront Url
+    Value: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+<% } -%>
+<% } else { -%>
+  oVodOutputUrl:
+    Description: Amplify Video S3 Url
     Value: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
 <% } -%>
 
@@ -136,6 +153,11 @@ Resources:
       Parameters:
           pBucketUrl: !GetAtt rS3OutputBucket.Outputs.oOutputUrl
           pOriginAccessIdentity: !GetAtt rS3OutputBucket.Outputs.oOriginAccessIdentity
+  <% if (props.contentDeliveryNetwork.customUrl) { %>
+          pAlias: !Ref customAlias
+          pCertificateArn: !Ref certificateArn
+  <% } %>
+  
   <% if (props.contentDeliveryNetwork.signedKey) { %>
           pProjectName:
             !If
@@ -169,6 +191,16 @@ Resources:
               - - !Ref pProjectName
                 - 'tokenGen'
   <% } %>
+<% } %>
+<% if (props.contentDeliveryNetwork.customUrl) { %>
+  rRoute53RecordSet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/Route53RecordSet.template"
+      Parameters:
+          cfDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+          pAlias: !Ref customAlias
+          pDomain: !Ref customDomain
 <% } %>
   rMediaConvertTemplate:
     Type: AWS::CloudFormation::Stack

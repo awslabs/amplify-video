@@ -132,6 +132,19 @@ function getVODEnvVars(context, props, resourceName) {
 
     Object.assign(props.contentDeliveryNetwork, cdnEnv);
   }
+
+  if (props.contentDeliveryNetwork && props.contentDeliveryNetwork.customUrl) {
+    envVars = amplifyProjectDetails.teamProviderInfo[currentEnvInfo]
+    .categories.video[resourceName];
+    const cdnExtraEnv = {
+      customAlias: envVars.customAlias,
+      customDomain: envVars.customDomain,
+      certificateArn: envVars.certificateArn
+    };
+
+    Object.assign(props.contentDeliveryNetwork, cdnExtraEnv);
+  }
+
   props.env = {
     bucket: projectBucket,
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),

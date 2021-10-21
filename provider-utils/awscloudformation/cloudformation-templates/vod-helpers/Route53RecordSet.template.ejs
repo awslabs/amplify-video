@@ -1,0 +1,30 @@
+Description: Route53 Record Set Workflow
+
+Parameters:
+  cfDomainName:
+    Type: String
+    Description: cloudfront domain name
+    Default: NONE
+  pAlias:
+    Type: String
+    Description: Alias name
+    Default: NONE
+  pDomain:
+    Type: String
+    Description: Domain name
+    Default: NONE
+
+Resources:
+  VodAlias:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Ref pDomain
+      Name: !Ref pAlias
+      Type: A
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !Ref cfDomainName
+Outputs:
+  oAlias:
+    Value: !GetAtt VodAlias.Name
+    Description: alias

@@ -258,6 +258,67 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.contentDeliveryNetwork = contentDeliveryNetwork;
   }
 
+  if (cdnResponse.enableCDN) {
+    const customURLQuestion = [{
+      type: question.customUrl.type,
+      name: question.customUrl.key,
+      message: question.customUrl.question,
+      choices: question.customUrl.options,
+      default: question.customUrl.default,
+    }];
+    const customURLResponse = await inquirer.prompt(customURLQuestion);
+    const customUrlDetails = {}
+    props.contentDeliveryNetwork.customUrl = customURLResponse.customUrl
+    if (props.contentDeliveryNetwork.customUrl) {
+      const customDomainQuestion = [{
+        type: question.customDomain.type,
+        name: question.customDomain.key,
+        validate: amplify.inputValidation(question.customDomain),
+        message: question.customDomain.question,
+        choices: question.customDomain.options,
+        default: question.customDomain.default,
+      }];
+      const customDomainResponse = await inquirer.prompt(customDomainQuestion);
+      customUrlDetails.customDomain = customDomainResponse.customDomain
+      const customRecord = [
+        {
+          type: question.customRecord.type,
+          name: question.customRecord.key,
+          message: question.customRecord.question,
+          validate: amplify.inputValidation(question.customRecord),
+          default: question.customDomain.default,
+          when(answers) {
+            return headlessMode.autoAnswer({
+              context,
+              answers,
+              key: question.customRecord.key,
+              value: args.customRecord ? args.customRecord : question.customDomain.default,
+            });
+          },
+        }];
+
+      const customRecordResponse = await inquirer.prompt(customRecord);
+      customUrlDetails.customAlias = `${projectDetails.localEnvInfo.envName}-${customRecordResponse.customRecord}.${customUrlDetails.customDomain}`
+      context.print.blue(customUrlDetails.customAlias);
+      if (customUrlDetails.customAlias) {
+        const certificateQuestion = [{
+          type: question.certificate.type,
+          name: question.certificate.key,
+          validate: amplify.inputValidation(question.certificate),
+          message: question.certificate.question,
+          choices: question.certificate.options,
+          default: question.certificate.default,
+        }];
+        const certificateResponse = await inquirer.prompt(certificateQuestion);
+        customUrlDetails.certificateArn = certificateResponse.certificate
+        if (customUrlDetails.certificateArn) {
+          updateCDNEnvVars(context, props.shared.resourceName, customUrlDetails)
+        }
+      }
+    }
+  }
+
+
   props.contentDeliveryNetwork.enableDistribution = cdnResponse.enableCDN;
 
   const cmsEnable = [
@@ -425,6 +486,12 @@ async function createCDNEnvVars(context, options, resourceName, aws) {
   cdnEnvConfigDetails.secretPem = secretCreate.Name;
   cdnEnvConfigDetails.secretPemArn = secretCreate.ARN;
   amplify.saveEnvResourceParameters(context, 'video', resourceName, cdnEnvConfigDetails);
+}
+
+
+async function updateCDNEnvVars(context, resourceName, customUrlDetails) {
+  const { amplify } = context;
+  amplify.saveEnvResourceParameters(context, 'video', resourceName, customUrlDetails);
 }
 
 async function createCMS(context, apiName, props) {

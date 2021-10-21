@@ -15,6 +15,16 @@ Parameters:
     Description: Name for public key
     Default: DefaultName
   <% } %>
+  <% if (props.contentDeliveryNetwork.customUrl) { %>
+  pAlias:
+    Type: String
+    Description: Alias name
+    Default: NONE
+  pCertificateArn:
+    Type: String
+    Description: ACM Certificate Arn
+    Default: NONE
+  <% } %>
 
 Resources:
   rCloudFrontDist:
@@ -51,6 +61,22 @@ Resources:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${pOriginAccessIdentity}"
         Enabled: 'true'
         PriceClass: PriceClass_All
+      <% if (props.contentDeliveryNetwork.customAlias) { %>
+        Aliases:
+        - !Ref pAlias
+      <% } %>
+      <% if (props.contentDeliveryNetwork.certificateArn) { %>
+        ViewerCertificate:
+          AcmCertificateArn: !Ref pCertificateArn
+          MinimumProtocolVersion: TLSv1.1_2016
+          SslSupportMethod: sni-only        
+      <% } else { %>
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: TLSv1
+          CertificateSource: "cloudfront" 
+      <% } %>
+
   <% if (props.contentDeliveryNetwork.signedKey) { %>
   <%= props.contentDeliveryNetwork.rPublicName %>:
     Type: AWS::CloudFront::PublicKey
