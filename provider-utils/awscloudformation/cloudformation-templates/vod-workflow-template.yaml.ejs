@@ -175,7 +175,11 @@ Resources:
           pPemID: !GetAtt rCloudfrontDistribution.Outputs.oPemId
           pSecretPem: !Ref secretPem
           pSecretPemArn: !Ref secretPemArn
+          <% if (props.contentDeliveryNetwork.customUrl) { %>
+          pDomainName: !Ref customAlias
+          <% } else { %>
           pDomainName: !GetAtt rCloudfrontDistribution.Outputs.oCFDomain
+          <% } %>
           pFunctionHash: "<%= props.hashes.CloudFrontTokenGen %>"
           pS3: !Ref pS3
           pFunctionName: 
