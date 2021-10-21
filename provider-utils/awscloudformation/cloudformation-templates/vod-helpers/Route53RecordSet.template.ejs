@@ -18,7 +18,7 @@ Resources:
   VodAlias:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneName: !Ref pDomain
+      HostedZoneName: !Sub '${pDomain}.'
       Name: !Ref pAlias
       Type: A
       AliasTarget:
