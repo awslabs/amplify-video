@@ -1,0 +1,48 @@
+
+
+type VodAsset @model (subscriptions: {level: public})
+@auth(
+  rules: [
+<% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
+    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
+<% } -%>
+<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% } -%>
+<% if (!locals.permissions) { -%>
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% } -%>
+    {allow: private, operations: [read]}
+  ]
+)
+{
+  id:ID!
+  title:String!
+  description:String!
+
+  #DO NOT EDIT
+  video:VideoObject @connection
+}
+
+#DO NOT EDIT
+type VideoObject @model
+@auth(
+  rules: [
+<% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
+    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
+<% } -%>
+<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% } -%>
+<% if (!locals.permissions) { -%>
+    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+<% } -%>
+    {allow: private, operations: [read]}
+  ]
+)
+{
+  id:ID!
+<% if (contentDeliveryNetwork.signedKey) { -%>
+  token: String @function(name: "<%= contentDeliveryNetwork.functionNameSchema %>")
+<% } -%>
+}
