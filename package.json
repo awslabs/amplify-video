@@ -26,7 +26,7 @@
     "video"
   ],
   "dependencies": {
-    "amplify-util-headless-input": "^1.5.3",
+    "amplify-util-headless-input": "^1.5.4",
     "archiver": "^3.1.1",
     "chalk": "^2.4.2",
     "child_process": "^1.0.2",
