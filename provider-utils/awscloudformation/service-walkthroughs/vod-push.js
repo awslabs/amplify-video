@@ -1,12 +1,10 @@
 const inquirer = require('inquirer');
 const fs = require('fs-extra');
 const path = require('path');
-const ejs = require('ejs');
 const { generateKeyPairSync } = require('crypto');
 const headlessMode = require('../utils/headless-mode');
 const question = require('../../vod-questions.json');
 const { getAWSConfig } = require('../utils/get-aws');
-const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
 const { setupAPI } = require('./api-push');
 
 module.exports = {
@@ -21,7 +19,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   const defaultLocation = path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   const targetDir = amplify.pathManager.getBackendDirPath();
-  const props = {};
+  let props = {};
   let oldValues = {};
   let nameDict = {};
   let aws;

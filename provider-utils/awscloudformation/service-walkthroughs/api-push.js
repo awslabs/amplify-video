@@ -1,23 +1,29 @@
+const fs = require('fs-extra');
+const path = require('path');
+const ejs = require('ejs');
+const inquirer = require('inquirer');
+const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
 const question = require('../../api-questions.json');
 
 import { validateAddApiRequest, validateUpdateApiRequest,
          validateAddAuthRequest, validateUpdateAuthRequest} from 'amplify-util-headless-input';
-const inquirer = require('inquirer');
+
 
 module.exports = {
   setupAPI,
 };
 
 async function setupAPI(context, props, projectType, resourceName) {
-  const { amplify } = context;
   const apiName = getAPIName(context);
+  const backEndDir = context.amplify.pathManager.getBackendDirPath();
+  const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
   
   if (apiName !== '') {
     context.print.info(`Using ${apiName} to manage API`);
     // Add check to API for API_KEY or Cognito
     // If Cognito then ask permissions question
     // send off to schemaMaker
-    const genSchema = schemaMaker(context, props, projectType);
+    const genSchema = await schemaMaker(context, props, projectType);
     const cmsOveride = [
       {
         type: question.overrideSchema.type,
@@ -64,7 +70,12 @@ async function setupAPI(context, props, projectType, resourceName) {
   const authType = await inquirer.prompt(apiAuthQuestion);
 
   if (authType.authModel === 'AMAZON_COGNITO_USER_POOLS') {
-    await setupAuth(context, options, projectType, resourceName);
+    const authName = getAuthName(context);
+    if (authName && authName !== ''){
+      context.print.info(`Using ${authName} for your Authentication`);
+    } else {
+      await setupAuth(context);
+    }
     const permissions = [
       {
         type: question.permissionSchema.type,
@@ -124,7 +135,8 @@ async function setupAPI(context, props, projectType, resourceName) {
   return props;
 }
 
-async function setupAuth(context, options, projectType, resourceName) {
+async function setupAuth(context) {
+  const { amplify } = context;
   const authProps = {
     version:1,
     resourceName: 'VideoAuth',
@@ -165,6 +177,15 @@ async function editGraphQL(context, apiName) {
       const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/parameters.json`));
       const cmsEditResponse = await inquirer.prompt(cmsEdit);
       const editSchemaChoice = cmsEditResponse.editAPI;
+      let authConfig = {};
+      const amplifyMeta = context.amplify.getProjectMeta();
+      if ('api' in amplifyMeta && Object.keys(amplifyMeta.api).length !== 0) {
+        Object.values(amplifyMeta.api).forEach((project) => {
+          if ('output' in project) {
+            ({ authConfig } = project.output);
+          }
+        });
+      }
 
       if (editSchemaChoice) {
         await context.amplify.openEditor(context, `${resourceDir}/schema.graphql`).then(async () => {
@@ -194,21 +215,13 @@ async function schemaMaker(context, props, projectType) {
 }
 
 
-// async function createCMS(context, apiName, props) {
+async function createCMS(context, apiName, props) {
   
   
-//   const backEndDir = context.amplify.pathManager.getBackendDirPath();
-//   let authConfig = {};
-//   const amplifyMeta = context.amplify.getProjectMeta();
-//   if ('api' in amplifyMeta && Object.keys(amplifyMeta.api).length !== 0) {
-//     Object.values(amplifyMeta.api).forEach((project) => {
-//       if ('output' in project) {
-//         ({ authConfig } = project.output);
-//       }
-//     });
-//   }
+  const backEndDir = context.amplify.pathManager.getBackendDirPath();
   
-// }
+  
+}
 
 async function createDependency(context, props, apiName) {
   if (props.contentDeliveryNetwork.pemID && props.contentDeliveryNetwork.secretPemArn) {
@@ -257,6 +270,21 @@ function getAPIName(context) {
     });
   }
   return apiName;
+}
+
+function getAuthName(context) {
+  const { amplifyMeta } = context.amplify.getProjectDetails();
+  let authName = '';
+
+  if (amplifyMeta.auth) {
+    const categoryResources = amplifyMeta.auth;
+    Object.keys(categoryResources).forEach((resource) => {
+      if (categoryResources[resource].service === 'Cognito') {
+        authName = resource;
+      }
+    });
+  }
+  return authName;
 }
 
 async function authGroupHack(context, bucketName) {
