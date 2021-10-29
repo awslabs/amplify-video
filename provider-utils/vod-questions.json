@@ -200,7 +200,7 @@
 		"type": "checkbox",
 		"options": [			
 			{
-				"name": "Authenticated users that are not part of any groups can upload videos",
+				"name": "Authenticated users who are not a member of any groups can upload videos",
 				"value": "any",
 				"next": "overrideSchema",
 				"ignore": true
