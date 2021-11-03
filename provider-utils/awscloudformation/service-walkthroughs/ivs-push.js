@@ -76,10 +76,9 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           value: args.channelLatency ? args.channelLatency : question.channelLatency.default,
         });
       },
-    }
+    },
   ];
 
-  
   const statusReporting = [
     {
       type: question.reportStatus.type,
@@ -95,11 +94,11 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           value: args.reportStatus ? args.reportStatus : question.reportStatus.default,
         });
       },
-    }
-    ]
-    
-    const statusLambda = [
-        {
+    },
+  ];
+
+  const statusLambda = [
+    {
       type: question.reportStatusLambda.type,
       name: question.reportStatusLambda.key,
       message: question.reportStatusLambda.question,
@@ -110,24 +109,23 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           context,
           answers,
           key: question.reportStatusLambda.key,
-          value: args.reportStatusLambda ? args.reportStatusLambda : question.reportStatusLambda.default,
+          value: args.reportStatusLambda
+            ? args.reportStatusLambda : question.reportStatusLambda.default,
         });
       },
-    }
-        
-      ]
-      
+    },
+  ];
+
   const channelQuestions = await inquirer.prompt(createChannel);
   props.channel = channelQuestions;
 
   const statusQuestions = await inquirer.prompt(statusReporting);
-  props.status = statusQuestions
-  
-  
-  if(statusQuestions.reportStatus === true){
+  props.status = statusQuestions;
+
+  if (statusQuestions.reportStatus === true) {
     const statusQuestionsLambda = await inquirer.prompt(statusLambda);
-    props.status.lambda = statusQuestionsLambda.reportStatusLambda
+    props.status.lambda = statusQuestionsLambda.reportStatusLambda;
   }
-  
+
   return props;
 }
