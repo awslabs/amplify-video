@@ -46,5 +46,29 @@
         ],
         "default": "LOW",
         "required": true
+    },
+    "reportStatus" : {
+        "key": "reportStatus",
+        "question": "Report status of the channel",
+        "type": "confirm",
+        "default": "true",
+        "required": true,
+        "options" : [
+            {
+                "value" : "true",
+                "next" : "reportStatusLambda"
+            },
+            {
+                "value" : "false",
+                "next" : "" 
+            }
+        ]
+    },
+    "reportStatusLambda" : {
+        "key": "reportStatusLambda",
+        "question": "Invoke Lambda on channel status event",
+        "type": "confirm",
+        "default": "true",
+        "required": true
     }
 }
