@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const question = require('../../ivs-questions.json');
 const headlessMode = require('../utils/headless-mode');
+const { setupAPI } = require('./api-push');
 
 module.exports = {
   serviceQuestions,
@@ -14,7 +15,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   // const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   // const targetDir = amplify.pathManager.getBackendDirPath();
-  const props = {};
+  let props = {};
   let nameDict = {};
 
   const { payload } = context.parameters.options;
@@ -46,7 +47,23 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.shared = nameDict;
   }
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
-  const createChannel = [
+
+  const createChannelQuestions = [
+    {
+      type: question.cvsEnable.type,
+      name: question.cvsEnable.key,
+      message: question.cvsEnable.question,
+      choices: question.cvsEnable.options,
+      default: question.cvsEnable.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.cvsEnable.key,
+          value: args.cvsEnable ? args.cvsEnable : question.cvsEnable.default,
+        });
+      },
+    },
     {
       type: question.channelQuality.type,
       name: question.channelQuality.key,
@@ -79,8 +96,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     },
   ];
 
-  const channelQuestions = await inquirer.prompt(createChannel);
+  const channelQuestions = await inquirer.prompt(createChannelQuestions);
   props.channel = channelQuestions;
+
+  if (channelQuestions.cvsEnable) {
+    props = await setupAPI(context, props, 'ivs');
+  }
 
   return props;
 }

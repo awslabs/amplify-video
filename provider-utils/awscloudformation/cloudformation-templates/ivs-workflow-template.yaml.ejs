@@ -28,12 +28,36 @@ Parameters:
     Type: String
     Description: Quality of channel
     Default: <%= props.channel.channelQuality %>
-
+<% if(props.channel.cvsEnable) { -%>
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
+<% } -%>
 Conditions:
   HasEnvironmentParameter:
     !Not [!Equals [!Ref env, NONE]]
 
 Resources:
+<% if(props.channel.cvsEnable) { -%>
+  rChannelManagerLambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/Lambda-ChannelManager.template"
+      Parameters:
+        env: !Ref env
+        pLatencyMode: !Ref pLatencyMode
+        pQuality: !Ref pQuality
+        GraphQLAPIId: !Ref GraphQLAPIId
+        pFunctionHash: "<%= props.hashes.ChannelManager %>"
+Output:
+  oLambdaArn:
+    Value: !GetAtt rChannelManagerLambda.Outputs.LamdaArn
+<% } else { -%>
   rIVSChannel:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -59,3 +83,4 @@ Outputs:
     Value: !GetAtt rIVSChannel.Outputs.oVideoInputKey
   oVideoChannelArn:
     Value: !GetAtt rIVSChannel.Outputs.oVideoChannelArn
+<% } -%>

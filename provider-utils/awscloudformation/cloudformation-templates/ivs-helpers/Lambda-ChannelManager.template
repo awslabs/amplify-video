@@ -1,0 +1,91 @@
+Description: IVS Channel Manager Lambda
+
+Parameters:
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  pLatencyMode:
+    Type: String
+    Description: Latency Mode for IVS-Channel
+    Default: LOW
+  pQuality:
+    Type: String
+    Description: Quality of channel
+    Default: BASIC
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
+
+Resources:
+  rCMLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        !Join
+          - '-'
+          - - 'channelManager'
+            - !Ref env
+      Description: Manages Channel for GraphQL
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 25
+      Code:
+        S3Bucket: !Ref pS3
+        S3Key: !Sub
+          - ivs-helpers/ChannelManager-${hash}.zip
+          - { hash: !Ref pFunctionHash }
+      Environment:
+        Variables:
+          ENV: !Ref env
+          GRAPHQLID: !Ref GraphQLAPIId
+          PQUALITY: !REF pQuality
+          PLATENCYMODE: !Ref pLatencyMode
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: 
+            Service: 
+              - lambda.amazonaws.com
+          Action: 
+            - 'sts:AssumeRole'
+      Path: /
+      Policies:
+      - PolicyName: IVSChannelManagerLambda
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Join ["", ["arn:aws:logs:", Ref: "AWS::Region", ":", Ref: "AWS::AccountId", ":log-group:/aws/lambda/*"]]
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  !Join
+                    - '-'
+                    - - 'Channel'
+                      - !Ref GraphQLAPIId
+                      - !Ref env
+              - Effect: Allow
+                Action:
+                  - ivs:CreateStreamKey
+                  - ivs:CreateChannel
+                  - ivs:DeleteStreamKey
+                  - ivs:UpdateChannel
+                Resource: '*'

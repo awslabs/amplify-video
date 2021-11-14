@@ -8,23 +8,36 @@
             "onErrorMsg": "Resource name should be alphanumeric"
         },
         "required": true,
-        "default": "myivs",
-        "next": "channelQuality"
+        "default": "myivs"
+    },
+    "cvsEnable": {
+        "key": "cvsEnable",
+        "question": "Do you want to create a single channel or an API to manage multiple channels?",
+        "type": "list",
+        "options": [
+            {
+                "name": "Single IVS Stream",
+                "value": "single"
+            },
+            {
+                "name": "Video management Service",
+                "value": "vms"
+            }
+        ],
+        "default": "single"
     },
     "channelQuality": {
         "key": "channelQuality",
-        "question": "Choose the Channel type or stream quality:",
+        "question": "Choose the default stream quality:",
         "type": "list",
         "options": [
             {
                 "name": "Standard (HD Stream)",
-                "value": "STANDARD",
-                "next": "channelLatency"
+                "value": "STANDARD"
             },
             {
                 "name": "Basic (SD Stream)",
-                "value": "BASIC",
-                "next": "channelLatency"
+                "value": "BASIC"
             }
         ],
         "default": "STANDARD",
@@ -32,7 +45,7 @@
     },
     "channelLatency": {
         "key": "channelLatency",
-        "question": "Choose the Video latency type:",
+        "question": "Choose the default stream latency type:",
         "type": "list",
         "options": [
             {

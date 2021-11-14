@@ -1,48 +1,18 @@
 
-
-type VodAsset @model (subscriptions: {level: public})
-@auth(
-  rules: [
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
-    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
-<% } -%>
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-<% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-    {allow: private, operations: [read]}
-  ]
-)
+type Channel @model 
+@auth(rules: [{ allow: owner, operations: [create, delete, update] }])
+@key(name: "channelsByArn", fields: ["channelArn"], queryField: "channelByArn")
 {
-  id:ID!
-  title:String!
-  description:String!
-
-  #DO NOT EDIT
-  video:VideoObject @connection
+  id: ID!
+  title: String!
+  description: String!
+  streamKey: String @auth(rules: [{allow: owner}])
+  channelArn: String @auth(rules: [{allow: owner}])
+  streamURL: String
+  streamKeyArn: String @auth(rules: [{allow: owner}])
+  ingestEndpoint: String @auth(rules: [{allow: owner}])
 }
 
-#DO NOT EDIT
-type VideoObject @model
-@auth(
-  rules: [
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
-    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
-<% } -%>
-<% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-<% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
-<% } -%>
-    {allow: private, operations: [read]}
-  ]
-)
-{
-  id:ID!
-<% if (contentDeliveryNetwork.signedKey) { -%>
-  token: String @function(name: "<%= contentDeliveryNetwork.functionNameSchema %>")
-<% } -%>
+type Mutation {
+  createStreamKey(id: ID): Channel @function(name: "channelManager-${env}") @auth(rules: [{allow: owner}])
 }

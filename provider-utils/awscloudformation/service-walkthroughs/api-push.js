@@ -13,7 +13,7 @@ module.exports = {
   setupAPI,
 };
 
-async function setupAPI(context, props, projectType, resourceName) {
+async function setupAPI(context, props, projectType) {
   const apiName = getAPIName(context);
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
@@ -76,26 +76,27 @@ async function setupAPI(context, props, projectType, resourceName) {
     } else {
       await setupAuth(context);
     }
-    const permissions = [
-      {
-        type: question.permissionSchema.type,
-        name: question.permissionSchema.key,
-        message: question.permissionSchema.question,
-        choices: question.permissionSchema.options,
-        validate(answer) {
-          if (answer.length < 1) {
-            return 'You must choose at least one auth style';
-          }
-          return true;
+    if (projectType === 'vod') {
+      const permissions = [
+        {
+          type: question.permissionSchema.type,
+          name: question.permissionSchema.key,
+          message: question.permissionSchema.question,
+          choices: question.permissionSchema.options,
+          validate(answer) {
+            if (answer.length < 1) {
+              return 'You must choose at least one auth style';
+            }
+            return true;
+          },
         },
-      },
-    ];
-    const permissionsResponse = await inquirer.prompt(permissions);
-    props.permissions = permissionsResponse;
+      ];
+      const permissionsResponse = await inquirer.prompt(permissions);
+      props.permissions = permissionsResponse;
 
-    
-    if (props.permissions.permissionSchema.includes('admin')) {
-      authGroupHack(context, props.shared.bucketInput);
+      if (props.permissions.permissionSchema.includes('admin')) {
+        authGroupHack(context, props.shared.bucketInput);
+      }
     }
   }
 
@@ -113,7 +114,7 @@ async function setupAPI(context, props, projectType, resourceName) {
     }
   };
   const pluginAPIInfo = context.pluginPlatform.plugins['api'][0];
-  const {getCfnApiArtifactHandler} = require(`${pluginAPIInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`)
+  const {getCfnApiArtifactHandler} = require(`${pluginAPIInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`);
   const validateAPIProps = await validateAddApiRequest(JSON.stringify(apiProps));
   await getCfnApiArtifactHandler(context).createArtifacts(validateAPIProps);
 
@@ -144,10 +145,11 @@ async function setupAuth(context) {
       includeIdentityPool: false,
       serviceName: 'Cognito',
       userPoolConfiguration: {
-        signinMethod: "EMAIL",
+        signinMethod: "USERNAME",
         requiredSignupAttributes: [
           "EMAIL",
           "NAME",
+          'PHONE_NUMBER',
         ],
       }
     }
@@ -212,15 +214,6 @@ async function schemaMaker(context, props, projectType) {
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
   return appendSchema;
-}
-
-
-async function createCMS(context, apiName, props) {
-  
-  
-  const backEndDir = context.amplify.pathManager.getBackendDirPath();
-  
-  
 }
 
 async function createDependency(context, props, apiName) {
