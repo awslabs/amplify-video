@@ -49,14 +49,15 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/Lambda-ChannelManager.template"
       Parameters:
+        pS3: !Ref pS3
         env: !Ref env
         pLatencyMode: !Ref pLatencyMode
         pQuality: !Ref pQuality
         GraphQLAPIId: !Ref GraphQLAPIId
         pFunctionHash: "<%= props.hashes.ChannelManager %>"
-Output:
+Outputs:
   oLambdaArn:
-    Value: !GetAtt rChannelManagerLambda.Outputs.LamdaArn
+    Value: !GetAtt rChannelManagerLambda.Outputs.LambdaArn
 <% } else { -%>
   rIVSChannel:
     Type: AWS::CloudFormation::Stack

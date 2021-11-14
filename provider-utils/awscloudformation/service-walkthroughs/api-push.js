@@ -14,7 +14,7 @@ module.exports = {
 };
 
 async function setupAPI(context, props, projectType) {
-  const apiName = getAPIName(context);
+  let apiName = getAPIName(context);
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
   
@@ -53,7 +53,7 @@ async function setupAPI(context, props, projectType) {
       ],
     };
 
-    createDependency(context, props, apiName);
+    createDependency(context, props, apiName, projectType);
 
     return props;
   }
@@ -101,12 +101,12 @@ async function setupAPI(context, props, projectType) {
   }
 
   const schema = await schemaMaker(context, props, projectType);
-
+  apiName = 'VideoManagementApi';
   const apiProps = {
     version:1,
     serviceConfiguration:{
       serviceName:'AppSync',
-      apiName:'VideoManagementApi',
+      apiName,
       transformSchema: schema,
       defaultAuthType: {
         mode:authType.authModel,
@@ -131,7 +131,7 @@ async function setupAPI(context, props, projectType) {
     ],
   };
 
-  createDependency(context, props, apiName);
+  createDependency(context, props, apiName, projectType);
 
   return props;
 }
@@ -216,15 +216,17 @@ async function schemaMaker(context, props, projectType) {
   return appendSchema;
 }
 
-async function createDependency(context, props, apiName) {
-  if (props.contentDeliveryNetwork.pemID && props.contentDeliveryNetwork.secretPemArn) {
-    context.amplify.updateamplifyMetaAfterResourceUpdate('api', apiName, 'dependsOn', [
-      {
-        category: 'video',
-        resourceName: props.shared.resourceName,
-        attributes: [],
-      },
-    ]);
+async function createDependency(context, props, apiName, projectType) {
+  if (projectType === 'vod') {
+    if (props.contentDeliveryNetwork.pemID && props.contentDeliveryNetwork.secretPemArn) {
+      context.amplify.updateamplifyMetaAfterResourceUpdate('api', apiName, 'dependsOn', [
+        {
+          category: 'video',
+          resourceName: props.shared.resourceName,
+          attributes: [],
+        },
+      ]);
+    }
   }
 }
 

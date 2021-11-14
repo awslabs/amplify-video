@@ -100,6 +100,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   props.channel = channelQuestions;
 
   if (channelQuestions.cvsEnable) {
+    props.parameters = {};
     props = await setupAPI(context, props, 'ivs');
   }
 
