@@ -4,7 +4,7 @@ const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient();
 const ivs = new AWS.IVS();
 const environment = process.env.ENV;
-const apiGraphQLAPIIdOutput = process.env.API_UNICORNSPORT_GRAPHQLAPIIDOUTPUT;
+const apiGraphQLAPIIdOutput = process.env.GRAPHQLID;
 const myTableName = `Channel-${apiGraphQLAPIIdOutput}-${environment}`;
 
 exports.handler = async (event, context, callback) => {
