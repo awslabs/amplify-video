@@ -142,25 +142,51 @@ async function setupAuth(context) {
     version:1,
     resourceName: 'VideoAuth',
     serviceConfiguration:{
-      includeIdentityPool: false,
+      includeIdentityPool: true,
+      identityPoolConfiguration: {
+      },
       serviceName: 'Cognito',
       userPoolConfiguration: {
         signinMethod: "USERNAME",
         requiredSignupAttributes: [
           "EMAIL",
-          "NAME",
-          'PHONE_NUMBER',
         ],
+        readAttributes: [
+          "EMAIL",
+        ],
+        writeAttributes: [
+          "EMAIL",
+        ]
+      }
+    }
+  };
+  const updateHackAuthProps = {
+    version:1,
+    serviceModification:{
+      includeIdentityPool:false,
+      serviceName: 'Cognito',
+      userPoolModification: {
+        readAttributes: [
+          "EMAIL",
+        ],
+        writeAttributes: [
+          "EMAIL",
+        ]
       }
     }
   };
 
   const pluginAuthInfo = context.pluginPlatform.plugins['auth'][0];
-  const { getAddAuthRequestAdaptor } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/utils/auth-request-adaptors.js`);
-  const { getAddAuthHandler } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/handlers/resource-handlers.js`);
+  const { getAddAuthRequestAdaptor, getUpdateAuthRequestAdaptor } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/utils/auth-request-adaptors.js`);
+  const { getAddAuthHandler, getUpdateAuthHandler } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/handlers/resource-handlers.js`);
   await validateAddAuthRequest(JSON.stringify(authProps))
         .then(getAddAuthRequestAdaptor(amplify.getProjectConfig().frontend))
         .then(getAddAuthHandler(context));
+  const backEndDir = context.amplify.pathManager.getBackendDirPath();
+  const resourceDir = path.normalize(path.join(backEndDir, 'auth', 'VideoAuth'));
+  const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/cli-inputs.json`));
+  parameters.cognitoConfig.autoVerifiedAttributes = ['email'];
+  fs.writeFileSync(`${resourceDir}/cli-inputs.json`, JSON.stringify(parameters, null, 2));
 }
 
 async function editGraphQL(context, apiName) {
