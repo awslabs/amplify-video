@@ -163,7 +163,7 @@ async function setupAuth(context) {
 
   const pluginAuthInfo = context.pluginPlatform.plugins['auth'][0];
   const { getAddAuthRequestAdaptor } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/utils/auth-request-adaptors.js`);
-  const { getAddAuthHandler } = require(`${pluginAuthI7nfo.packageLocation}/lib/provider-utils/awscloudformation/handlers/resource-handlers.js`);
+  const { getAddAuthHandler } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/handlers/resource-handlers.js`);
   await validateAddAuthRequest(JSON.stringify(authProps))
         .then(getAddAuthRequestAdaptor(amplify.getProjectConfig().frontend))
         .then(getAddAuthHandler(context));
