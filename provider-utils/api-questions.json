@@ -13,7 +13,7 @@
                 "value": "AMAZON_COGNITO_USER_POOLS"
             }
         ],
-        "default": "API_KEY",
+        "default": "AMAZON_COGNITO_USER_POOLS",
         "required": true
     },
     "permissionSchema": {
