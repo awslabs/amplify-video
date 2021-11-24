@@ -61,6 +61,7 @@ exports.handler = async (event, context, callback) => {
       channelItem.streamKeyArn = newChannel.streamKey.arn;
       channelItem.channelArn = newChannel.channel.arn;
       channelItem.streamURL = newChannel.channel.playbackUrl;
+      channelItem.ingestEndpoint = newChannel.channel.ingestEndpoint;
       callback(null, channelItem);
     }
   } catch (e) {
