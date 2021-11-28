@@ -67,7 +67,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
 
-
   if (!fs.existsSync(`${targetDir}/video/${props.shared.resourceName}/`)) {
     fs.mkdirSync(`${targetDir}/video/${props.shared.resourceName}/`, { recursive: true });
   }
@@ -136,7 +135,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
         context.print.error(e.message);
       }
       const advTemplate = await inquirer.prompt(encodingTemplateName);
-      props.template.name = advTemplate.encodingTemplate;
+      props.template.name = advTemplate.encodingTemplateName;
       const params = {
         Name: props.template.name,
       };
@@ -157,7 +156,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       }
 
       // determine the outputRendition of the template (HLS or DASH)
-      const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${advTemplate.encodingTemplate}`, { encoding: 'utf8', flag: 'r' }));
+      const currentTemplate = jobTemplate.JobTemplate;
 
       for (let counter = 0; counter < currentTemplate.Settings.OutputGroups.length; counter++) {
         if (currentTemplate.Settings.OutputGroups[0].OutputGroupSettings.Type.includes('DASH')) {
@@ -172,7 +171,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   } else {
     props.template.name = template.encodingTemplate;
 
-
     const currentTemplate = JSON.parse(fs.readFileSync(`${pluginDir}/templates/${template.encodingTemplate}`, { encoding: 'utf8', flag: 'r' }));
 
     for (let counter = 0; counter < currentTemplate.Settings.OutputGroups.length; counter++) {
@@ -182,7 +180,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
         outputRendition.push('HLS');
       }
     }
-
 
     props.template.type = outputRendition;
 

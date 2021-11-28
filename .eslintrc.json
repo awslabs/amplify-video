@@ -1,6 +1,6 @@
 {
 	"plugins": ["jest"],
-	"extends": "airbnb-base",
+	"extends": ["airbnb-base", "plugin:jest/recommended"],
     "rules": {
     	"no-param-reassign": "off",
     	"no-return-await" : "off",

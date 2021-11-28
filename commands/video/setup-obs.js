@@ -14,7 +14,7 @@ module.exports = {
       return;
     }
 
-    const filteredProjects = Object.keys(amplifyMeta[category]).filter(project => (
+    const filteredProjects = Object.keys(amplifyMeta[category]).filter((project) => (
       amplifyMeta[category][project].serviceType === 'livestream' || amplifyMeta[category][project].serviceType === 'ivs'));
     if (filteredProjects.length === 0) {
       context.print.error('You have no livestreaming projects.');

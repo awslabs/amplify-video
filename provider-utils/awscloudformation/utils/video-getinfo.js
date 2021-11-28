@@ -20,8 +20,6 @@ async function getInfoVideoAll(context) {
         }
         if ('oMediaLivePrimaryIngestUrl' in project.output) {
           prettifyOutputLive(context, project.output);
-        } else if ('oVODInputS3' in project.output) {
-          prettifyOutputVod(context, project.output);
         }
       }
     });
@@ -94,7 +92,6 @@ async function generateAWSExportsVideo(context) {
     }
   }
 }
-
 
 async function getVideoInfo(context, resourceName) {
   const amplifyMeta = context.amplify.getProjectMeta();

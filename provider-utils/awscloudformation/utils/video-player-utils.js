@@ -3,26 +3,61 @@ const ora = require('ora');
 const ejs = require('ejs');
 const inquirer = require('inquirer');
 const xmlParser = require('xml2js');
+const { parse } = require('node-html-parser');
 const { exec } = require('./headless-mode');
 
 module.exports = {
   getProjectConfig,
   fileExtension,
   getServiceUrl,
-  isVLCKitInstalled,
+  isDependencyInstalled,
   installIosDependencies,
   checkNpmDependencies,
   genIosSourcesAndHeaders,
   parseAndroidManifest,
   isGradleDependencyInstalled,
   appendGradleDependency,
+  includesHTML,
+  insertAdjacentHTML,
+  getProjectIndexHTMLPath,
+};
+
+const FRAMEWORK_DATA = {
+  react: {
+    extension: 'jsx',
+    static: 'public',
+  },
+  angular: {
+    extension: 'ts',
+    static: 'src',
+  },
+  vue: {
+    extension: 'vue',
+    static: 'public',
+  },
+  ember: {
+    extension: 'js',
+    static: 'app',
+  },
+  ionic: {
+    extension: 'ts',
+    static: 'src',
+  },
+  ios: {
+    extension: 'swift',
+  },
 };
 
 function getProjectConfig(context) {
   const projectConfigFilePath = context.amplify.pathManager.getProjectConfigFilePath();
-  let projectConfig = fs.readFileSync(projectConfigFilePath, { encoding: 'utf-8' });
-  projectConfig = JSON.parse(projectConfig);
-  return projectConfig;
+  return context.amplify.readJsonFile(projectConfigFilePath);
+}
+
+function getProjectIndexHTMLPath(context) {
+  const { amplify } = context;
+  const { framework } = getProjectConfig(context)[getProjectConfig(context).frontend];
+  const rootPath = amplify.pathManager.searchProjectRootPath();
+  return `${rootPath}/${FRAMEWORK_DATA[framework].static}/index.html`;
 }
 
 async function parseAndroidManifest(path) {
@@ -41,26 +76,12 @@ function appendGradleDependency(buildGradlePath, dependency) {
     buildGradlePath,
     fs
       .readFileSync(buildGradlePath, 'utf8')
-      .replace(/[^ \t]dependencies {(\r\n|\n)/, match => `${match}\timplementation '${dependency}'\n`),
+      .replace(/[^ \t]dependencies {(\r\n|\n)/, (match) => `${match}\timplementation '${dependency}'\n`),
   );
 }
 
 function fileExtension(framework) {
-  switch (framework) {
-    case 'react':
-      return 'jsx';
-    case 'vue':
-      return 'vue';
-    case 'angular':
-      return 'ts';
-    case 'ember':
-      return 'js';
-    case 'ionic':
-      return 'ts';
-    case 'ios':
-      return 'swift';
-    default:
-  }
+  return FRAMEWORK_DATA[framework].extension;
 }
 
 function getServiceUrl(amplifyVideoMeta) {
@@ -80,6 +101,18 @@ function getServiceUrl(amplifyVideoMeta) {
   }
 }
 
+function includesHTML(sourcePath, selector, text) {
+  const root = parse(fs.readFileSync(sourcePath), { comment: true });
+  return root.querySelector(selector).toString().includes(text);
+}
+
+function insertAdjacentHTML(sourcePath, selector, position, text) {
+  const root = parse(fs.readFileSync(sourcePath), { comment: true });
+  const element = root.querySelector(selector);
+  element.insertAdjacentHTML(position, `\t${text}\n`);
+  fs.writeFileSync(sourcePath, root.toString(), { encoding: 'utf-8' });
+}
+
 function genIosSourcesAndHeaders(context, props, extension) {
   let template;
   const { amplify } = context;
@@ -94,7 +127,7 @@ function genIosSourcesAndHeaders(context, props, extension) {
   }
 }
 
-function isVLCKitInstalled(podfile, projectName) {
+function isDependencyInstalled(podfile, projectName, dependencyKey) {
   if (podfile.target_definitions[0].children) {
     const { children } = podfile.target_definitions[0];
     if (children.length > 0) {
@@ -103,9 +136,17 @@ function isVLCKitInstalled(podfile, projectName) {
           if (!child.dependencies) {
             return false;
           }
-          return child.dependencies.some(dependency => dependency.MobileVLCKit);
+          return child.dependencies.includes(dependencyKey)
+          || child.dependencies.some((dependency) => dependency[dependencyKey]);
         }
-        return false;
+        if (!child.children) return false;
+        return child.children.some((subChildren) => {
+          if (!subChildren.dependencies) {
+            return false;
+          }
+          return subChildren.dependencies.includes(dependencyKey)
+          || child.dependencies.some((dependency) => dependency[dependencyKey]);
+        });
       });
     }
   }
@@ -123,17 +164,18 @@ function addPodEntry(
   podName,
   podVersion,
 ) {
-  const platform = `platform :ios, '${platformVersion}'`;
-  const pod = `pod '${podName}', '~>${podVersion}'`;
+  const pod = podVersion ? `pod '${podName}', '~>${podVersion}'` : `pod '${podName}'`;
   const { line, indentation } = linesToAddEntry;
 
   function getLineToAdd(newEntry, offset) {
     const spaces = Array(offset + 1).join(' ');
     return spaces + newEntry;
   }
-
   podLines.splice(line, 0, getLineToAdd(pod, indentation));
-  podLines.splice(line, 0, getLineToAdd(platform, indentation));
+  if (platformVersion) {
+    const platform = `platform :ios, '${platformVersion}'`;
+    podLines.splice(line, 0, getLineToAdd(platform, indentation));
+  }
 }
 
 function listTargets(podLines) {
@@ -159,7 +201,7 @@ function savePodFile(podfilePath, podLines) {
   fs.writeFileSync(podfilePath, newPodfile);
 }
 
-async function installIosDependencies(context) {
+async function installIosDependencies(context, dependency) {
   const { amplify } = context;
   const projectRootPath = amplify.pathManager.searchProjectRootPath();
 
@@ -178,16 +220,21 @@ async function installIosDependencies(context) {
       },
     ];
     const props = await inquirer.prompt(chooseTarget);
-    if (isVLCKitInstalled(podFileData, props.podTarget.target)) {
-      context.print.info('Podfile already contains MobileVLCKit');
+    if (isDependencyInstalled(podFileData, props.podTarget.target, dependency.podName)) {
+      context.print.info(`Podfile already contains ${dependency.podName}`);
       const spinner = ora('Installing dependencies...');
       spinner.start();
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');
     } else {
-      addPodEntry(pod, props.podTarget, '8.4', 'MobileVLCKit', '3.3.0');
+      if (dependency.podVersion) {
+        addPodEntry(pod, props.podTarget, dependency.platformVersion,
+          dependency.podName, dependency.podVersion);
+      } else {
+        addPodEntry(pod, props.podTarget, '', dependency.podName, '');
+      }
       savePodFile(`${projectRootPath}/Podfile`, pod);
-      const spinner = ora('Installing MobileVLCKit with CocoaPods...');
+      const spinner = ora(`Installing ${dependency.podName} with CocoaPods...`);
       spinner.start();
       await exec('pod', ['install'], true);
       spinner.succeed('Configuration complete.');
@@ -199,8 +246,7 @@ async function installIosDependencies(context) {
 
 function checkNpmDependencies(context, dependency) {
   const projectRootPath = context.amplify.pathManager.searchProjectRootPath();
-  const packageJSONFile = fs.readFileSync(`${projectRootPath}/package.json`, { encoding: 'utf-8' });
-  const packageJSON = JSON.parse(packageJSONFile);
+  const packageJSON = context.amplify.readJsonFile(`${projectRootPath}/package.json`);
   if (!packageJSON.dependencies[dependency]) {
     return false;
   }

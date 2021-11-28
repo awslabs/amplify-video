@@ -47,7 +47,7 @@ Resources:
           Resource:
           - !Join
             - ''
-            - - arn:aws:s3:::'
+            - - 'arn:aws:s3:::'
               - !Ref OutputBucket
               - "/${cognito-identity.amazonaws.com:sub}/*"
 

@@ -38,6 +38,15 @@ Parameters:
     Description: API Endpoint URL
     Default: NONE
 <% } -%>
+<% if (props.status.reportStatus) { -%>  
+  pSnsTopicName:
+    Type: String
+    Description: Name of the SNS topic for MediaConvert status events
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: AmplifyIvsChannelEvents
+<% }  -%>
+
+
 Conditions:
   HasEnvironmentParameter:
     !Not [!Equals [!Ref env, NONE]]
@@ -75,6 +84,36 @@ Outputs:
         pLatencyMode: !Ref pLatencyMode
         pQuality: !Ref pQuality
 
+  
+
+<% if (props.status.reportStatus) { -%>  
+  rSnsInvokeLambdaSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IvsSnsSetup.template"
+      Parameters:
+        env: !Ref env
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pSnsTopicName: !Ref pSnsTopicName
+        pFunctionHash: "<%= props.hashes.IvsStatusLambda %>"
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'IvsChannelStatusLambda'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'IvsChannelStatusLambda'
+        
+<% }  -%>
+
+
+  
 Outputs:
   oVideoOutput:
     Value: !GetAtt rIVSChannel.Outputs.oVideoOutput

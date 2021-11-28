@@ -4,7 +4,6 @@ const fs = require('fs-extra');
 const { pushTemplates } = require('./provider-utils/awscloudformation/utils/video-staging');
 const { createCDNEnvVars } = require('./provider-utils/awscloudformation/service-walkthroughs/vod-push');
 
-
 async function add(context, providerName, service) {
   const options = {
     service,

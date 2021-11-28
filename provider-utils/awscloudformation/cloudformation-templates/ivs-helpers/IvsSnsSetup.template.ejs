@@ -1,5 +1,5 @@
 Description: 
-  "MediaConvert notifications sent to SNS and then forwarded to Lambda"
+  "IVS notifications sent to SNS and then forwarded to Lambda"
 
 Parameters:
   env:
@@ -16,59 +16,50 @@ Parameters:
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
     Default: vod-helpers
-  pFunctionName:
-    Type: String
-    Description: Name of function
-    Default: arn-default
-  pFunctionHash:
-    Type: String
-    Description: FunctionHash
-    Default: default
   pSnsTopicName:
     Type: String
     Description: Topic Name
     Default: default
-<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
-  GraphQLAPIId: 
+  pFunctionName:
     Type: String
-    Description: GraphQL API Id
-  GraphQLEndpoint:
+    Description: Function Name
+    Default: IvsChannelStatusLambda
+  pFunctionHash:
     Type: String
-    Description: GraphQL endpoint
-<% } -%>
-
+    Description: FunctionHash
+    Default: default
 
 Resources:
 
-  MediaConvertNotificationsSNS:
+  IvsNotificationsSNS:
     Type: AWS::SNS::Topic
     
-  MediaConvertEventsRule:
+  IvsEventsRule:
     Type: AWS::Events::Rule
     Properties:
-        Description: "Event rule for MediaConvert"
+        Description: "Event rule for IVS"
         EventPattern: 
             source:
-              - aws.mediaconvert
+              - aws.ivs
             detail-type:
-              - "MediaConvert Job State Change"
+              - "IVS Stream State Change"
         State: ENABLED
         Targets:
-            - Arn: !Ref MediaConvertNotificationsSNS
-              Id: MediaConvertNotificationsSNS
+            - Arn: !Ref IvsNotificationsSNS
+              Id: IvsNotificationsSNS
 
-  rMediaConvertNotificationsSNSPolicy:
+  rIvsNotificationsSNSPolicy:
     Type: 'AWS::SNS::TopicPolicy'
     Properties:
       Topics:
-        - !Ref MediaConvertNotificationsSNS
+        - !Ref IvsNotificationsSNS
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Sid: "1"
             Action: 'sns:Publish'
-            Resource: !Ref MediaConvertNotificationsSNS
+            Resource: !Ref IvsNotificationsSNS
             Principal:
               AWS: '*'
             Condition:
@@ -79,30 +70,25 @@ Resources:
             Action: "sns:Publish"
             Principal:
               Service : 'events.amazonaws.com'
-            Resource: !Ref MediaConvertNotificationsSNS
-<% if (props.sns.snsFunction) { -%>
-  rMediaconvertStatusLambda:
+            Resource: !Ref IvsNotificationsSNS
+            
+<% if (props.status.lambda) { -%>
+  rIvsStatusLambda:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Ref pFunctionName
-      Description: Invoked on MediaConvert status events 
+      Description: Invoked on IVS status events 
       Handler: index.handler
-      Role: !GetAtt rMediaconvertStatusLambdaRole.Arn
+      Role: !GetAtt rIvsStatusLambdaRole.Arn
       Runtime: nodejs14.x
       Timeout: 30
       Code:
         S3Bucket: !Ref pS3
         S3Key: !Sub
-          - vod-helpers/MediaConvertStatusLambda-${hash}.zip
+          - ivs-helpers/IvsStatusLambda-${hash}.zip
           - { hash: !Ref pFunctionHash }
-<% if (props.parameters && props.parameters.GraphQLAPIId) { -%>
-      Environment:
-        Variables:
-          GraphQLAPIId: !Ref GraphQLAPIId
-          GraphQLEP: !Ref GraphQLEndpoint
-<% } -%>
 
-  rMediaconvertStatusLambdaRole:
+  rIvsStatusLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -117,7 +103,7 @@ Resources:
               - sts:AssumeRole
       Policies:
         -
-          PolicyName: !Sub "${AWS::AccountId}-mediaconvert-status-processing-role"
+          PolicyName: !Sub "${AWS::AccountId}-ivs-status-processing-role"
           PolicyDocument:
             Statement:
                -
@@ -133,7 +119,7 @@ Resources:
   rSNSLambdaPermissions:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref rMediaconvertStatusLambda
+      FunctionName: !Ref rIvsStatusLambda
       Action: lambda:InvokeFunction
       Principal: sns.amazonaws.com
       SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:* 
@@ -142,7 +128,7 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       Protocol: lambda
-      Endpoint: !GetAtt rMediaconvertStatusLambda.Arn
-      TopicArn: !Ref MediaConvertNotificationsSNS
+      Endpoint: !GetAtt rIvsStatusLambda.Arn
+      TopicArn: !Ref IvsNotificationsSNS
       
 <% } -%>

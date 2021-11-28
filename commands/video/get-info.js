@@ -23,7 +23,18 @@ module.exports = {
         default: Object.keys(amplifyMeta[category])[0],
       },
     ];
-    const props = await inquirer.prompt(chooseProject);
+
+    let props;
+    if (context.parameters.options.default) {
+      if (typeof context.parameters.options.default === 'boolean') {
+        props = { resourceName: chooseProject[0].default };
+      } else {
+        props = { resourceName: context.parameters.options.default };
+      }
+      console.log(props);
+    } else {
+      props = await inquirer.prompt(chooseProject);
+    }
 
     const options = amplifyMeta.video[props.resourceName];
 
