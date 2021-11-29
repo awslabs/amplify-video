@@ -52,6 +52,31 @@ Conditions:
     !Not [!Equals [!Ref env, NONE]]
 
 Resources:
+<% if (props.status.reportStatus) { -%>  
+  rSnsInvokeLambdaSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IvsSnsSetup.template"
+      Parameters:
+        env: !Ref env
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pSnsTopicName: !Ref pSnsTopicName
+        pFunctionHash: "<%= props.hashes.IvsStatusLambda %>"
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'IvsChannelStatusLambda'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'IvsChannelStatusLambda'
+        
+<% }  -%>
 <% if(props.channel.cvsEnable) { -%>
   rChannelManagerLambda:
     Type: AWS::CloudFormation::Stack
@@ -84,36 +109,6 @@ Outputs:
         pLatencyMode: !Ref pLatencyMode
         pQuality: !Ref pQuality
 
-  
-
-<% if (props.status.reportStatus) { -%>  
-  rSnsInvokeLambdaSetup:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IvsSnsSetup.template"
-      Parameters:
-        env: !Ref env
-        pS3: !Ref pS3
-        pSourceFolder: !Ref pSourceFolder
-        pSnsTopicName: !Ref pSnsTopicName
-        pFunctionHash: "<%= props.hashes.IvsStatusLambda %>"
-        pFunctionName:
-          !If
-            - HasEnvironmentParameter
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - !Ref env
-                - 'IvsChannelStatusLambda'
-            - !Join
-              - '-'
-              - - !Ref pProjectName
-                - 'IvsChannelStatusLambda'
-        
-<% }  -%>
-
-
-  
 Outputs:
   oVideoOutput:
     Value: !GetAtt rIVSChannel.Outputs.oVideoOutput
