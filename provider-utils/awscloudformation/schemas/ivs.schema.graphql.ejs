@@ -11,5 +11,5 @@ type Channel @model @auth(rules: [{allow: owner}, {allow: private, operations: [
 }
 
 type Mutation {
-  createStreamKey(id: ID): Channel @function(name: "channelManager-${env}") @auth(rules: [{allow: owner}])
+  createStreamKey(id: ID): Channel @function(name: "channelManager-${env}")
 }

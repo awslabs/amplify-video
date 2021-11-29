@@ -9,6 +9,9 @@ const myTableName = `Channel-${apiGraphQLAPIIdOutput}-${environment}`;
 
 exports.handler = async (event, context, callback) => {
   const eventId = event.arguments.id;
+  if (event.identity.claims.username !== event.arguments.id){
+    return;
+  }
   try {
     const channelInfo = await documentClient.get({
       TableName: myTableName,
