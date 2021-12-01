@@ -50,21 +50,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
 
   const createChannelQuestions = [
     {
-      type: question.cvsEnable.type,
-      name: question.cvsEnable.key,
-      message: question.cvsEnable.question,
-      choices: question.cvsEnable.options,
-      default: question.cvsEnable.default,
-      when(answers) {
-        return headlessMode.autoAnswer({
-          context,
-          answers,
-          key: question.cvsEnable.key,
-          value: args.cvsEnable ? args.cvsEnable : question.cvsEnable.default,
-        });
-      },
-    },
-    {
       type: question.channelQuality.type,
       name: question.channelQuality.key,
       message: question.channelQuality.question,
@@ -91,6 +76,21 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
           answers,
           key: question.channelLatency.key,
           value: args.channelLatency ? args.channelLatency : question.channelLatency.default,
+        });
+      },
+    },
+    {
+      type: question.cvsEnable.type,
+      name: question.cvsEnable.key,
+      message: question.cvsEnable.question,
+      choices: question.cvsEnable.options,
+      default: question.cvsEnable.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.cvsEnable.key,
+          value: args.cvsEnable ? args.cvsEnable : question.cvsEnable.default,
         });
       },
     },

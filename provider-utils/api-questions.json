@@ -1,7 +1,7 @@
 {
     "selectAuthModel": {
         "key": "authModel",
-        "question": "Select your Auth Model:",
+        "question": "Select your API Authentication Model:",
         "type": "list",
         "options": [
             {
@@ -9,7 +9,7 @@
                 "value": "API_KEY"
             },
             {
-                "name": "Auth",
+                "name": "Amplify Auth",
                 "value": "AMAZON_COGNITO_USER_POOLS"
             }
         ],
