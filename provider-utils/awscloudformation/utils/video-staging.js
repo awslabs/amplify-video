@@ -59,6 +59,8 @@ async function build(context, resourceName, projectType, props) {
     props = getVODEnvVars(context, props, resourceName);
   } else if (projectType === 'livestream') {
     props = getLivestreamEnvVars(context, props);
+  } else if (projectType === 'ivs') {
+    props = getIVSEnvVars(context, props);
   }
   await syncHelperCF(context, props, projectType);
   props.hashes = await generateLambdaHashes(context, props, projectType);
@@ -136,6 +138,16 @@ function getVODEnvVars(context, props, resourceName) {
     bucket: projectBucket,
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
     bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
+  };
+  return props;
+}
+
+function getIVSEnvVars(context, props) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const projectBucket = amplifyMeta.providers.awscloudformation.DeploymentBucketName;
+  props.env = {
+    bucket: projectBucket,
   };
   return props;
 }

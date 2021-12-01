@@ -9,7 +9,7 @@ Parameters:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucket %>"
+    Default: "<%= props.env.bucket %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
