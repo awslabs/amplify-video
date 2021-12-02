@@ -64,7 +64,7 @@
         "key": "reportStatus",
         "question": "Report status of the channel",
         "type": "confirm",
-        "default": "true",
+        "default": "false",
         "required": true,
         "options" : [
             {
@@ -81,7 +81,7 @@
         "key": "reportStatusLambda",
         "question": "Invoke Lambda on channel status event",
         "type": "confirm",
-        "default": "true",
+        "default": "false",
         "required": true
     }
 }
