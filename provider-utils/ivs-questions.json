@@ -62,7 +62,7 @@
     },
     "reportStatus" : {
         "key": "reportStatus",
-        "question": "Report status of the channel",
+        "question": "Report status of the channel?",
         "type": "confirm",
         "default": false,
         "required": true,
@@ -79,7 +79,7 @@
     },
     "reportStatusLambda" : {
         "key": "reportStatusLambda",
-        "question": "Invoke Lambda on channel status event",
+        "question": "Invoke Lambda on channel status event?",
         "type": "confirm",
         "default": false,
         "required": true
