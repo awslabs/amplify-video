@@ -95,12 +95,12 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       },
     },
   ];
+
   const statusReporting = [
     {
       type: question.reportStatus.type,
       name: question.reportStatus.key,
       message: question.reportStatus.question,
-      choices: question.reportStatus.options,
       default: question.reportStatus.default,
       when(answers) {
         return headlessMode.autoAnswer({
@@ -118,7 +118,6 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
       type: question.reportStatusLambda.type,
       name: question.reportStatusLambda.key,
       message: question.reportStatusLambda.question,
-      choices: question.reportStatusLambda.options,
       default: question.reportStatusLambda.default,
       when(answers) {
         return headlessMode.autoAnswer({
