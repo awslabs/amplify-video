@@ -137,8 +137,10 @@ async function setupWebProjects(context, resourceName) {
   switch (framework) {
     case 'angular':
       fs.mkdirSync(`${projectRootPath}/${config.SourceDir}/app/video-player`, { recursive: true });
-      fs.copyFileSync(`${__dirname}/../video-player-templates/web/video-player.component.scss`,
-        `${projectRootPath}/${config.SourceDir}/app/video-player/video-player.component.scss`);
+      fs.copyFileSync(
+        `${__dirname}/../video-player-templates/web/video-player.component.scss`,
+        `${projectRootPath}/${config.SourceDir}/app/video-player/video-player.component.scss`,
+      );
       fs.writeFileSync(`${projectRootPath}/${config.SourceDir}/app/video-player/video-player.component.${videoPlayerUtils.fileExtension(framework)}`, appendVideoTemplate);
       context.print.info("Don't forget to add the component to your angular module");
       break;

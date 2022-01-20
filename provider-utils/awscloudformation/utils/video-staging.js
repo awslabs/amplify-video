@@ -409,13 +409,29 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
         }
         if (fs.existsSync(`${customDirPath}/${filePath}/${lambdaName}`)) {
           promiseFilesToUpload.push(
-            zipLambdaFunctionsAndPush(context, lambdaName, `${customDirPath}/${filePath}/${lambdaName}`,
-              customDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
+            zipLambdaFunctionsAndPush(
+              context,
+              lambdaName,
+              `${customDirPath}/${filePath}/${lambdaName}`,
+              customDirPath,
+              s3Client,
+              targetBucket,
+              stackFolder,
+              props.hashes[lambdaName],
+            ),
           );
         } else {
           promiseFilesToUpload.push(
-            zipLambdaFunctionsAndPush(context, lambdaName, `${buildDirPath}/${filePath}/${lambdaName}`,
-              buildDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
+            zipLambdaFunctionsAndPush(
+              context,
+              lambdaName,
+              `${buildDirPath}/${filePath}/${lambdaName}`,
+              buildDirPath,
+              s3Client,
+              targetBucket,
+              stackFolder,
+              props.hashes[lambdaName],
+            ),
           );
         }
       });
@@ -432,8 +448,16 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
   await Promise.all(promiseFilesToUpload);
 }
 
-async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
-  s3Client, targetBucket, stackFolder, hash) {
+async function zipLambdaFunctionsAndPush(
+  context,
+  lambdaName,
+  lambdaDir,
+  zipDir,
+  s3Client,
+  targetBucket,
+  stackFolder,
+  hash,
+) {
   const newFilePath = `${lambdaName}.zip`;
   const zipName = `${zipDir}/${lambdaName}.zip`;
   let hashName = `${lambdaName}-${hash}.zip`;
@@ -466,8 +490,15 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
   await archive.finalize();
 }
 
-async function uploadFile(context, s3Client, hostingBucketName, distributionDirPath, filePath,
-  stackFolder, nameOverride) {
+async function uploadFile(
+  context,
+  s3Client,
+  hostingBucketName,
+  distributionDirPath,
+  filePath,
+  stackFolder,
+  nameOverride,
+) {
   let relativeFilePath = path.relative(distributionDirPath, filePath);
 
   relativeFilePath = relativeFilePath.replace(/\\/g, '/');

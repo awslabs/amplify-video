@@ -11,7 +11,8 @@
     	"global-require": "off",
     	"import/no-dynamic-require": "off",
 		"consistent-return": "off",
-		"no-plusplus": "off"
+		"no-plusplus": "off",
+		"import/no-import-module-exports":"off"
 	},
 	"env": {
 		"jest/globals": true

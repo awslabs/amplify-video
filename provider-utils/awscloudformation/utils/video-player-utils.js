@@ -228,8 +228,13 @@ async function installIosDependencies(context, dependency) {
       spinner.succeed('Configuration complete.');
     } else {
       if (dependency.podVersion) {
-        addPodEntry(pod, props.podTarget, dependency.platformVersion,
-          dependency.podName, dependency.podVersion);
+        addPodEntry(
+          pod,
+          props.podTarget,
+          dependency.platformVersion,
+          dependency.podName,
+          dependency.podVersion,
+        );
       } else {
         addPodEntry(pod, props.podTarget, '', dependency.podName, '');
       }
