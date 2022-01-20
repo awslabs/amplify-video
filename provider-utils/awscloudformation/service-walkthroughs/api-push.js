@@ -1,13 +1,14 @@
+import {
+  validateAddApiRequest,
+  validateAddAuthRequest,
+} from 'amplify-util-headless-input';
+
 const fs = require('fs-extra');
 const path = require('path');
 const ejs = require('ejs');
 const inquirer = require('inquirer');
 const { generateIAMAdmin, generateIAMAdminPolicy } = require('./vod-roles');
 const question = require('../../api-questions.json');
-
-import { validateAddApiRequest, validateUpdateApiRequest,
-         validateAddAuthRequest, validateUpdateAuthRequest} from 'amplify-util-headless-input';
-
 
 module.exports = {
   setupAPI,
@@ -17,7 +18,7 @@ async function setupAPI(context, props, projectType) {
   let apiName = getAPIName(context);
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'api', apiName));
-  
+
   if (apiName !== '') {
     context.print.info(`Using ${apiName} to manage API`);
     // Add check to API for API_KEY or Cognito
@@ -30,7 +31,7 @@ async function setupAPI(context, props, projectType) {
         name: question.overrideSchema.key,
         message: question.overrideSchema.question,
         default: question.overrideSchema.default,
-      }
+      },
     ];
     const cmsOverideAnswer = await inquirer.prompt(cmsOveride);
     if (cmsOverideAnswer.overrideSchema) {
@@ -39,7 +40,7 @@ async function setupAPI(context, props, projectType) {
       await fs.appendFileSync(`${resourceDir}/schema.graphql`, genSchema);
     }
     await editGraphQL(context, apiName);
-    
+
     props.parameters.GraphQLAPIId = {
       'Fn::GetAtt': [
         `api${apiName}`,
@@ -71,7 +72,7 @@ async function setupAPI(context, props, projectType) {
 
   if (authType.authModel === 'AMAZON_COGNITO_USER_POOLS') {
     const authName = getAuthName(context);
-    if (authName && authName !== ''){
+    if (authName && authName !== '') {
       context.print.info(`Using ${authName} for your Authentication`);
     } else {
       await setupAuth(context);
@@ -103,18 +104,18 @@ async function setupAPI(context, props, projectType) {
   const schema = await schemaMaker(context, props, projectType);
   apiName = 'VideoManagementApi';
   const apiProps = {
-    version:1,
-    serviceConfiguration:{
-      serviceName:'AppSync',
+    version: 1,
+    serviceConfiguration: {
+      serviceName: 'AppSync',
       apiName,
       transformSchema: schema,
       defaultAuthType: {
-        mode:authType.authModel,
-      }
-    }
+        mode: authType.authModel,
+      },
+    },
   };
-  const pluginAPIInfo = context.pluginPlatform.plugins['api'][0];
-  const {getCfnApiArtifactHandler} = require(`${pluginAPIInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`);
+  const pluginAPIInfo = context.pluginPlatform.plugins.api[0];
+  const { getCfnApiArtifactHandler } = require(`${pluginAPIInfo.packageLocation}/lib/provider-utils/awscloudformation/cfn-api-artifact-handler.js`);
   const validateAPIProps = await validateAddApiRequest(JSON.stringify(apiProps));
   await getCfnApiArtifactHandler(context).createArtifacts(validateAPIProps);
 
@@ -139,34 +140,34 @@ async function setupAPI(context, props, projectType) {
 async function setupAuth(context) {
   const { amplify } = context;
   const authProps = {
-    version:1,
+    version: 1,
     resourceName: 'VideoAuth',
-    serviceConfiguration:{
+    serviceConfiguration: {
       includeIdentityPool: true,
       identityPoolConfiguration: {
       },
       serviceName: 'Cognito',
       userPoolConfiguration: {
-        signinMethod: "USERNAME",
+        signinMethod: 'USERNAME',
         requiredSignupAttributes: [
-          "EMAIL",
+          'EMAIL',
         ],
         readAttributes: [
-          "EMAIL",
+          'EMAIL',
         ],
         writeAttributes: [
-          "EMAIL",
-        ]
-      }
-    }
+          'EMAIL',
+        ],
+      },
+    },
   };
 
-  const pluginAuthInfo = context.pluginPlatform.plugins['auth'][0];
+  const pluginAuthInfo = context.pluginPlatform.plugins.auth[0];
   const { getAddAuthRequestAdaptor } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/utils/auth-request-adaptors.js`);
   const { getAddAuthHandler } = require(`${pluginAuthInfo.packageLocation}/lib/provider-utils/awscloudformation/handlers/resource-handlers.js`);
   await validateAddAuthRequest(JSON.stringify(authProps))
-        .then(getAddAuthRequestAdaptor(amplify.getProjectConfig().frontend))
-        .then(getAddAuthHandler(context));
+    .then(getAddAuthRequestAdaptor(amplify.getProjectConfig().frontend))
+    .then(getAddAuthHandler(context));
   const backEndDir = context.amplify.pathManager.getBackendDirPath();
   const resourceDir = path.normalize(path.join(backEndDir, 'auth', 'VideoAuth'));
   const parameters = JSON.parse(fs.readFileSync(`${resourceDir}/cli-inputs.json`));
@@ -183,7 +184,7 @@ async function editGraphQL(context, apiName) {
       name: question.editAPI.key,
       message: question.editAPI.question,
       default: question.editAPI.default,
-  }];
+    }];
   if (fs.existsSync(`${resourceDir}/schema.graphql`)) {
     const currentSchema = fs.readFileSync(`${resourceDir}/schema.graphql`);
     if (!currentSchema.includes('videoObject') && !currentSchema.includes('vodAsset')) {
@@ -216,11 +217,9 @@ async function editGraphQL(context, apiName) {
     }
     // TODO: Add check if they switched schemas
   }
-
 }
 
 async function schemaMaker(context, props, projectType) {
-
   const appendSchemaTemplate = await fs.readFileSync(`${__dirname}/../schemas/${projectType}.schema.graphql.ejs`, { encoding: 'utf-8' });
   const appendSchema = ejs.render(appendSchemaTemplate, props);
 
@@ -329,7 +328,7 @@ async function authGroupHack(context, bucketName) {
 
           const policy = generateIAMAdminPolicy(resourceName, bucketName);
           if (!userGroup.customPolicies.some(
-            existingPolicy => existingPolicy.PolicyName === policy.PolicyName,
+            (existingPolicy) => existingPolicy.PolicyName === policy.PolicyName,
           )) {
             userGroup.customPolicies.push(policy);
           }
@@ -358,7 +357,6 @@ async function authGroupHack(context, bucketName) {
     });
   }
 }
-
 
 function updateUserPoolGroups(context, userPoolGroupList) {
   if (userPoolGroupList && userPoolGroupList.length > 0) {
