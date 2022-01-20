@@ -4,13 +4,13 @@ type VodAsset @model (subscriptions: {level: public})
 @auth(
   rules: [
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
-    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
+    {allow: owner},
 <% } -%>
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: groups, groups:["Admin"]},
 <% } -%>
 <% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: groups, groups:["Admin"]},
 <% } -%>
     {allow: private, operations: [read]}
   ]
@@ -29,13 +29,13 @@ type VideoObject @model
 @auth(
   rules: [
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("any")) { -%>
-    {allow: owner, ownerField: "owner", operations: [create, update, delete, read] },
+    {allow: owner},
 <% } -%>
 <% if (locals.permissions && locals.permissions.permissionSchema.includes("admin")) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: groups, groups:["Admin"]},
 <% } -%>
 <% if (!locals.permissions) { -%>
-    {allow: groups, groups:["Admin"], operations: [create, update, delete, read]},
+    {allow: groups, groups:["Admin"]},
 <% } -%>
     {allow: private, operations: [read]}
   ]

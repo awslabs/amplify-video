@@ -110,15 +110,19 @@ async function getVideoInfo(context, resourceName) {
 }
 
 async function prettifyOutputIVS(context, output) {
-  context.print.info(chalk.bold('\nInteractive Video Service:'));
-  context.print.blue('\nInput url:');
-  context.print.blue(chalk`{underline rtmps://${output.oVideoInputURL}}\n`);
-  context.print.blue('Stream Keys:');
-  context.print.blue(`${output.oVideoInputKey}\n`);
-  context.print.blue('Output url:');
-  context.print.blue(chalk`{underline ${output.oVideoOutput}}\n`);
-  context.print.blue('Channel ARN:');
-  context.print.blue(`${output.oVideoChannelArn}\n`);
+  if (output.oVideoInputURL) {
+    context.print.info(chalk.bold('\nInteractive Video Service:'));
+    context.print.blue('\nInput url:');
+    context.print.blue(chalk`{underline rtmps://${output.oVideoInputURL}}\n`);
+    context.print.blue('Stream Keys:');
+    context.print.blue(`${output.oVideoInputKey}\n`);
+    context.print.blue('Output url:');
+    context.print.blue(chalk`{underline ${output.oVideoOutput}}\n`);
+    context.print.blue('Channel ARN:');
+    context.print.blue(`${output.oVideoChannelArn}\n`);
+  } else {
+    context.print.blue('Video Management Service stood up. Start by using GraphQL endpoint to create your first livestream');
+  }
 }
 
 async function prettifyOutputLive(context, output) {

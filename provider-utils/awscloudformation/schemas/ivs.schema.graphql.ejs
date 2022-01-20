@@ -1,0 +1,15 @@
+
+type Channel @model @auth(rules: [{allow: owner}, {allow: private, operations: [read]}]) {
+  id: ID! @primaryKey
+  title: String!
+  description: String!
+  streamKey: String @auth(rules: [{allow: owner}])
+  channelArn: String @auth(rules: [{allow: owner}]) @index(name: "channelsByArn", queryField: "channelByArn")
+  streamURL: String
+  streamKeyArn: String @auth(rules: [{allow: owner}])
+  ingestEndpoint: String @auth(rules: [{allow: owner}])
+}
+
+type Mutation {
+  createStreamKey(id: ID): Channel @function(name: "channelManager-${env}")
+}

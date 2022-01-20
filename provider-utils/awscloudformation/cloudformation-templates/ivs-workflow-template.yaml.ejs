@@ -9,7 +9,7 @@ Parameters:
     Type: String
     Description: Store template and lambda package
     AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
-    Default: "<%= props.shared.bucket %>"
+    Default: "<%= props.env.bucket %>"
   pSourceFolder:
     Type: String
     Description: Store template and lambda package
@@ -28,12 +28,71 @@ Parameters:
     Type: String
     Description: Quality of channel
     Default: <%= props.channel.channelQuality %>
+<% if(props.channel.cvsEnable) { -%>
+  GraphQLAPIId:
+    Type: String
+    Description: API ID
+    Default: NONE
+  GraphQLEndpoint:
+    Type: String
+    Description: API Endpoint URL
+    Default: NONE
+<% } -%>
+<% if (props.status.reportStatus) { -%>  
+  pSnsTopicName:
+    Type: String
+    Description: Name of the SNS topic for MediaConvert status events
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: AmplifyIvsChannelEvents
+<% }  -%>
+
 
 Conditions:
   HasEnvironmentParameter:
     !Not [!Equals [!Ref env, NONE]]
 
 Resources:
+<% if (props.status.reportStatus) { -%>  
+  rSnsInvokeLambdaSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/IvsSnsSetup.template"
+      Parameters:
+        env: !Ref env
+        pS3: !Ref pS3
+        pSourceFolder: !Ref pSourceFolder
+        pSnsTopicName: !Ref pSnsTopicName
+        pFunctionHash: "<%= props.hashes.IvsStatusLambda %>"
+        pFunctionName:
+          !If
+            - HasEnvironmentParameter
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - !Ref env
+                - 'IvsChannelStatusLambda'
+            - !Join
+              - '-'
+              - - !Ref pProjectName
+                - 'IvsChannelStatusLambda'
+        
+<% }  -%>
+<% if(props.channel.cvsEnable) { -%>
+  rChannelManagerLambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${pS3}/${pSourceFolder}/Lambda-ChannelManager.template"
+      Parameters:
+        pS3: !Ref pS3
+        env: !Ref env
+        pLatencyMode: !Ref pLatencyMode
+        pQuality: !Ref pQuality
+        GraphQLAPIId: !Ref GraphQLAPIId
+        pFunctionHash: "<%= props.hashes.ChannelManager %>"
+Outputs:
+  oLambdaArn:
+    Value: !GetAtt rChannelManagerLambda.Outputs.LambdaArn
+<% } else { -%>
   rIVSChannel:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -59,3 +118,4 @@ Outputs:
     Value: !GetAtt rIVSChannel.Outputs.oVideoInputKey
   oVideoChannelArn:
     Value: !GetAtt rIVSChannel.Outputs.oVideoChannelArn
+<% } -%>

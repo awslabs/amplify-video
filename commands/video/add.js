@@ -28,6 +28,8 @@ module.exports = {
     }
 
     // Normal mode
+    // Hiding livestream as marking as old/unsupported.
+    delete serviceMetadata.livestream;
     return amplify.serviceSelectionPrompt(context, category, serviceMetadata).then((results) => {
       options = {
         service: category,

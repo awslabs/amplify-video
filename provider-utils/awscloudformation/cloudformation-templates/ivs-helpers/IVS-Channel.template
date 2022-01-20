@@ -1,4 +1,4 @@
-Description: S3 Workflow
+Description: IVS Channel Spin up
 
 Parameters:
   pProjectName:

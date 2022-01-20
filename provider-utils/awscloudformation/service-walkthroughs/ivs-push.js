@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const question = require('../../ivs-questions.json');
 const headlessMode = require('../utils/headless-mode');
+const { setupAPI } = require('./api-push');
 
 module.exports = {
   serviceQuestions,
@@ -14,7 +15,7 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
   // path.resolve(`${__dirname}/../default-values/${defaultValuesFilename}`);
   // const defaults = JSON.parse(fs.readFileSync(`${defaultLocation}`));
   // const targetDir = amplify.pathManager.getBackendDirPath();
-  const props = {};
+  let props = {};
   let nameDict = {};
 
   const { payload } = context.parameters.options;
@@ -46,7 +47,8 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
     props.shared = nameDict;
   }
   props.shared.bucket = projectMeta.providers.awscloudformation.DeploymentBucketName;
-  const createChannel = [
+
+  const createChannelQuestions = [
     {
       type: question.channelQuality.type,
       name: question.channelQuality.key,
@@ -77,10 +79,73 @@ async function serviceQuestions(context, options, defaultValuesFilename, resourc
         });
       },
     },
+    {
+      type: question.cvsEnable.type,
+      name: question.cvsEnable.key,
+      message: question.cvsEnable.question,
+      choices: question.cvsEnable.options,
+      default: question.cvsEnable.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.cvsEnable.key,
+          value: args.cvsEnable ? args.cvsEnable : question.cvsEnable.default,
+        });
+      },
+    },
   ];
 
-  const channelQuestions = await inquirer.prompt(createChannel);
+  const statusReporting = [
+    {
+      type: question.reportStatus.type,
+      name: question.reportStatus.key,
+      message: question.reportStatus.question,
+      default: question.reportStatus.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.reportStatus.key,
+          value: args.reportStatus ? args.reportStatus : question.reportStatus.default,
+        });
+      },
+    },
+  ];
+
+  const statusLambda = [
+    {
+      type: question.reportStatusLambda.type,
+      name: question.reportStatusLambda.key,
+      message: question.reportStatusLambda.question,
+      default: question.reportStatusLambda.default,
+      when(answers) {
+        return headlessMode.autoAnswer({
+          context,
+          answers,
+          key: question.reportStatusLambda.key,
+          value: args.reportStatusLambda
+            ? args.reportStatusLambda : question.reportStatusLambda.default,
+        });
+      },
+    },
+  ];
+
+  const channelQuestions = await inquirer.prompt(createChannelQuestions);
   props.channel = channelQuestions;
+
+  const statusQuestions = await inquirer.prompt(statusReporting);
+  props.status = statusQuestions;
+
+  if (statusQuestions.reportStatus === true) {
+    const statusQuestionsLambda = await inquirer.prompt(statusLambda);
+    props.status.lambda = statusQuestionsLambda.reportStatusLambda;
+  }
+
+  if (channelQuestions.cvsEnable) {
+    props.parameters = {};
+    props = await setupAPI(context, props, 'ivs');
+  }
 
   return props;
 }

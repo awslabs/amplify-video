@@ -5,13 +5,13 @@
   </a>
 </p>
 
-An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://aws-amplify.github.io/) and [AWS Media Services](https://aws.amazon.com/media-services/)
+An open source plugin for the Amplify CLI that makes it easy to incorporate video streaming into your mobile and web applications powered by [AWS Amplify](https://docs.amplify.aws/) and [AWS Media Services](https://aws.amazon.com/media-services/)
 
 Read more about Amplify Video on the [AWS Media Blog](https://aws.amazon.com/blogs/media/introducing_aws_amplify_video/)
 
 ## Installation
 
-Amplify Video is a [Category Plugin for AWS Amplify](https://aws-amplify.github.io/docs/cli-toolchain/plugins?sdk=js) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
+Amplify Video is a [Category Plugin for AWS Amplify](https://docs.amplify.aws/cli/plugins/plugins/) that provides video streaming resources to your Amplify project. It requires that you have the Amplify CLI installed on your system before installing the Amplify Video plugin
 
 To get started install the Amplify CLI via NPM as shown below or follow the [getting started guide](https://github.com/aws-amplify/amplify-cli/).
 
@@ -35,15 +35,14 @@ amplify video add
 
 ## Getting Started with Amplify Video
 
-* [Documentation](https://github.com/awslabs/amplify-video/wiki)
-* [Commands](https://github.com/awslabs/amplify-video/wiki/CLI-Reference)
-* [Getting Started with VOD](https://github.com/awslabs/amplify-video/wiki/Getting-Started-with-VOD)
-* [Getting Started with Live](https://github.com/awslabs/amplify-video/wiki/Getting-Started-with-Live)
+* [Documentation](https://docs.amplify-video.com/)
+* [Getting Started with VOD](https://docs.amplify-video.com/docs/Video-on-Demand/Getting-Started-with-VOD)
+* [Getting Started with Live](https://docs.amplify-video.com/docs/Live/Getting-Started-with-Live)
 
 ## Tutorials
 
 * [UnicornFlix](https://github.com/awslabs/unicornflix)
-* [UnicornTrivia](https://github.com/awslabs/aws-amplify-unicorntrivia-workshop)
+* [UnicornSports](https://catalog.us-east-1.prod.workshops.aws/v2/workshops/269c3965-c623-4b86-8d27-46fe91b48f3e/en-US)
 * [CodingCatDev Video Tutorial](https://www.youtube.com/watch?v=vM_YoZbLQQ0)
 
 ## Contributions

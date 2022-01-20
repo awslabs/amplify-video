@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [16.x]
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
@@ -15,7 +15,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Install eslint
-      run : npx install-peerdeps --dev eslint-config-airbnb
+      run : npx install-peerdeps --dev eslint-config-airbnb; npm i --dev eslint-plugin-jest;
     - name: eslint
       run : npm run lint
     - name: build

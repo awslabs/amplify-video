@@ -1,0 +1,74 @@
+{
+    "selectAuthModel": {
+        "key": "authModel",
+        "question": "Select your API Authentication Model:",
+        "type": "list",
+        "options": [
+            {
+                "name": "API Key",
+                "value": "API_KEY"
+            },
+            {
+                "name": "Amplify Auth",
+                "value": "AMAZON_COGNITO_USER_POOLS"
+            }
+        ],
+        "default": "AMAZON_COGNITO_USER_POOLS",
+        "required": true
+    },
+    "permissionSchema": {
+        "key": "permissionSchema",
+        "question": "Define your permission schema",
+        "type": "checkbox",
+        "options": [
+            {
+                "name": "Admins can only upload videos",
+                "value": "admin",
+                "checked": true,
+                "ignore": true
+            },
+            {
+                "name": "Any authenticated user can upload videos",
+                "value": "any",
+                "ignore": true
+            }
+        ],
+        "next": "overrideSchema"
+    },
+    "editAPI": {
+        "key": "editAPI",
+        "type": "confirm",
+        "question": "Do you want to edit your newly created model?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "ignore": true
+            }
+        ],
+        "default": true
+    },
+    "overrideSchema": {
+        "key": "overrideSchema",
+        "type": "confirm",
+        "question": "Do you want to override your GraphQL schema?",
+        "required": true,
+        "options": [
+            {
+                "value": "true",
+                "next": "editAPI",
+                "ignore": true
+            },
+            {
+                "value": "false",
+                "next": "editAPI",
+                "ignore": true
+            }
+        ],
+        "default": true
+    }
+}

@@ -8,13 +8,13 @@
      "provider":"awscloudformation"
   },
   "ivs":{
-   "alias":"Amazon Interactive Video Service Live Stream",
-   "serviceWalkthroughFilename":"ivs-push.js",
-   "cfnFilename":"ivs-workflow-template.yaml.ejs",
-   "stackFolder":"ivs-helpers",
-   "defaultValuesFilename":"ivs-defaults.json",
-   "provider":"awscloudformation"
-},
+      "alias":"Live Streaming",
+      "serviceWalkthroughFilename":"ivs-push.js",
+      "cfnFilename":"ivs-workflow-template.yaml.ejs",
+      "stackFolder":"ivs-helpers",
+      "defaultValuesFilename":"ivs-defaults.json",
+      "provider":"awscloudformation"
+   },
   "video-on-demand":{
      "alias":"Video-On-Demand",
      "serviceWalkthroughFilename":"vod-push.js",

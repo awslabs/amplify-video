@@ -1,0 +1,134 @@
+Description: 
+  "IVS notifications sent to SNS and then forwarded to Lambda"
+
+Parameters:
+  env:
+    Type: String
+    Description: The environment name. e.g. Dev, Test, or Production.
+    Default: NONE
+  pS3:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: amazonbooth
+  pSourceFolder:
+    Type: String
+    Description: Store template and lambda package
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9-_]*"
+    Default: vod-helpers
+  pSnsTopicName:
+    Type: String
+    Description: Topic Name
+    Default: default
+  pFunctionName:
+    Type: String
+    Description: Function Name
+    Default: IvsChannelStatusLambda
+  pFunctionHash:
+    Type: String
+    Description: FunctionHash
+    Default: default
+
+Resources:
+
+  IvsNotificationsSNS:
+    Type: AWS::SNS::Topic
+    
+  IvsEventsRule:
+    Type: AWS::Events::Rule
+    Properties:
+        Description: "Event rule for IVS"
+        EventPattern: 
+            source:
+              - aws.ivs
+            detail-type:
+              - "IVS Stream State Change"
+        State: ENABLED
+        Targets:
+            - Arn: !Ref IvsNotificationsSNS
+              Id: IvsNotificationsSNS
+
+  rIvsNotificationsSNSPolicy:
+    Type: 'AWS::SNS::TopicPolicy'
+    Properties:
+      Topics:
+        - !Ref IvsNotificationsSNS
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Sid: "1"
+            Action: 'sns:Publish'
+            Resource: !Ref IvsNotificationsSNS
+            Principal:
+              AWS: '*'
+            Condition:
+              ArnLike:
+                AWS:SourceArn: !Sub 'arn:aws:*:*:${AWS::AccountId}:*'
+          - Effect: Allow
+            Sid: "2"
+            Action: "sns:Publish"
+            Principal:
+              Service : 'events.amazonaws.com'
+            Resource: !Ref IvsNotificationsSNS
+            
+<% if (props.status.lambda) { -%>
+  rIvsStatusLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref pFunctionName
+      Description: Invoked on IVS status events 
+      Handler: index.handler
+      Role: !GetAtt rIvsStatusLambdaRole.Arn
+      Runtime: nodejs14.x
+      Timeout: 30
+      Code:
+        S3Bucket: !Ref pS3
+        S3Key: !Sub
+          - ivs-helpers/IvsStatusLambda-${hash}.zip
+          - { hash: !Ref pFunctionHash }
+
+  rIvsStatusLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        -
+          PolicyName: !Sub "${AWS::AccountId}-ivs-status-processing-role"
+          PolicyDocument:
+            Statement:
+               -
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*
+            
+  rSNSLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref rIvsStatusLambda
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:* 
+      
+  rSNSLambdaSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: lambda
+      Endpoint: !GetAtt rIvsStatusLambda.Arn
+      TopicArn: !Ref IvsNotificationsSNS
+      
+<% } -%>

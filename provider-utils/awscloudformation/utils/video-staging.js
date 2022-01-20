@@ -59,6 +59,8 @@ async function build(context, resourceName, projectType, props) {
     props = getVODEnvVars(context, props, resourceName);
   } else if (projectType === 'livestream') {
     props = getLivestreamEnvVars(context, props);
+  } else if (projectType === 'ivs') {
+    props = getIVSEnvVars(context, props);
   }
   await syncHelperCF(context, props, projectType);
   props.hashes = await generateLambdaHashes(context, props, projectType);
@@ -136,6 +138,16 @@ function getVODEnvVars(context, props, resourceName) {
     bucket: projectBucket,
     bucketInput: `${resourceName.toLowerCase()}-${currentEnvInfo}-input-${envVars.s3UUID}`.slice(0, 63),
     bucketOutput: `${resourceName.toLowerCase()}-${currentEnvInfo}-output-${envVars.s3UUID}`.slice(0, 63),
+  };
+  return props;
+}
+
+function getIVSEnvVars(context, props) {
+  const { amplify } = context;
+  const amplifyMeta = amplify.getProjectMeta();
+  const projectBucket = amplifyMeta.providers.awscloudformation.DeploymentBucketName;
+  props.env = {
+    bucket: projectBucket,
   };
   return props;
 }
@@ -397,13 +409,29 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
         }
         if (fs.existsSync(`${customDirPath}/${filePath}/${lambdaName}`)) {
           promiseFilesToUpload.push(
-            zipLambdaFunctionsAndPush(context, lambdaName, `${customDirPath}/${filePath}/${lambdaName}`,
-              customDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
+            zipLambdaFunctionsAndPush(
+              context,
+              lambdaName,
+              `${customDirPath}/${filePath}/${lambdaName}`,
+              customDirPath,
+              s3Client,
+              targetBucket,
+              stackFolder,
+              props.hashes[lambdaName],
+            ),
           );
         } else {
           promiseFilesToUpload.push(
-            zipLambdaFunctionsAndPush(context, lambdaName, `${buildDirPath}/${filePath}/${lambdaName}`,
-              buildDirPath, s3Client, targetBucket, stackFolder, props.hashes[lambdaName]),
+            zipLambdaFunctionsAndPush(
+              context,
+              lambdaName,
+              `${buildDirPath}/${filePath}/${lambdaName}`,
+              buildDirPath,
+              s3Client,
+              targetBucket,
+              stackFolder,
+              props.hashes[lambdaName],
+            ),
           );
         }
       });
@@ -420,8 +448,16 @@ async function copyFilesToS3(context, options, resourceName, projectType, props)
   await Promise.all(promiseFilesToUpload);
 }
 
-async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
-  s3Client, targetBucket, stackFolder, hash) {
+async function zipLambdaFunctionsAndPush(
+  context,
+  lambdaName,
+  lambdaDir,
+  zipDir,
+  s3Client,
+  targetBucket,
+  stackFolder,
+  hash,
+) {
   const newFilePath = `${lambdaName}.zip`;
   const zipName = `${zipDir}/${lambdaName}.zip`;
   let hashName = `${lambdaName}-${hash}.zip`;
@@ -454,8 +490,15 @@ async function zipLambdaFunctionsAndPush(context, lambdaName, lambdaDir, zipDir,
   await archive.finalize();
 }
 
-async function uploadFile(context, s3Client, hostingBucketName, distributionDirPath, filePath,
-  stackFolder, nameOverride) {
+async function uploadFile(
+  context,
+  s3Client,
+  hostingBucketName,
+  distributionDirPath,
+  filePath,
+  stackFolder,
+  nameOverride,
+) {
   let relativeFilePath = path.relative(distributionDirPath, filePath);
 
   relativeFilePath = relativeFilePath.replace(/\\/g, '/');

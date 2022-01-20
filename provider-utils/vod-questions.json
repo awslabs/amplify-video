@@ -193,24 +193,5 @@
             }
         ],
         "default": true
-    },
-    "permissionSchema": {
-        "key": "permissionSchema",
-        "question": "Define your permission schema",
-        "type": "checkbox",
-        "options": [
-            {
-                "name": "Admins can only upload videos",
-                "value": "admin",
-                "checked": true,
-                "ignore": true
-            },
-            {
-                "name": "Any authenticated user can upload videos",
-                "value": "any",
-                "ignore": true
-            }
-        ],
-        "next": "overrideSchema"
     }
 }
