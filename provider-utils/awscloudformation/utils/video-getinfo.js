@@ -38,7 +38,7 @@ async function generateAWSExportsVideo(context) {
   if (projectConfig.frontend === 'ios') {
     filePath = './aws-video-exports.json';
   } else if (projectConfig.frontend === 'android') {
-    filePath = `./${projectConfig.android.config.ResDir}/aws-video-exports.json`;
+    filePath = `./${projectConfig.android.config.ResDir}/raw/aws_video_exports.json`;
   } else if (projectConfig.frontend === 'javascript') {
     filePath = `./${projectConfig.javascript.config.SourceDir}/aws-video-exports.js`;
   } else {
