@@ -125,6 +125,7 @@ Resources:
                   - mediaconvert:ListJobs
                   - mediaconvert:ListQueues
                   - mediaconvert:ListPresets
+                  - mediaconvert:TagResource
                   - mediaconvert:UpdateJobTemplate
                 Resource:
                   - !Join ["", ["arn:aws:mediaconvert:", Ref: "AWS::Region", ":", Ref: "AWS::AccountId", ":*"]]
