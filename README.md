@@ -1,3 +1,6 @@
+# Deprecated!
+This plugin is no longer actively maintained. It is still provided as-is to incorporate into Amplify projects but no additional support, bug fixes, security patches or features will be provided.
+
 # Amplify Video Plugin
 <p>
   <a href="https://www.npmjs.com/package/amplify-category-video">
